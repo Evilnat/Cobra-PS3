@@ -1,0 +1,60 @@
+CC				:= ppu-gcc
+CXX				:= ppu-g++
+LD				:= ppu-ld 
+OBJCOPY			:= ppu-objcopy
+AR 				:= ppu-ar
+STRIP			:= ppu-strip
+INCLUDE			=  ../lv2/include ../lv1/include ../debug/include
+INCLUDE			+= $(PS3DEV)/ppu/ppu/include
+LIBSDIR         =
+LIBS            =
+NAME			= stage1
+TARGET			= stage1_453D
+BUILD_TYPE      = release
+LV2GEN 			= ../lv2gen/lv2gen
+LV2_KERNEL		= ../lv2gen/lv2Dkernel.self
+KERNEL_TARGET	= lv2Dkernel.self
+PAYLOAD_ADDR	= 0x7f0000
+STAGE0 			= ../stage0_file/stage0_453D.bin
+STAGE0_ADDR_CEX	= 0x27BFEC
+
+
+
+CFLAGS = -ffunction-sections -fdata-sections -Os -m64 -fno-builtin -fno-exceptions \
+			   -Os -Wall -Wno-strict-aliasing $(foreach dir,$(INCLUDE),-I$(dir)) \
+			   -DLV2 -DFIRMWARE_4_53DEX -DCFW -ffreestanding 
+CFLAGS += --std=gnu99
+
+ifeq ($(BUILD_TYPE), debug)
+CFLAGS += -DDEBUG
+endif
+
+LDFLAGS=-nostartfiles -nostdlib -mbig-endian
+LDFLAGS= -T $(NAME).ld -nostartfiles -nostdlib -nodefaultlibs -Wl,-static -Wl,-s -L. $(foreach dir,$(LIBSDIR),-L$(dir)) $(LIBS) -Wl,--gc-sections -Wl,-Map=stage1.map
+
+OBJS = start.o main.o ../lv2/src/libc.o ../lv2/src/memory.o  ../lv2/src/io.o ../lv2/src/thread.o 
+
+ifeq ($(BUILD_TYPE), debug)
+OBJS += ../lv1/src/device.o  ../lv1/src/hvcall.o ../debug/src/debug.o ../debug/src/printf.o 
+endif
+
+
+all: $(TARGET).bin
+
+%.bin: %.elf
+	$(OBJCOPY) -O binary $< $@
+	$(LV2GEN) $(STAGE0) $(TARGET).bin $(LV2_KERNEL) $(KERNEL_TARGET) $(PAYLOAD_ADDR) $(STAGE0_ADDR_CEX)
+	@cp $(KERNEL_TARGET) ../../BIN
+	@rm -f *.o *.elf *.map ../lv1/src/*.o ../debug/src/*.o ../lv2/src/*.o
+	
+$(TARGET).elf: $(OBJS) $(NAME).ld
+	$(CC) $(LDFLAGS) -o $@ $(OBJS)
+
+%.o: %.S
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+clean:
+	rm -f *.o *.elf *.self *.bin *.453D *.map ../lv1/src/*.o ../debug/src/*.o ../lv2/src/*.o
