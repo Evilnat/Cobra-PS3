@@ -26,7 +26,7 @@
 #define BOOT_PLUGINS_FILE			"/dev_hdd0/boot_plugins.txt"
 #define BOOT_PLUGINS_FIRST_SLOT 	1
 #define MAX_BOOT_PLUGINS			(MAX_VSH_PLUGINS-BOOT_PLUGINS_FIRST_SLOT)
-//#define PRX_PATH					"/dev_flash/vsh/module/webftp_server.sprx"
+#define PRX_PATH					"/dev_flash/vsh/module/webftp_server.sprx"
 
 LV2_EXPORT int decrypt_func(uint64_t *, uint32_t *);
 
@@ -982,11 +982,13 @@ int read_text_line(int fd, char *line, unsigned int size, int *eof)
 	return i;
 }
 
+// webMAN integration support
 void load_boot_plugins(void)
 {
 	int fd;
 	int current_slot = BOOT_PLUGINS_FIRST_SLOT;
 	int num_loaded = 0;
+	int webman_loaded = 0; // KW
 	
 	if (safe_mode)
 	{
@@ -995,33 +997,73 @@ void load_boot_plugins(void)
 	}
 	
 	if (!vsh_process)
-		return;
-	
-	if (cellFsOpen(BOOT_PLUGINS_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != 0)
-		return;
-	
-	while (num_loaded < MAX_BOOT_PLUGINS)
+		return;	
+
+	// EVILNAT START
+	// KW / Special thanks to KW for providing an awesome source
+	// Improving initial KW's code	
+	// Firstly will load plugin from '/dev_hdd0' instead '/dev_flash'
+	// If it does not exist in '/dev_hdd0' will load it from '/dev_flash' 
+	if (cellFsOpen(BOOT_PLUGINS_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) == 0)
 	{
-		char path[128];
-		int eof;
-		
-		if (read_text_line(fd, path, sizeof(path), &eof) > 0)
+		while (num_loaded < MAX_BOOT_PLUGINS)
 		{
-			int ret = prx_load_vsh_plugin(current_slot, path, NULL, 0);
-			DPRINTF("Load boot plugin %s -> %x\n", path, current_slot);
+			char path[128];
+			int eof;			
 			
-			if (ret >= 0)
+			if (read_text_line(fd, path, sizeof(path), &eof) > 0)
 			{
-				current_slot++;
-				num_loaded++;
+				int ret = prx_load_vsh_plugin(current_slot, path, NULL, 0);
+					
+				if (ret >= 0)
+				{
+					if(strstr(path, "web"))
+						webman_loaded = 1;
+
+					DPRINTF("Load boot plugin %s -> %x\n", path, current_slot);
+					current_slot++;
+					num_loaded++;
+				}			
 			}
+			
+			if (eof)
+				break;
 		}
-		
-		if (eof)
-			break;
+
+		cellFsClose(fd);
 	}
-	
-	cellFsClose(fd);
+
+	if(!webman_loaded)
+	{
+		CellFsStat stat;
+		char path_prx[128];		
+
+		// Default plugin's paths in some CFW
+		char webman_paths[4][60] = 
+		{
+        	"/dev_flash/vsh/module/webftp_server.sprx",
+        	"/dev_flash/ps3ita/webftp_server.sprx",
+        	"/dev_flash/webman/webftp_server.sprx",
+        	"/dev_flash/dragon/web.sprx",
+    	};		
+
+    	// Copy "/dev_flash/vsh/module/webftp_server.sprx" as default path
+    	strcpy(path_prx, webman_paths[0]);
+
+    	// Let's find the plugin
+		for(int i = 0; i < 4; i++)
+	    { 
+	        if(cellFsStat(webman_paths[i], &stat) == 0)
+	        {            
+	            strcpy(path_prx, webman_paths[i]);
+	            break;
+	        }
+	    }
+
+		if (prx_load_vsh_plugin(current_slot, path_prx, NULL, 0) >= 0)	
+			DPRINTF("Loading integrated webMAN plugin into slot %x\n", current_slot);		
+	}
+	// EVILNAT END
 }
 
 #ifdef DEBUG

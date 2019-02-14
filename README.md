@@ -1,6 +1,6 @@
 Feel free to download / modify.
 
-Thanks to Cobra team, Joonie, Habib, Alexander, Dean, KW, Nzv, Aldo, LightningMods and all who helped updating Cobra source.
+Thanks to Cobra team, Joonie, Habib, Haxxxen, Alexander, Dean, KW, Nzv, Aldo, LightningMods and all who helped updating Cobra source.
 
 # COBRA 7.55 Source
 
@@ -63,6 +63,18 @@ Thanks to Cobra team, Joonie, Habib, Alexander, Dean, KW, Nzv, Aldo, LightningMo
 	* BASIC_PLUGIN hash is commented.
 	* 80010006 Error fix when trying to install a game update with syscall disabled. Fix & Research @Joonie @Alexander @Aldo
 
-	[ Alexander's Changes ]
+	[ Alexander's changes ]
 	
 	* Fixed data corruption if you uninstall game/game update/homebrew with syscall disabled
+
+	[ Haxxxen's changes ]
+
+    * Extra patch for PSP SAVE DATA is disabled by default to improve compatibility, however can be toggled by CROSS+R1 when launching PSP launcher.
+
+    [Evilnat's changes]
+
+    * Updated KW's code to search webMAN in flash and load it firstly if it's found in /dev_hdd0, will search in the following paths:
+    	- /dev_flash/vsh/module/webftp_server.sprx
+    	- /dev_flash/ps3ita/webftp_server.sprx
+    	- /dev_flash/webman/webftp_server.sprx 
+    	- /dev_flash/dragon/web.sprx
