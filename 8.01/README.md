@@ -1,4 +1,4 @@
-[# PORTING...]
+# PORTING...
 
 Feel free to download / modify.
 
