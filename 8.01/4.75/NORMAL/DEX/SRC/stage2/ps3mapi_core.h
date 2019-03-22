@@ -24,9 +24,9 @@
 #if defined(FIRMWARE_4_75DEX)
 	#define PS3MAPI_FW_VERSION			 		0x0475
 	#if defined(IS_MAMBA)
-		#define PS3MAPI_FW_TYPE			 		"CEX MAMBA"
+		#define PS3MAPI_FW_TYPE			 		"DEX MAMBA"
 	#else
-		#define PS3MAPI_FW_TYPE			 		"CEX COBRA"
+		#define PS3MAPI_FW_TYPE			 		"DEX COBRA"
 	#endif
 	#define PS3MAPI_IDPS_1			 			0x8000000000409930ULL
 	#define PS3MAPI_IDPS_2			 			0x800000000049CAF4ULL
