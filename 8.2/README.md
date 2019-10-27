@@ -11,6 +11,7 @@ Thanks to Cobra team, Joonie, Habib, Haxxxen, Alexander, Dean, KW, Nzv, Aldo, Li
 	* unknown E3 patches are removed to fix an issue with XMB, [Originally found by rancid-0, from his PS3ITA 4.50 COBRA]
 	* Dual VSH supported for REBUG REX / D-REX CFW, with the proper hash check code was developed by habib and Nzv recently. 
 	* NPDRM Fself fix is no longer used due to improved fself patches hard coded within the firmware modules on REX/D-REX 
+	* Built-in reactPSN feature supported
 
 	[ Habib's changes ]
 
