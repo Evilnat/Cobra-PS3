@@ -174,8 +174,6 @@ static INLINE void apply_patches(void)
 	}	
 }
 
-// 0x02200000
-
 int main(void)
 {
 #ifdef DEBUG
