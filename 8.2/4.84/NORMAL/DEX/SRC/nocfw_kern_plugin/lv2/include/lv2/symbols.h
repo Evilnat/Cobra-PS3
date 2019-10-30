@@ -20,6 +20,8 @@
 #define copy_from_user_symbol							0x100D0
 #define copy_to_process_symbol							0xFF6C
 #define copy_from_process_symbol						0xFD7C
+#define process_read_memory_symbol						0x26E7E4
+#define process_write_memory_symbol						0x26E658
 #define page_allocate_symbol							0x63D64
 #define page_free_symbol								0x637C8
 #define page_export_to_proc_symbol						0x63F00
@@ -107,6 +109,7 @@
 #define cellFsStat_symbol								0x2B20B4
 #define cellFsUtime_symbol 								0x2B3A24
 #define cellFsUnlink_internal_symbol   		 			0x1A29D8
+#define cellFsRename_internal_symbol   		 			0x19D490
 
 #define cellFsUtilMount_symbol							0x2B1D70
 #define cellFsUtilUmount_symbol 						0x2B1D44
@@ -167,6 +170,13 @@
 #define ss_get_open_psid_symbol							0x230B44
 #define update_mgr_read_eeprom_symbol					0x229F3C
 #define update_mgr_write_eeprom_symbol					0x229E70
+
+/* RAP Activation */
+#define SHA1_init_symbol								0x2F0228
+#define SHA1_update_symbol								0x2F0288
+#define SHA1_final_symbol								0x2F043C
+#define aescbccfb_dec_symbol							0x2EE71C
+#define aescbccfb_enc_symbol							0x2EE4CC
 
 #define ss_params_get_update_status_symbol				0x5445C
 
@@ -249,6 +259,9 @@
 
 /* vars */
 #define thread_info_symbol								0x3A4A30
+
+/* mmapper flags temp patch */
+#define mmapper_flags_temp_patch						0x74C08
 
 #endif /* FIRMWARE */
 

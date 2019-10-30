@@ -109,6 +109,7 @@
 #define cellFsStat_symbol								0x29711C
 #define cellFsUtime_symbol 								0x298C08
 #define cellFsUnlink_internal_symbol   		 			0x19C64C
+#define cellFsRename_internal_symbol 				    0x197104
 
 #define cellFsUtilMount_symbol							0x296C78
 #define cellFsUtilUmount_symbol 						0x296C4C
@@ -169,6 +170,13 @@
 #define ss_get_open_psid_symbol							0x22A668
 #define update_mgr_read_eeprom_symbol					0x223A78
 #define update_mgr_write_eeprom_symbol					0x2239C0
+
+/* RAP Activation */
+#define SHA1_init_symbol								0x2CE688
+#define SHA1_update_symbol								0x2CE6E8
+#define SHA1_final_symbol								0x2CE89C
+#define aescbccfb_dec_symbol							0x2CCB7C
+#define aescbccfb_enc_symbol							0x2CC92C
 
 #define ss_params_get_update_status_symbol				0x50AB4
 
@@ -251,6 +259,9 @@
 
 /* vars */
 #define thread_info_symbol								0x37DE30
+
+/* mmapper flags temp patch */
+#define mmapper_flags_temp_patch          				0x70F78
 
 #endif /* FIRMWARE */
 

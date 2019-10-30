@@ -15,7 +15,7 @@ TARGET		= payload
 
 CFLAGS = -ffunction-sections -fdata-sections -Os -m64 -fno-builtin -fno-exceptions \
 			   -Os -Wall $(foreach dir,$(INCLUDE),-I$(dir)) \
-			   -DLV2 -DFIRMWARE_4_84 -ffreestanding 
+			   -DLV2 -DFIRMWARE_4_84DEX -ffreestanding 
 CFLAGS += --std=gnu99
 LDFLAGS=-nostartfiles -nostdlib -mbig-endian
 LDFLAGS= -T $(TARGET).ld -nostartfiles -nostdlib -nodefaultlibs -Wl,-static -Wl,-s -L. $(foreach dir,$(LIBSDIR),-L$(dir)) $(LIBS) -Wl,--gc-sections -Wl
