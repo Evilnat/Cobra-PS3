@@ -7,6 +7,7 @@ STRIP			:= ppu-strip
 LV2GEN 			= ../lv2gen/lv2gen
 LV2_KERNEL		= ../lv2gen/lv2_kernel.self
 KERNEL_TARGET	= lv2_kernel.self
+PAYLOAD 		= ../nocfw_kern_plugin/payload/payload.bin
 STAGE0 			= stage0.bin
 STAGE0_ADDR_CEX	= 0x26C8DC
 INCLUDE			=  ../lv2/include ../lv1/include ../debug/include
@@ -30,7 +31,7 @@ all: $(TARGET).bin
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $< $@	
-	$(LV2GEN) $(LV2_KERNEL) $(STAGE0) $(STAGE0_ADDR_CEX) ../nocfw_kern_plugin/payload/payload.bin
+	$(LV2GEN) $(LV2_KERNEL) $(STAGE0) $(STAGE0_ADDR_CEX) $(PAYLOAD)
 	@rm -f *.o *.elf ../lv2/src/*.o ../lv1/src/*.o *.bin
 	@mv lv2_kernel.self.cobra.self lv2_kernel.self
 	@cp lv2_kernel.self ../../BIN	
