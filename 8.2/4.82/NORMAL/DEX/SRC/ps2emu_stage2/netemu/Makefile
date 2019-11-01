@@ -18,7 +18,7 @@ OUT_SELF	= ps2_netemu.self
 
 CFLAGS = -ffunction-sections -fdata-sections -Os -m64 -fno-builtin -fno-exceptions \
 			   -Os -Wall -Wno-strict-aliasing $(foreach dir,$(INCLUDE),-I$(dir)) \
-			   -DPS2EMU -DPS2NETEMU -DFIRMWARE_4_82DEX -ffreestanding 
+			   -DPS2EMU -DPS2NETEMU -DFIRMWARE_DEX -ffreestanding 
 CFLAGS += --std=gnu99
 
 ifeq ($(BUILD_TYPE), debug)

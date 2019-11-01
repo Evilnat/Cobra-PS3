@@ -4,7 +4,7 @@
 #include <lv2/process.h>
 #include <lv2/thread.h>
 
-#if defined(FIRMWARE_4_85)
+#if defined(FIRMWARE_CEX)
 
 #define VSH_HASH						0xb6b6d000002e0000
 #define BDP_DISC_CHECK_PLUGIN_HASH		0x9940000000003000

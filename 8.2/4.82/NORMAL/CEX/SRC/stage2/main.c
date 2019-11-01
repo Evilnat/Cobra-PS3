@@ -60,7 +60,7 @@
 #define COBRA_VERSION			0x0F
 #define COBRA_VERSION_BCD		0x0820
 
-#if defined(FIRMWARE_4_82)
+#if defined(FIRMWARE_CEX)
 	#define FIRMWARE_VERSION	0x0482
 #endif
 

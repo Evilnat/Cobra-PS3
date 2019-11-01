@@ -21,7 +21,7 @@
 #define PS3MAPI_CORE_VERSION			 		0x0121
 #define PS3MAPI_CORE_MINVERSION			 		0x0111
 
-#if defined(FIRMWARE_4_82DEX)
+#if defined(FIRMWARE_DEX)
 	#define PS3MAPI_FW_VERSION			 		0x0482
 	#if defined(IS_MAMBA)
 		#define PS3MAPI_FW_TYPE			 		"DEX MAMBA"

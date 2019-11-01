@@ -55,5 +55,4 @@ void main(void)
 		
 	func = (void *)&f;	
 	func();
-
 }

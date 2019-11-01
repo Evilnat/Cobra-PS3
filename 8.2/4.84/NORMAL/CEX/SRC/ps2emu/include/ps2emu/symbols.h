@@ -3,7 +3,7 @@
 #ifndef __PS2EMU_SYMBOLS_H_S__
 #define __PS2EMU_SYMBOLS_H_S__
 
-#if defined(FIRMWARE_4_84)
+#if defined(FIRMWARE_CEX)
 
 #if defined(PS2HWEMU)
 

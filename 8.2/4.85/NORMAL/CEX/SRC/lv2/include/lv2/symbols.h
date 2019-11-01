@@ -3,7 +3,7 @@
 #ifndef __FIRMWARE_SYMBOLS_H_S__
 #define __FIRMWARE_SYMBOLS_H_S__
 
-#if defined(FIRMWARE_4_85)
+#if defined(FIRMWARE_CEX)
 
 #define TOC 											0x34FBB0
 

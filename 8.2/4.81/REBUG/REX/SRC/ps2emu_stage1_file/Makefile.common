@@ -1,7 +1,7 @@
 CC			= ppu-gcc
 STRIP		= ppu-strip
 OBJCOPY		= ppu-objcopy
-CFLAGS		+= -mno-toc -ffunction-sections -fdata-sections -Os $(INC) -DFIRMWARE_4_81 -DPS2EMU 
+CFLAGS		+= -mno-toc -ffunction-sections -fdata-sections -Os $(INC) -DFIRMWARE_CEX -DPS2EMU 
 LDFLAGS		= -Tldscript.ld -nostartfiles -nostdlib -nodefaultlibs -Wl,--gc-sections
 INC 		= -I. -I../ps2emu/include
 

@@ -7,7 +7,7 @@
 #include <ps2emu/patch.h>
 #include <ps2emu/symbols.h>
 
-#ifdef FIRMWARE_4_85
+#ifdef FIRMWARE_CEX
 	#define EXTENDED_DATA	(0x821000+0x2953478)
 #endif
 

@@ -6,7 +6,11 @@
 #include <lv2/patch.h>
 #include <lv1/lv1.h>
 
-#define STAGE2_FILE	"/dev_flash/rebug/cobra/stage2.cex"
+#if defined (FIRMWARE_CEX)
+	#define STAGE2_FILE	"/dev_flash/rebug/cobra/stage2.cex"
+#elif defined (FIRMWARE_DEX)
+	#define STAGE2_FILE	"/dev_flash/rebug/cobra/stage2.dex"
+#endif
 
 void main(void)
 {

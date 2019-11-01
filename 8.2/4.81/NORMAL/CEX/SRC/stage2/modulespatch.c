@@ -220,7 +220,7 @@ SprxPatch emulator_api_patches[] =
 	{ psp_read+0x70, BLR, &condition_psp_iso },
 	{ psp_read_header, MAKE_CALL_VALUE(psp_read_header, psp_read+0x3C), &condition_psp_iso },
 
-#if defined (FIRMWARE_4_81) 
+#if defined (FIRMWARE_CEX) 
 	// Drm patches
 	{ psp_drm_patch5, MAKE_JUMP_VALUE(psp_drm_patch5, psp_drm_patch6), &condition_psp_iso },
 	{ psp_drm_patch7, LI(R6, 0), &condition_psp_iso },
@@ -282,7 +282,7 @@ SprxPatch pemucorelib_patches[] =
 	// Prometheus
 	{ psp_prometheus_patch, '.OLD', &condition_psp_prometheus },
 
-	/*#if defined(FIRMWARE_4_81) 
+	/*#if defined(FIRMWARE_CEX) 
 		// Extra save data patch required since some 3.60+ firmware
 		{ psp_extra_savedata_patch, LI(R31, 1), &condition_psp_iso },
 	#endif */
@@ -291,7 +291,7 @@ SprxPatch pemucorelib_patches[] =
 
 SprxPatch libsysutil_savedata_psp_patches[] =
 {
-#if defined(FIRMWARE_4_81) 
+#if defined(FIRMWARE_CEX) 
 	{ psp_savedata_patch1, MAKE_JUMP_VALUE(psp_savedata_patch1, psp_savedata_patch2), &condition_psp_iso },
 	{ psp_savedata_patch3, NOP, &condition_psp_iso },
 	{ psp_savedata_patch4, NOP, &condition_psp_iso },
@@ -451,7 +451,7 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 
 	// +4.30 -> 0x13 (exact firmware since it happens is unknown)
 	// 3.55 -> 0x29
-#if defined(FIRMWARE_4_81)
+#if defined(FIRMWARE_CEX)
 	if ((p[0x30/4] >> 16) == 0x13)
 #endif
 	{	
@@ -663,7 +663,7 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 	return 0;
 }
 
-#if defined (FIRMWARE_4_81)
+#if defined (FIRMWARE_CEX)
 LV2_HOOKED_FUNCTION_COND_POSTCALL_2(int, pre_modules_verification, (uint32_t *ret, uint32_t error))
 {
 /*

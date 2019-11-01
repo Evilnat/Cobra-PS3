@@ -9,7 +9,7 @@
 
 #include "common.h"
 
-#if defined(FIRMWARE_4_82DEX)
+#if defined(FIRMWARE_DEX)
 	#define AUTH_OFFSET			0x90120
 	#define DATA_TOC_OFFSET		-0x5B00
 	#define	LPAR_TOC_OFFSET		-0x5BC8

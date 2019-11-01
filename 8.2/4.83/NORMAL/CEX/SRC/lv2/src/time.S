@@ -26,4 +26,4 @@ get_time_seconds:
 	addi	%sp, %sp, 0x80
 	mtlr	%r0
 	blr
-	
+

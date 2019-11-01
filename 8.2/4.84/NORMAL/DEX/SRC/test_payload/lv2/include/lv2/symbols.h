@@ -3,7 +3,7 @@
 #ifndef __FIRMWARE_SYMBOLS_H_S__
 #define __FIRMWARE_SYMBOLS_H_S__
 
-#if defined(FIRMWARE_4_84DEX)
+#if defined(FIRMWARE_DEX)
 
 #define TOC 											0x3759C0
 

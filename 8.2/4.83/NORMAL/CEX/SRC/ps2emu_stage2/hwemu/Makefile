@@ -14,7 +14,7 @@ OUTPUT		= ps2hwemu_stage2.bin
 
 CFLAGS = -ffunction-sections -fdata-sections -Os -m64 -fno-builtin -fno-exceptions \
 			   -Os -Wall -Wno-strict-aliasing $(foreach dir,$(INCLUDE),-I$(dir)) \
-			   -DPS2EMU -DPS2HWEMU -DFIRMWARE_4_83 -ffreestanding 
+			   -DPS2EMU -DPS2HWEMU -DFIRMWARE_CEX -ffreestanding 
 CFLAGS += --std=gnu99
 
 ifeq ($(BUILD_TYPE), debug)

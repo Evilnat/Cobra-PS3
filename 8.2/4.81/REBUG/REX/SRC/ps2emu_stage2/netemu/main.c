@@ -7,7 +7,7 @@
 #include <ps2emu/patch.h>
 #include <ps2emu/symbols.h>
 
-#ifdef FIRMWARE_4_81
+#ifdef FIRMWARE_CEX
 	#define EXTENDED_DATA	(0x31FE000)
 #endif
 

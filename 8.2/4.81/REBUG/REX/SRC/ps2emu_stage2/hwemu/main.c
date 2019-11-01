@@ -8,7 +8,7 @@
 
 #include "common.h"
 
-#if defined(FIRMWARE_4_81)
+#if defined(FIRMWARE_CEX)
 	#define AUTH_OFFSET			0x20700 
 	#define DISC_SIZE_OFFSET	0x25714
 	#define DISC_TYPE_OFFSET	0x25310

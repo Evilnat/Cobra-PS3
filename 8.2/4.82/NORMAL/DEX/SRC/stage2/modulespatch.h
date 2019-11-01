@@ -4,7 +4,7 @@
 #include <lv2/process.h>
 #include <lv2/thread.h>
 
-#if defined(FIRMWARE_4_82DEX)
+#if defined(FIRMWARE_DEX)
 
 #define VSH_HASH						0xb6b6d000002e0000
 #define EXPLORE_PLUGIN_HASH				0xc50d0000000e0000
