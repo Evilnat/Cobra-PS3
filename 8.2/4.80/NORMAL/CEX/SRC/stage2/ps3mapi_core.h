@@ -22,7 +22,7 @@
 #define PS3MAPI_CORE_MINVERSION			 		0x0111
 
 #if defined(FIRMWARE_CEX)
-	#define PS3MAPI_FW_VERSION			 		0x0481
+	#define PS3MAPI_FW_VERSION			 		0x0480
 	#if defined(IS_MAMBA)
 		#define PS3MAPI_FW_TYPE			 		"CEX MAMBA"
 	#else
