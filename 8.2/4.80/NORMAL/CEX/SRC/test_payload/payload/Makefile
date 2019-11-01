@@ -38,4 +38,4 @@ $(TARGET).elf: $(OBJS) $(TARGET).ld
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	@rm -f *.o *.elf *.self *.bin *.481c *.map ../lv1/src/*.o ../debug/src/*.o ../lv2/src/*.o
+	@rm -f *.o *.elf *.self *.bin *.480c *.map ../lv1/src/*.o ../debug/src/*.o ../lv2/src/*.o
