@@ -8,7 +8,7 @@
 
 #define VSH_HASH						0xb6b6d000002e0000
 #define EXPLORE_PLUGIN_HASH				0xc50d0000000e0000
-#define EXPLORE_CATEGORY_GAME_HASH		0xde52c00000050000
+#define EXPLORE_CATEGORY_GAME_HASH		0xde52d00000050000
 #define PS1_EMU_HASH					0xcc28400000090000
 #define PS1_NETEMU_HASH 				0xcc284000000b0000
 #define GAME_EXT_PLUGIN_HASH			0xcc26800000010000
@@ -22,23 +22,23 @@
 
 /* vsh */
 #define vsh_text_size					0x6C0000
-#define ps2tonet_patch					0xCA380
-#define ps2tonet_size_patch 			0xCA374
-#define psp_drm_patch1					0x24A7E8
-#define psp_drm_patch2					0x24B288
-#define psp_drm_patch3					0x24AEC4
-#define psp_drm_patch4					0x24B6D0
-#define psp_drm_patchA					0x24A904
-#define psp_drm_patchB					0x24B1A4
-#define psp_drm_patchC					0x24A33C
-#define psp_drm_patchD					0x24A8EC
-#define psp_drm_patchE					0x24A8F0
-#define psp_drm_patchF					0x24B2BC
-#define vmode_patch_offset				0x44ADD0
+#define ps2tonet_patch					0xCA060
+#define ps2tonet_size_patch 			0xCA054
+#define psp_drm_patch1					0x249FA4
+#define psp_drm_patch2					0x24AA44
+#define psp_drm_patch3					0x24A680
+#define psp_drm_patch4					0x24AE8C
+#define psp_drm_patchA					0x24A0C0
+#define psp_drm_patchB					0x24A960
+#define psp_drm_patchC					0x249AF8
+#define psp_drm_patchD					0x24A0A8
+#define psp_drm_patchE					0x24A0AC
+#define psp_drm_patchF					0x24AA78
+#define vmode_patch_offset				0x44D7E0
 
 /* explore_plugin */
-#define app_home_offset      			0x2514C0
-#define ps2_nonbw_offset      			0xDDDC4
+#define app_home_offset      			0x251740
+#define ps2_nonbw_offset      			0xDDD8C
 
 /* explore_category_game */
 #define ps2_nonbw_offset2				0x68264
@@ -47,13 +47,13 @@
 #define ps1_emu_get_region_offset		0x3E74
 
 /* ps1_netemu */
-#define ps1_netemu_get_region_offset	0xA4E74
+#define ps1_netemu_get_region_offset	0xA440C
 
 /* game_ext_plugin */
-#define sfo_check_offset				0x23DAC
-#define ps2_nonbw_offset3				0x172F0
-#define ps_region_error_offset			0x687C
-#define game_exit_popup_patch       	0xE418
+#define sfo_check_offset				0x240EC
+#define ps2_nonbw_offset3				0x172F4
+#define ps_region_error_offset			0x6880
+#define game_exit_popup_patch       	0xE41C
 
 /* psp_emulator */
 #define psp_set_psp_mode_offset 		0x1C18

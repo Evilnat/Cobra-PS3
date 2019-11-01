@@ -24,37 +24,37 @@
 
 /* vsh */
 #define dex_vsh_text_size				0x6C0000
-#define dex_ps2tonet_patch				0xCA380
-#define dex_ps2tonet_size_patch 		0xCA374
-#define dex_psp_drm_patch1				0x24A7E4
-#define dex_psp_drm_patch2				0x24B284
-#define dex_psp_drm_patch3				0x24AEC0
-#define dex_psp_drm_patch4				0x24B6CC
-#define dex_psp_drm_patchA				0x24A900
-#define dex_psp_drm_patchB				0x24B1A0
-#define dex_psp_drm_patchC				0x24A338
-#define dex_psp_drm_patchD				0x24A8E8
-#define dex_psp_drm_patchE				0x24A8EC
-#define dex_psp_drm_patchF				0x24B2B8
-#define dex_vmode_patch_offset			0x44ADD8
+#define dex_ps2tonet_patch				0xCA060
+#define dex_ps2tonet_size_patch 		0xCA054
+#define dex_psp_drm_patch1				0x24A49C
+#define dex_psp_drm_patch2				0x24AF3C
+#define dex_psp_drm_patch3				0x24AB78
+#define dex_psp_drm_patch4				0x24B384
+#define dex_psp_drm_patchA				0x24A5B8
+#define dex_psp_drm_patchB				0x24AE58
+#define dex_psp_drm_patchC				0x249FF0
+#define dex_psp_drm_patchD				0x24A5A0
+#define dex_psp_drm_patchE				0x24A5A4
+#define dex_psp_drm_patchF				0x24AF70
+#define dex_vmode_patch_offset			0x44AA50
 
 #define cex_vsh_text_size				0x6B0000
-#define cex_ps2tonet_patch				0xC4E34
-#define cex_ps2tonet_size_patch 		0xC4E28
-#define cex_psp_drm_patch1				0x242FBC
-#define cex_psp_drm_patch2				0x243A5C
-#define cex_psp_drm_patch3				0x243698
-#define cex_psp_drm_patch4				0x243EA4
-#define cex_psp_drm_patchA				0x2430D8
-#define cex_psp_drm_patchB				0x243978
-#define cex_psp_drm_patchC				0x242B10
-#define cex_psp_drm_patchD				0x2430C0
-#define cex_psp_drm_patchE				0x2430C4
-#define cex_psp_drm_patchF				0x243A90
-#define cex_vmode_patch_offset			0x4431E4	
+#define cex_ps2tonet_patch				0xC4B14
+#define cex_ps2tonet_size_patch 		0xC4B08
+#define cex_psp_drm_patch1				0x242C74
+#define cex_psp_drm_patch2				0x243714
+#define cex_psp_drm_patch3				0x243350
+#define cex_psp_drm_patch4				0x243B5C
+#define cex_psp_drm_patchA				0x242D90
+#define cex_psp_drm_patchB				0x243630
+#define cex_psp_drm_patchC				0x2427C8
+#define cex_psp_drm_patchD				0x242D78
+#define cex_psp_drm_patchE				0x242D7C
+#define cex_psp_drm_patchF				0x243748
+#define cex_vmode_patch_offset			0x442E5C	
 
 /* explore_plugin */
-#define app_home_offset      			0x2514C0
+#define app_home_offset      			0x2514B0
 #define ps2_nonbw_offset      			0xDDDC4
 
 /* explore_category_game */
@@ -67,13 +67,13 @@
 #define ps1_emu_get_region_offset		0x3E74
 
 /* ps1_netemu */
-#define ps1_netemu_get_region_offset	0xA4D74
+#define ps1_netemu_get_region_offset	0xA440C
 
 /* game_ext_plugin */
-#define sfo_check_offset				0x23DAC
-#define ps2_nonbw_offset3				0x172F0
-#define ps_region_error_offset			0x687C
-#define game_exit_popup_patch       	0xE418
+#define sfo_check_offset				0x240EC
+#define ps2_nonbw_offset3				0x172F4
+#define ps_region_error_offset			0x6880
+#define game_exit_popup_patch       	0xE41C
 
 /* psp_emulator */ 
 #define psp_set_psp_mode_offset 		0x1C18 

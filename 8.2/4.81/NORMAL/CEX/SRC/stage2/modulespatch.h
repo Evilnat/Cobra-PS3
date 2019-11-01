@@ -35,7 +35,7 @@
 #define psp_drm_patchD					0x2430C4
 #define psp_drm_patchE					0x2430C8
 #define psp_drm_patchF					0x243A94
-#define vmode_patch_offset				0x4431DC
+#define vmode_patch_offset				0x4431D8
 
 /* explore_plugin */
 #define app_home_offset      			0x250910

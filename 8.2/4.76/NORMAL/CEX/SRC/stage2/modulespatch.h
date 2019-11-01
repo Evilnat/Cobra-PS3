@@ -23,23 +23,23 @@
 
 /* vsh */
 #define vsh_text_size					0x6B0000
-#define ps2tonet_patch					0xC4E34
-#define ps2tonet_size_patch 			0xC4E28
-#define psp_drm_patch1					0x242FBC
-#define psp_drm_patch2					0x243A5C
-#define psp_drm_patch3					0x243698
-#define psp_drm_patch4					0x243EA4
-#define psp_drm_patchA					0x2430D8
-#define psp_drm_patchB					0x243978
-#define psp_drm_patchC					0x242B10
-#define psp_drm_patchD					0x2430C0
-#define psp_drm_patchE					0x2430C4
-#define psp_drm_patchF					0x243A90
-#define vmode_patch_offset				0x4431E4
+#define ps2tonet_patch					0xC4B14
+#define ps2tonet_size_patch 			0xC4B08
+#define psp_drm_patch1					0x24277C
+#define psp_drm_patch2					0x24321C
+#define psp_drm_patch3					0x242E58
+#define psp_drm_patch4					0x243664
+#define psp_drm_patchA					0x242898
+#define psp_drm_patchB					0x243138
+#define psp_drm_patchC					0x2422D0
+#define psp_drm_patchD					0x242880
+#define psp_drm_patchE					0x242884
+#define psp_drm_patchF					0x243250
+#define vmode_patch_offset				0x445BEC
 
 /* explore_plugin */
-#define app_home_offset      			0x250910
-#define ps2_nonbw_offset      			0xDD9B4
+#define app_home_offset      			0x250B90
+#define ps2_nonbw_offset      			0xDD97C
 
 /* explore_category_game */
 #define ps2_nonbw_offset2				0x68324
@@ -51,12 +51,12 @@
 #define ps1_emu_get_region_offset		0x3E74
 
 /* ps1_netemu */
-#define ps1_netemu_get_region_offset	0xA4D74
+#define ps1_netemu_get_region_offset	0xA440C
 
 /* game_ext_plugin */
-#define sfo_check_offset				0x23B90
-#define ps2_nonbw_offset3				0x17000
-#define ps_region_error_offset			0x68C0
+#define sfo_check_offset				0x23ED0
+#define ps2_nonbw_offset3				0x17004
+#define ps_region_error_offset			0x68C4
 
 /* psp_emulator */
 #define psp_set_psp_mode_offset 		0x1C18
