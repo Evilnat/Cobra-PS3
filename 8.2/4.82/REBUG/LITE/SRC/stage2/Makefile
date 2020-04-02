@@ -10,7 +10,7 @@ INCLUDE		+= $(PS3DEV)/ppu/ppu/include
 LIBSDIR     =
 LIBS        =
 BUILD_TYPE  = release
-OUTPUT		= stage2.bin
+OUTPUT		= stage2.cex
 
 
 CFLAGS = -ffunction-sections -fdata-sections -Os -m64 -fno-builtin -fno-exceptions \
@@ -60,7 +60,7 @@ all: $(OUTPUT)
 objdump: $(OUTPUT)
 	$(OBJDUMP) -D -EB -b binary -m powerpc:common64 $(OUTPUT)	
 
-%.bin: %.elf
+%.cex: %.elf
 	$(OBJCOPY) -O binary $< $@	
 
 stage2.elf: $(OBJS) stage2.ld
