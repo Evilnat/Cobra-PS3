@@ -1,0 +1,12 @@
+CFLAGS 			= -DPS2HWEMU
+TARGET			= ps2hwemu_stage1_file
+SRC_SELF		= ../ps2emu_gen/ps2_emu.self
+OUT_SELF		= ps2_emu.self
+TEXT_OFFSET		= 0x10000
+PAYLOAD_ADDR	= 0x23D6C
+SH_ADDR			= 0x1BFEC8
+DATA_ADDR		= 0x4F7930
+PATCH_ADDR		= 0xFFFFFFFF
+PATCH_DATA		= 0x00000000
+
+include Makefile.common

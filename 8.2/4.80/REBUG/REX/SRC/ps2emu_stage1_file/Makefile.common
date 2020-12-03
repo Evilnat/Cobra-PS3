@@ -1,0 +1,36 @@
+CC			= ppu-gcc
+STRIP		= ppu-strip
+OBJCOPY		= ppu-objcopy
+CFLAGS		+= -mno-toc -ffunction-sections -fdata-sections -Os $(INC) -DFIRMWARE_CEX -DPS2EMU 
+LDFLAGS		= -Tldscript.ld -nostartfiles -nostdlib -nodefaultlibs -Wl,--gc-sections
+INC 		= -I. -I../ps2emu/include
+
+SRC_ASM= start.S icache.S 
+
+SRC_C=
+
+OBJ=$(SRC_ASM:.S=.o) $(SRC_C:.c=.o)
+
+ELF=$(TARGET).elf
+BIN=$(TARGET).bin
+
+all: $(BIN)
+
+$(BIN): $(ELF)
+	$(STRIP) -s $^
+	$(OBJCOPY) -j .start -j .text -j .data -j .got -j .bss -O binary $^ $@
+	../ps2emu_gen/ps2emu_gen $@ $(SRC_SELF) $(OUT_SELF) $(TEXT_OFFSET) $(PAYLOAD_ADDR) $(SH_ADDR) $(DATA_ADDR) $(PATCH_ADDR) $(PATCH_DATA)
+	@cp $(OUT_SELF) ../../BIN
+	@rm -f $(BIN) temp.self $(ELF) $(OBJ)
+
+$(ELF): $(OBJ)
+	$(CC) $(LDFLAGS) $(OBJ) -o $@
+
+%.o: %.S
+	$(CC) $(CFLAGS) -c $^
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $^
+
+clean:
+	@rm -f $(BIN) $(ELF) $(OBJ) temp.self
