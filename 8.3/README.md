@@ -4,6 +4,8 @@ Thanks to Cobra team, Joonie, Habib, Haxxxen, Alexander, Dean, KW, Nzv, Aldo, Li
 
 # COBRA 8.3 Source
 
-WIP of Cobra 8.3.
+WIP of Cobra 8.3 from @aldostools.
 
-This repository can have constant changes.
+QA Flag and reActPSN are not added yet due to freezes.
+
+This repository will have constant changes.
