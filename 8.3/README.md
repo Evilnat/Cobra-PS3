@@ -10,7 +10,7 @@ QA Flag and reActPSN are not added yet due to freezes.
 
 This repository will have constant changes.
 
-New features in 8.3:
+###### New features in 8.3:
 
     . Restore disabled CFW Syscalls without Reboot just entering to Settings > System Update on XMB by aldo
     . Integrated fan controller (to control fan when webMAN is unloaded) by aldo
@@ -22,7 +22,7 @@ New features in 8.3:
     . Added ps3mapi_get_process_module_info
     . Increased from 24 to 32 the max number of map paths by aldo
     
-To add:
+###### To add:
 
     . reActPSN
     . QA flag
