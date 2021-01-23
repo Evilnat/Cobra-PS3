@@ -20,6 +20,9 @@ This repository will have constant changes.
     . Updated ps3mapi_load_process_modules to load custom modules and system modules (by haxxxen)
     . Added ps3mapi_get_process_module_info
     . Increased from 24 to 32 the max number of map paths by aldo
+    . Added sm_get_temperature patch in kernel by Evilnat
+    . Added sm_get_fan_policy patch in kernel by Evilnat
+    . Added sm_set_fan_policy patch in kernel by Evilnat
     . Fixed Control FAN payload, avoids loading previous mode by Evilnat
     
 ###### To add:
