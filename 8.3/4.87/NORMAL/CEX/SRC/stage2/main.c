@@ -791,8 +791,6 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				*(uint64_t *)MKA(syscall_table_symbol + 8 * 35) = syscall_not_impl;
 				*(uint64_t *)MKA(syscall_table_symbol + 8 * 36) = syscall_not_impl;
 				*(uint64_t *)MKA(syscall_table_symbol + 8 * 38) = syscall_not_impl;
-				*(uint64_t *)MKA(syscall_table_symbol + 8 * 389) = syscall_not_impl;
-				*(uint64_t *)MKA(syscall_table_symbol + 8 * 409) = syscall_not_impl;
 				*(uint64_t *)MKA(syscall_table_symbol + 8 * 6) = syscall_not_impl;
 				*(uint64_t *)MKA(syscall_table_symbol + 8 * 7) = syscall_not_impl;
 			return SYSCALL8_STEALTH_OK;
