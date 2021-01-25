@@ -730,8 +730,10 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, load_process_hooked, (process_t proce
 			#endif
 
 			// Disable stage2.bin [haxxxen]
-			/*cellFsUtilMount_h("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0, 0, 0, 0, 0);
-			cellFsRename("/dev_blind/sys/stage2.bin", "/dev_blind/sys/stage2.bin.bak");*/
+			// Disabling it prevents issues while we are in Recovery Menu
+			cellFsUtilMount_h("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0, 0, 0, 0, 0);
+			cellFsRename("/dev_blind/sys/stage2.bin", "/dev_blind/sys/stage2.bin.bak");
+			cellFsUtilUmount("/dev_blind", 0, 1);
 			
 			safe_mode = 1;
 		}		
