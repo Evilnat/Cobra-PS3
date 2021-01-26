@@ -11,6 +11,7 @@ QA Flag and reActPSN are not added yet due to freezes.
 This repository will have constant changes.
 
 ###### New features in 8.3:
+    . Failsafe Cobra stage2 (by bguerville/aldo)
     . Restore disabled CFW Syscalls without Reboot just entering to Settings > System Update on XMB (by aldo)
     . Integrated fan controller (to control fan when webMAN is unloaded) (by aldo)
     . Support Photo GUI integration with webMAN MOD (mount games from Photo column) (by aldo/DeViL303)
