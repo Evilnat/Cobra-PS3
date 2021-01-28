@@ -99,7 +99,7 @@ static int listed(int blacklist, char *gameid)
 
 	for (i = 0; i < elements; i++)
 	{
-		if (!strncmp(list+(9*i),gameid, 9))
+		if (!strncmp(list + (9 * i), gameid, 9))
 			return 1; // gameid is in the lists
 	}
 	

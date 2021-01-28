@@ -81,6 +81,3 @@ _start:
 stage2_file:
 	
 .string "/vm/pm0"
-	
-
-	

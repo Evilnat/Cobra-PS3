@@ -115,6 +115,4 @@ static INLINE uint64_t storage_get_flash_device(void)
 	return NOR_FLASH;
 }
 
-
 #endif /* __LV2_STORAGE_H__ */
-

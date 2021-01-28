@@ -99,7 +99,3 @@ int prx_stop_module_with_thread(sys_prx_id_t id, process_t process, uint64_t fla
 	
 	return ppu_thread_join(thread, &exit_code);	
 }
-
-
-
-

@@ -130,7 +130,7 @@ static void dump_process(process_t process)
 		return;
 	}
 	
-	ret = cellFsOpen(path, CELL_FS_O_WRONLY|CELL_FS_O_CREAT|CELL_FS_O_TRUNC, &fd, 0666, NULL, 0);
+	ret = cellFsOpen(path, CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, 0666, NULL, 0);
 	if (ret != 0)
 	{
 		DPRINTF("Cannot create %s\n", path);
@@ -155,7 +155,7 @@ static void dump_process(process_t process)
 	
 	sprintf(path, "/dev_usb000/%s.heap_segment", get_process_name(process));
 	
-	ret = cellFsOpen(path, CELL_FS_O_WRONLY|CELL_FS_O_CREAT|CELL_FS_O_TRUNC, &fd, 0666, NULL, 0);
+	ret = cellFsOpen(path, CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, 0666, NULL, 0);
 	if (ret != 0)
 	{
 		DPRINTF("Cannot create %s\n", path);
@@ -182,7 +182,7 @@ static void dump_process(process_t process)
 
 static void dump_processes(void)
 {
-	uint64_t *proc_list = *(uint64_t **)MKA(TOC+process_rtoc_entry_1);
+	uint64_t *proc_list = *(uint64_t **)MKA(TOC + process_rtoc_entry_1);
 	
 	proc_list = *(uint64_t **)proc_list;
 	proc_list = *(uint64_t **)proc_list;	
@@ -221,7 +221,7 @@ void do_dump_processes_test(void)
 
 LV2_HOOKED_FUNCTION_POSTCALL_6(void, load_module_hook, (char *r3))
 {
-	DPRINTF("Load module: %s (%s)\n", r3, get_process_name(get_current_process())+8);	
+	DPRINTF("Load module: %s (%s)\n", r3, get_process_name(get_current_process()) + 8);	
 }
 
 void do_hook_load_module(void)
@@ -286,7 +286,7 @@ static void read_and_clear_ps2netemu_log(void)
 	
 	DPRINTF("%s\n", buf);
 	
-	if (cellFsOpen("/dev_hdd0/log_file.bin", CELL_FS_O_WRONLY|CELL_FS_O_CREAT|CELL_FS_O_TRUNC, &fd, 0666, NULL, 0) != 0)
+	if (cellFsOpen("/dev_hdd0/log_file.bin", CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, 0666, NULL, 0) != 0)
 	{
 		DPRINTF("open log write failed\n");
 		return;
@@ -321,7 +321,7 @@ static void ps2net_copy_test(uint64_t arg0)
 		goto umount_exit;
 	}
 	
-	if (cellFsOpen("/dev_wflash/ps2emu/ps2_netemu.self", CELL_FS_O_WRONLY|CELL_FS_O_CREAT|CELL_FS_O_TRUNC, &dst, 0666, NULL, 0) != 0)
+	if (cellFsOpen("/dev_wflash/ps2emu/ps2_netemu.self", CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &dst, 0666, NULL, 0) != 0)
 	{
 		DPRINTF("open dst write failed\n");
 		cellFsClose(src);
@@ -431,7 +431,7 @@ static void dump_process_modules_info(process_t process)
 
 static void dump_processes_modules_info(void)
 {
-	uint64_t *proc_list = *(uint64_t **)MKA(TOC+process_rtoc_entry_1);
+	uint64_t *proc_list = *(uint64_t **)MKA(TOC + process_rtoc_entry_1);
 	
 	proc_list = *(uint64_t **)proc_list;
 	proc_list = *(uint64_t **)proc_list;	
@@ -546,11 +546,11 @@ static void pad_test(uint64_t arg0)
 			if (digital & PAD_CTRL_R3)			
 				DPRINTF("R3 pressed\n");			
 			
-			if ((data.button[PAD_BTN_OFFSET_DIGITAL] & (PAD_CTRL_R2|PAD_CTRL_TRIANGLE)) == (PAD_CTRL_R2|PAD_CTRL_TRIANGLE))			
+			if ((data.button[PAD_BTN_OFFSET_DIGITAL] & (PAD_CTRL_R2 | PAD_CTRL_TRIANGLE)) == (PAD_CTRL_R2 | PAD_CTRL_TRIANGLE))			
 				break;			
 		}
 		
-		if (len >= ((PAD_BTN_OFFSET_PS+1)*2))
+		if (len >= ((PAD_BTN_OFFSET_PS + 1) * 2))
 		{
 			uint16_t ps = data.button[PAD_BTN_OFFSET_PS] & ~odata.button[PAD_BTN_OFFSET_PS];
 			

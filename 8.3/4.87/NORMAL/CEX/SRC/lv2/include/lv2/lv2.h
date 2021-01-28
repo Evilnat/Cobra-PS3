@@ -88,7 +88,3 @@ static INLINE void *mfsprg0()
 }
 
 #endif /* __LV2_H__ */
-
-
-
-

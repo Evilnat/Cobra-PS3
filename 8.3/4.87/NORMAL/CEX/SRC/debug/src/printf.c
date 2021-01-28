@@ -984,4 +984,3 @@ int _sprintf(char *buffer, const char *fmt, ...)
 	va_end(args);
 	return i;
 }
-

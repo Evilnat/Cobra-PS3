@@ -110,7 +110,7 @@ int read_cobra_config(void)
 	// Removed. Now condition_ps2softemu has another meaning and it is set automatically in storage_ext if no BC console
 	//condition_ps2softemu = config.ps2softemu;
 	#ifdef  DEBUG
-		DPRINTF("Configuration read.\n+ bd_video_region = %d, + dvd_video_region = %d\n+ spoof_version = %04X, + spoof_revision = %d\n+ fan_speed = %02X\n, + allow_restore_sc = %X\n",
+		DPRINTF("Configuration read.\n+ bd_video_region = %d, + dvd_video_region = %d\n+ spoof_version = %04X, + spoof_revision = %d\n+ fan_speed = %02X, + allow_restore_sc = %X\n",
 				 bd_video_region, dvd_video_region, config.spoof_version, config.spoof_revision, fan_speed, allow_restore_sc);
 	#endif
 	
@@ -123,7 +123,7 @@ int write_cobra_config(void)
 	uint64_t w;
 	int ret = 0;
 	
-	if (cellFsOpen(COBRA_CONFIG_FILE, CELL_FS_O_WRONLY|CELL_FS_O_CREAT|CELL_FS_O_TRUNC, &fd, 0666, NULL, 0) != 0)	
+	if (cellFsOpen(COBRA_CONFIG_FILE, CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, 0666, NULL, 0) != 0)	
 		return ENODEV;	
 	
 	if (cellFsWrite(fd, &config, sizeof(config), &w) != 0)

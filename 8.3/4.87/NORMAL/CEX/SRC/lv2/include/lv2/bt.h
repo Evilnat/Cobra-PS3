@@ -14,4 +14,3 @@ static INLINE int bt_set_controller_info(void *buf, uint16_t vid, uint16_t pid)
 }
 
 #endif /* __LV2_BT_H__ */
-

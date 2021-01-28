@@ -22,6 +22,4 @@ int lv1_stor_wrapper_close(lv1_stor_wrapper_var *stor_var);
 
 int lv1_stor_wrapper_read(lv1_stor_wrapper_var *stor_var, u64 region_id, u64 start_sector, u64 num_sectors, u64 flags, void *data);
 
-
-
 #endif

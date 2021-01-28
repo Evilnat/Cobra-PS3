@@ -92,23 +92,24 @@ uint64_t load_plugin_kernel(char *path)
 	int (* func)(void);
 	uint64_t read;
 
-	if(cellFsStat(path, &stat)==0)
+	if(cellFsStat(path, &stat) == 0)
 	{
-		if(stat.st_size>4)
+		if(stat.st_size > 4)
 		{
-			if(cellFsOpen(path, CELL_FS_O_RDONLY, &file, 0, NULL, 0)==0)
+			if(cellFsOpen(path, CELL_FS_O_RDONLY, &file, 0, NULL, 0) == 0)
 			{
-				void *skprx=alloc(stat.st_size,0x27);
+				void *skprx = alloc(stat.st_size, 0x27);
 				if(skprx)
 				{
-					if(cellFsRead(file, skprx, stat.st_size, &read)==0)
+					if(cellFsRead(file, skprx, stat.st_size, &read) == 0)
 					{	
 						f_desc_t f;
-						f.addr=skprx;
-						f.toc=(void *)MKA(TOC);
-						func=(void *)&f;
+						f.addr = skprx;
+						f.toc = (void *)MKA(TOC);
+						func = (void *)&f;
 						func();
-						uint64_t resident=(uint64_t)skprx;
+						uint64_t resident = (uint64_t)skprx;
+
 						return resident;
 					}
 					else					
@@ -117,6 +118,7 @@ uint64_t load_plugin_kernel(char *path)
 			}
 		}
 	}
+
 	return -1;
 }
 
@@ -269,11 +271,11 @@ void copy_emus(int emu_type)
 
 		for(int i=0; i < 2; i++)
 		{
-			if(cellFsOpen(ps2_files[i], CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &dst, 0666, NULL, 0)==0)
+			if(cellFsOpen(ps2_files[i], CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &dst, 0666, NULL, 0) == 0)
 			{
 				cellFsWrite(dst, buf, size, &size);
 				cellFsClose(dst);
-				size=4;
+				size = 4;
 			}
 		}
 		
@@ -301,6 +303,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, post_cellFsUtilMount, (const char *bl
 		}
 			
 	}
+	
 	return 0;
 }
 

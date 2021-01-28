@@ -30,4 +30,3 @@ int pad_get_data(pad_data *data)
 	
 	return ret;
 }
-

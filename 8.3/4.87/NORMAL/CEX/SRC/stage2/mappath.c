@@ -56,8 +56,8 @@ int map_path(char *oldpath, char *newpath, uint32_t flags)
 			{
 				if (newpath && strlen(newpath))
 				{
-					strncpy(map_table[i].newpath, newpath, MAX_PATH-1);	
-					map_table[i].newpath[MAX_PATH-1] = 0;
+					strncpy(map_table[i].newpath, newpath, MAX_PATH - 1);	
+					map_table[i].newpath[MAX_PATH - 1] = 0;
 					map_table[i].newpath_len = strlen(newpath);
 					map_table[i].flags = (map_table[i].flags&FLAG_COPY) | (flags&(~FLAG_COPY));
 				}
@@ -92,7 +92,7 @@ int map_path(char *oldpath, char *newpath, uint32_t flags)
 		if (flags & FLAG_COPY)
 		{
 			int len = strlen(oldpath);
-			map_table[firstfree].oldpath = alloc(len+1, 0x27);
+			map_table[firstfree].oldpath = alloc(len + 1, 0x27);
 			strncpy(map_table[firstfree].oldpath, oldpath, len);
 			map_table[firstfree].oldpath[len] = 0;
 		}
@@ -100,8 +100,8 @@ int map_path(char *oldpath, char *newpath, uint32_t flags)
 			map_table[firstfree].oldpath = oldpath;		
 		
 		map_table[firstfree].newpath = alloc(MAX_PATH, 0x27);
-		strncpy(map_table[firstfree].newpath, newpath, MAX_PATH-1);	
-		map_table[firstfree].newpath[MAX_PATH-1] = 0;
+		strncpy(map_table[firstfree].newpath, newpath, MAX_PATH - 1);	
+		map_table[firstfree].newpath[MAX_PATH - 1] = 0;
 		map_table[firstfree].newpath_len = strlen(newpath);
 	}
 	

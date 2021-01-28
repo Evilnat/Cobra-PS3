@@ -2061,6 +2061,4 @@ uint64_t call_hooked_function(void *func, uint64_t a1, uint64_t a2, uint64_t a3,
 #define call_hooked_function_6(func, a1, a2, a3, a4, a5, a6) call_hooked_function(func, a1, a2, a3, a4, a5, a6, 0)
 #define call_hooked_function_7(func, a1, a2, a3, a4, a5, a6, a7) call_hooked_function(func, a1, a2, a3, a4, a5, a6, a7)
 
-
 #endif /* __LV2_PATCH_H__ */
-

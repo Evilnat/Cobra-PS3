@@ -42,6 +42,4 @@ LV2_EXPORT void *lv2_memchr(const void *s, int c, size_t n);
 #define memcmp		lv2_memcmp
 #define memchr		lv2_memchr
 
-
-
 #endif /* __LV2_LIBC_H__ */

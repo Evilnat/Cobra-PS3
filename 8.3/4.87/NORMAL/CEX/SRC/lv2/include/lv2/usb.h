@@ -90,6 +90,4 @@ LV2_EXPORT int cellUsbdClosePipe(int pipe_id);
 LV2_EXPORT int cellUsbdControlTransfer(int pipe_id, UsbDeviceRequest *dr, void *buf, CellUsbdDoneCallback done_cb, void *arg);
 LV2_EXPORT int cellUsbdBulkTransfer(int pipe_id, void *buf, int len, CellUsbdDoneCallback done_cb, void *arg);
 
-
 #endif /* __LV2_USB_H__ */
-

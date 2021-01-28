@@ -26,6 +26,3 @@ static INLINE uint64_t get_ticks(void)
 time_t get_time_seconds(void);
 
 #endif /* __LV2_TIME_H__ */
-
-
-

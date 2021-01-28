@@ -798,5 +798,4 @@ static INLINE void set_syscall_handler(void *syscall_handler)
 	patch_call(syscall_call_offset, syscall_handler);
 }
 
-
 #endif /* __LV2_SYSCALL_H__ */

@@ -21,4 +21,3 @@
 #define FIELD(s, i) (S2I(s) + (i))
 
 #endif /* __LV1_H__ */
-

@@ -164,6 +164,3 @@ call_hooked_function:
 	ld	%rtoc, 0x28(%sp)
 	blr
 	.previous
-
-
-	

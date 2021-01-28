@@ -94,4 +94,3 @@ LV2_EXPORT int event_queue_receive(event_queue_t event_queue, event_t *event, ui
 LV2_EXPORT int event_queue_tryreceive(event_queue_t event_queue, event_t *event_array, int size, int *number);
 
 #endif /* __LV2_SYNCHRONIZATION_H__ */
-

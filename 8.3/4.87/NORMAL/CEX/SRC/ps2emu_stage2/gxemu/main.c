@@ -29,26 +29,26 @@ static uint8_t condition_optical = 0;
 
 static Patch patches[] =
 {
-	{ ps2_disc_auth_caller_symbol,   LI(3, 0), &condition_true },
-	{ ps2_disc_auth_caller_symbol+4, BLR, &condition_true },
+	{ ps2_disc_auth_caller_symbol, LI(3, 0), &condition_true },
+	{ ps2_disc_auth_caller_symbol + 4, BLR, &condition_true },
 };
 
 #define N_PATCHES	(sizeof(patches) / sizeof(Patch))
 
 static INLINE void *get_data_buffer(void)
 {
-	return (void *) *(uint64_t *)(*(uint64_t *)((TOC+DATA_TOC_OFFSET)));
+	return (void *) *(uint64_t *)(*(uint64_t *)((TOC + DATA_TOC_OFFSET)));
 }
 
 static INLINE uint8_t *get_buffer_from_lpar(uint64_t lpar)
 {
-	uint64_t lpar1 = *(uint64_t *)(*(uint64_t *)((TOC+LPAR_TOC_OFFSET)));
-	uint64_t lpar2 = lpar1+0x1000;
-	uint64_t lpar3 = lpar1+0x400;
+	uint64_t lpar1 = *(uint64_t *)(*(uint64_t *)((TOC + LPAR_TOC_OFFSET)));
+	uint64_t lpar2 = lpar1 + 0x1000;
+	uint64_t lpar3 = lpar1 + 0x400;
 	
 	uint8_t *out1 = get_data_buffer();
-	uint8_t *out2 = out1+0x1000;
-	uint8_t *out3 = out1+0x400;
+	uint8_t *out2 = out1 + 0x1000;
+	uint8_t *out3 = out1 + 0x400;
 	
 	if (lpar == lpar1)	
 		return out1;	
@@ -59,13 +59,13 @@ static INLINE uint8_t *get_buffer_from_lpar(uint64_t lpar)
 	
 	DPRINTF("Warning: cannot find buffer for lpar: 0x%lx, using default logic!!!\n", lpar);
 	dump_stack_trace2(16);
-	return (lpar-lpar1)+out1;
+	return (lpar-lpar1) + out1;
 }
 
 static INLINE uint64_t get_file_size(int fd)
 {
-	uint64_t *structure = (uint64_t *) ((0x1270*fd) + *(uint64_t *)(TOC+FILESZ_TOC_OFFSET));
-	return structure[0x178/8];
+	uint64_t *structure = (uint64_t *) ((0x1270 * fd) + *(uint64_t *)(TOC + FILESZ_TOC_OFFSET));
+	return structure[0x178 / 8];
 }
 
 #include "common.c"
@@ -98,7 +98,7 @@ PS2EMU_HOOKED_FUNCTION_COND_POSTCALL_1(int, emu_cdvd_send_device_command, (uint6
 	}
 	
 	uint32_t *psize = get_data_buffer();	
-	*psize = iso_size_sectors-1;
+	*psize = iso_size_sectors - 1;
 
 	return 0;
 }
@@ -165,7 +165,7 @@ static INLINE void apply_patches(void)
 	{
 		if (*patches[i].condition)
 		{		
-			uint32_t *addr= (uint32_t *)(uint64_t)patches[i].address;
+			uint32_t *addr = (uint32_t *)(uint64_t)patches[i].address;
 			*addr = patches[i].data;
 			clear_icache(addr, 4);			
 		}		

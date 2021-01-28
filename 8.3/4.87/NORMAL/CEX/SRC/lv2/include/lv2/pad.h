@@ -49,4 +49,3 @@ typedef struct _pad_data
 int pad_get_data(pad_data *data);
 
 #endif /* __LV2_PAD_H__ */
-

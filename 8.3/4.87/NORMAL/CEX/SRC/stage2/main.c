@@ -76,9 +76,7 @@
 #define MAKE_VERSION(cobra, fw, type) ((cobra & 0xFF) | ((fw & 0xffff) << 8) | ((type & 0x1) << 24))
 #define N_KERNEL_PATCHES	(sizeof(kernel_patches) / sizeof(Patch))
 
-//uint8_t allow_restore_sc = 1;
 //uint8_t auto_dev_blind = 1;
-//extern uint8_t photo_gui;
 
 typedef struct
 {
@@ -745,10 +743,6 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				//----------
 				//MISC
 				//----------
-				/*case PS3MAPI_OPCODE_AUTO_DEV_BLIND:
-					auto_dev_blind = (uint8_t)param2;
-					return auto_dev_blind;
-				break;*/
 				case PS3MAPI_OPCODE_PHOTO_GUI:
 					photo_gui = (uint8_t)param2;
 					return photo_gui;

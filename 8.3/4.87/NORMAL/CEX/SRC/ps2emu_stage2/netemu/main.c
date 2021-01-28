@@ -8,7 +8,7 @@
 #include <ps2emu/symbols.h>
 
 #ifdef FIRMWARE_CEX
-	#define EXTENDED_DATA	(0x821000+0x2953478)
+	#define EXTENDED_DATA	(0x821000 + 0x2953478)
 #endif
 
 #define CONFIG_FILE	"/tmp/cfg.bin"
@@ -189,15 +189,15 @@ PS2EMU_PATCHED_FUNCTION(int, open_config, (int unk, char *path))
 	if(vars->iso_file[0])
 	{
 		strcpy(vars->cfg_suffix, ".CONFIG");
-		strcpy(vars->cfg_file, vars->iso_file+10);
-		strcpy(vars->cfg_file+strlen(vars->iso_file)-10, vars->cfg_suffix);
-		int fd=ufs_open(0, vars->cfg_file);
+		strcpy(vars->cfg_file, vars->iso_file + 10);
+		strcpy(vars->cfg_file + strlen(vars->iso_file) - 10, vars->cfg_suffix);
+		int fd = ufs_open(0, vars->cfg_file);
 
-		if(fd>=0)
+		if(fd >= 0)
 		{
 			ufs_stat stat;
 			ufs_fstat(fd, &stat);
-			vars->config_size=stat.st_size;
+			vars->config_size = stat.st_size;
 		}
 
 		return fd;
@@ -210,7 +210,7 @@ PS2EMU_PATCHED_FUNCTION(int, read_config_size, (int fd, uint64_t offset, uint64_
 {
 	if(vars->iso_file[0])
 	{		
-		*config_size=vars->config_size;
+		*config_size = vars->config_size;
 		return size;
 	}
 

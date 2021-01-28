@@ -13,4 +13,3 @@ uint64_t spin_lock_irqsave(void);
 void spin_unlock_irqrestore(uint64_t restore);
 
 #endif /* __LV2_INTERRUPT_H__ */
-

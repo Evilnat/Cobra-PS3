@@ -27,4 +27,3 @@ int _vsnprintf(char *str, size_t size, const char *format, va_list args);
 int _sprintf(char *buffer, const char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
 
 #endif
-

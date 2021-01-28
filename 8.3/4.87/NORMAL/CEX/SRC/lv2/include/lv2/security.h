@@ -68,5 +68,3 @@ static void syscon_brick_experiment(void)
 }*/
 
 #endif /* __LV2_SECURITY_H__ */
-
-

@@ -126,4 +126,3 @@ LV2_EXPORT int open_fs_object(void *unk, char *path, void **fs_object, void **un
 LV2_EXPORT int close_fs_object(void *unk, fs_object_handle_t handle);
 
 #endif /* __LV2_IO_H__ */
-

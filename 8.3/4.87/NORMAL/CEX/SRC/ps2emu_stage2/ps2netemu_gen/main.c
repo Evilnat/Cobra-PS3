@@ -133,8 +133,8 @@ static void make_long_jump(void *addr, uint64_t to)
 {
 	uint32_t *ins = (uint32_t *)addr;
 	
-	ins[0] = LIS(0, ((to>>16)&0xFFFF));
-	ins[1] = ORI(0, 0, (to&0xFFFF));
+	ins[0] = LIS(0, ((to >> 16) & 0xFFFF));
+	ins[1] = ORI(0, 0, (to & 0xFFFF));
 	ins[2] = MTCTR(0);
 	ins[3] = BCTR;
 	
@@ -150,28 +150,26 @@ static void make_long_call_with_inst(void *addr, uint64_t to, uint32_t *inst)
 	
 	ins_ps3 = (uint8_t *)addr - ps2_netemu;
 	
-	ins[0] = LIS(0, ((to>>16)&0xFFFF));
-	ins[1] = ORI(0, 0, (to&0xFFFF));
+	ins[0] = LIS(0, ((to >> 16) & 0xFFFF));
+	ins[1] = ORI(0, 0, (to & 0xFFFF));
 	ins[2] = MTCTR(0);
 	
 	for (i = 0, j = 3; i < 4; i++, j++)
 	{
 		if (swap32(inst[i]) == MFLR(0))
 		{
-			ins[j] = LIS(0, (((uint64_t)(ins_ps3+(9*4))>>16)&0xFFFF));
+			ins[j] = LIS(0, (((uint64_t)(ins_ps3 + (9 * 4)) >> 16) & 0xFFFF));
 			j++;
-			ins[j] = ORI(0, 0, ((uint64_t)(ins_ps3+(9*4))&0xFFFF));
+			ins[j] = ORI(0, 0, ((uint64_t)(ins_ps3 + (9 * 4)) & 0xFFFF));
 		}
 		else if (swap32(inst[i]) == MFLR(11))
 		{			
-			ins[j] = LIS(11, (((uint64_t)(ins_ps3+(9*4))>>16)&0xFFFF));
+			ins[j] = LIS(11, (((uint64_t)(ins_ps3+(9 * 4)) >> 16) & 0xFFFF));
 			j++;
-			ins[j] = ORI(11, 11, ((uint64_t)(ins_ps3+(9*4))&0xFFFF));
+			ins[j] = ORI(11, 11, ((uint64_t)(ins_ps3 + (9 * 4)) & 0xFFFF));
 		}
-		else
-		{			
-			ins[j] = swap32(inst[i]);
-		}
+		else					
+			ins[j] = swap32(inst[i]);		
 		
 		if (i == 3 && j == 6)		
 			ins[7] = NOP;		
@@ -219,9 +217,9 @@ static void hook_function_with_cond_postcall(uint64_t func_addr, void *newfunc, 
 	
 	f_desc_t *f = (f_desc_t *)newfunc;
 	uint32_t *inst = (uint32_t *)(ps2_netemu+func_addr);
-	uint32_t *orig_call = &((uint32_t *)(ps2_netemu+swap64(f->addr)))[19+(nparams*2)]; // WARNING: relies on HOOKED_FUNCTION_COND_POST_CALL_N not being changed	
+	uint32_t *orig_call = &((uint32_t *)(ps2_netemu + swap64(f->addr)))[19 + (nparams * 2)]; // WARNING: relies on HOOKED_FUNCTION_COND_POST_CALL_N not being changed	
 	
-	make_long_call_with_inst(&orig_call[0], func_addr+16, inst);
+	make_long_call_with_inst(&orig_call[0], func_addr + 16, inst);
 	change_function(func_addr, newfunc);
 }
 
@@ -233,7 +231,7 @@ static void get_func_name(char *line, char *name)
 	
 	*name = 0;
 	
-	for (int i = len-1; i >= 0; i--)
+	for (int i = len - 1; i >= 0; i--)
 	{
 		if (in_name)
 		{
@@ -253,7 +251,7 @@ static void get_func_name(char *line, char *name)
 		}
 	}
 	
-	len = (int)(end-begin)+1;
+	len = (int)(end-begin) + 1;
 	
 	if (begin && end)
 	{
@@ -270,9 +268,9 @@ static uint64_t get_func_address(char *line)
 	
 	for (int i = 1; i < len; i++)
 	{
-		if (line[i-1] == '0' && line[i] == 'x')
+		if (line[i - 1] == '0' && line[i] == 'x')
 		{
-			sscanf(line+i-1, "0x%lx", (long unsigned int*)&address);
+			sscanf(line + i-1, "0x%lx", (long unsigned int*)&address);
 			break;
 		}
 	}
@@ -347,7 +345,7 @@ static int patch_emu(char *payload_map_file)
 				hook_function_with_cond_postcall(ufs_open_symbol, ps2_netemu+addr, 2);
 			}*/
 			//else 
-				if (strcmp(name, "cdvd_read_patched") == 0)
+			if (strcmp(name, "cdvd_read_patched") == 0)
 			{
 				addr = get_func_address(line);
 				
@@ -373,7 +371,7 @@ static int patch_emu(char *payload_map_file)
 				}
 				
 				printf("read_iso_size found at %lx\n", (unsigned long)addr);
-				patch_call(read_iso_size_call, ps2_netemu+addr);
+				patch_call(read_iso_size_call, ps2_netemu + addr);
 			}
 			else if (strcmp(name, "fstat_iso_patched") == 0)
 			{
@@ -387,7 +385,7 @@ static int patch_emu(char *payload_map_file)
 				}
 				
 				printf("fstat_iso_patched found at %lx\n", (unsigned long)addr);
-				patch_call(fstat_iso_call, ps2_netemu+addr);
+				patch_call(fstat_iso_call, ps2_netemu + addr);
 			}
 			else if (strcmp(name, "open_config") == 0)
 			{
@@ -401,7 +399,7 @@ static int patch_emu(char *payload_map_file)
 				}
 				
 				printf("open_config found at %lx\n", (unsigned long)addr);
-				patch_call(open_config_call, ps2_netemu+addr);
+				patch_call(open_config_call, ps2_netemu + addr);
 			}
 			else if (strcmp(name, "read_config_size") == 0)
 			{
@@ -415,7 +413,7 @@ static int patch_emu(char *payload_map_file)
 				}
 				
 				printf("read_config_size found at %lx\n", (unsigned long)addr);
-				patch_call(read_config_size_call, ps2_netemu+addr);
+				patch_call(read_config_size_call, ps2_netemu + addr);
 			}
 			else if (strcmp(name, "decrypt_config") == 0)
 			{
@@ -429,7 +427,7 @@ static int patch_emu(char *payload_map_file)
 				}
 				
 				printf("decrypt_config found at %lx\n", (unsigned long)addr);
-				patch_call(decrypt_config_call, ps2_netemu+addr);
+				patch_call(decrypt_config_call, ps2_netemu + addr);
 			}
 			else if (strcmp(name, "open_iso") == 0)
 			{
@@ -443,8 +441,8 @@ static int patch_emu(char *payload_map_file)
 				}
 				
 				printf("open_iso found at %lx\n", (unsigned long)addr);
-				patch_call(open_iso_call1, ps2_netemu+addr);
-				patch_call(open_iso_call2, ps2_netemu+addr);
+				patch_call(open_iso_call1, ps2_netemu + addr);
+				patch_call(open_iso_call2, ps2_netemu + addr);
 			}
 		}
 		else
@@ -519,12 +517,12 @@ static void patch_self(char *src, char *dst, uint32_t sh_offset, uint32_t code_a
 		
 		if (swap64(shdr->sh_addr) == data_address)
 		{
-			shdr->sh_size = swap64(swap64(shdr->sh_size)+ADDITIONAL_DATA_SIZE);
+			shdr->sh_size = swap64(swap64(shdr->sh_size) + ADDITIONAL_DATA_SIZE);
 			patches++;
 		}
 		else if (swap64(shdr->sh_addr) == code_address)
 		{
-			shdr->sh_size = swap64(swap64(shdr->sh_size)+ADDITIONAL_CODE_SIZE);
+			shdr->sh_size = swap64(swap64(shdr->sh_size) + ADDITIONAL_CODE_SIZE);
 			patches++;
 		}
 		

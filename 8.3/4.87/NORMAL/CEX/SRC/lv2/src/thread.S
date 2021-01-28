@@ -29,4 +29,3 @@ get_current_thread_name:
 
 	mfsprg0 %r3
 	blr
-

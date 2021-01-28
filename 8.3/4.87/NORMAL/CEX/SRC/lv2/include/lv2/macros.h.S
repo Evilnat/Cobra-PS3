@@ -61,4 +61,3 @@
 	.previous;
 
 #endif /* __MACRO_H_S__ */
-

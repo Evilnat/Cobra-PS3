@@ -67,5 +67,3 @@ int lv1_stor_wrapper_read(lv1_stor_wrapper_var *stor_var, u64 region_id, u64 sta
 
 	return 0;
 }
-
-

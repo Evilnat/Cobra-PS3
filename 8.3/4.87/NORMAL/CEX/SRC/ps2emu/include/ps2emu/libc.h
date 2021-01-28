@@ -24,5 +24,4 @@ PS2EMU_EXPORT void *ps2emu_memset(void *s, int c, size_t n);
 #define malloc		ps2emu_malloc
 #define free		ps2emu_free
 
-
 #endif /* _PS2EMU_LIBC_H__ */

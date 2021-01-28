@@ -33,8 +33,8 @@ static uint8_t condition_ps2_cdda = 0;
 
 static Patch patches[] =
 {
-	{ ps2_disc_auth_caller_symbol,   LI(3, 0), &condition_true },
-	{ ps2_disc_auth_caller_symbol+4, BLR, &condition_true },
+	{ ps2_disc_auth_caller_symbol, LI(3, 0), &condition_true },
+	{ ps2_disc_auth_caller_symbol + 4, BLR, &condition_true },
 	{ DISC_TYPE_OFFSET,	LI(25, 0x13), &condition_ps2_cdda }, /* hack for ps2 cdda, SCECdPS2CD -> SCECdPS2CDDA */
 };
 
@@ -48,16 +48,16 @@ static INLINE void *get_data_buffer(void)
 
 static INLINE uint8_t *get_buffer_from_lpar(uint64_t lpar)
 {
-	uint64_t *p = (uint64_t *) *(uint64_t *)(TOC+DATA_TOC_OFFSET);
-	uint64_t lpar1 = p[LPAR_SUBTOC_OFFSET/8];
-	uint64_t lpar2 = lpar1+0x1000;
-	uint64_t lpar3 = lpar1+0x400;
-	uint64_t lpar4 = lpar1+0x10000;
+	uint64_t *p = (uint64_t *) *(uint64_t *)(TOC + DATA_TOC_OFFSET);
+	uint64_t lpar1 = p[LPAR_SUBTOC_OFFSET / 8];
+	uint64_t lpar2 = lpar1 + 0x1000;
+	uint64_t lpar3 = lpar1 + 0x400;
+	uint64_t lpar4 = lpar1 + 0x10000;
 	
 	uint8_t *out1 = get_data_buffer();
-	uint8_t *out2 = out1+0x1000;
-	uint8_t *out3 = out1+0x400;
-	uint8_t *out4 = out1+0x10000;
+	uint8_t *out2 = out1 + 0x1000;
+	uint8_t *out3 = out1 + 0x400;
+	uint8_t *out4 = out1 + 0x10000;
 	
 	if (lpar == lpar1)	
 		return out1;	
@@ -73,13 +73,13 @@ static INLINE uint8_t *get_buffer_from_lpar(uint64_t lpar)
 	
 	DPRINTF("Warning: cannot find buffer for lpar: 0x%lx, using default logic (lpar1=0x%lx)!!!\n", lpar, lpar1);
 	dump_stack_trace2(16);
-	return (lpar-lpar1)+out1;
+	return (lpar - lpar1) + out1;
 }
 
 static INLINE uint64_t get_file_size(int fd)
 {
-	uint64_t *structure = (uint64_t *) ((0x1270*fd) + *(uint64_t *)(TOC+FILESZ_TOC_OFFSET));
-	return structure[0x178/8];
+	uint64_t *structure = (uint64_t *) ((0x1270 * fd) + *(uint64_t *)(TOC + FILESZ_TOC_OFFSET));
+	return structure[0x178 / 8];
 }
 
 #include "common.c"
@@ -144,8 +144,8 @@ static INLINE void apply_patches(void)
 		uint32_t *inst = (uint32_t *)DISC_SIZE_OFFSET;
 		
 		inst[0] = LI(10, 0);
-		inst[1] = ORIS(10, 10, iso_size_sectors>>16);
-		inst[2] = ORI(10, 10, iso_size_sectors&0xFFFF);
+		inst[1] = ORIS(10, 10, iso_size_sectors >> 16);
+		inst[2] = ORI(10, 10, iso_size_sectors & 0xFFFF);
 		clear_icache(inst, 12);	
 		
 		if (device_type == DEVICE_TYPE_PS2_CD && num_tracks > 1)
@@ -173,8 +173,6 @@ static INLINE void apply_patches(void)
 		}		
 	}	
 }
-
-// 0x02200000
 
 int main(void)
 {

@@ -45,5 +45,4 @@ LV2_EXPORT int open_shared_kernel_object(void *object_table, uint32_t uid, void 
 /* Close the kernel object handle returned by create/open kernel_object functions */
 LV2_EXPORT int close_kernel_object_handle(void *object_table, object_handle_t handle);
 
-
 #endif /* __LV2_OBJECT_H__ */
