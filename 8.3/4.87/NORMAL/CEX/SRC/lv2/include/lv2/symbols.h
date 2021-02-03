@@ -230,7 +230,7 @@
 
 #define sm_get_temperature_patch 					    0xC6A8
 #define sm_get_fan_policy_patch 						0x9E38
-#define sm_set_fan_policy_patch 						0xA3FC
+#define sm_set_fan_policy_patch 						0xA334
 
 /* Rtoc entries */
 
