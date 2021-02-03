@@ -111,7 +111,7 @@ static Patch kernel_patches[] =
 	{ ode_patch, LI(R3, 0) },
 	{ ode_patch + 4, STD(R3, 0, R9) },
 
-	//Fan patches
+	// Fan patches
 	{ sm_get_temperature_patch, LI(R3, 0) },
 	{ sm_get_fan_policy_patch, LI(R3, 1) },
 	{ sm_set_fan_policy_patch, LI(R3, 1) },
@@ -437,8 +437,6 @@ void create_syscalls(void)
 	create_syscall2(10, sys_cfw_lv1_call);
 	create_syscall2(11, sys_cfw_lv1_peek);
 	create_syscall2(15, sys_cfw_lv2_func);
-	create_syscall2(389, sm_set_fan_policy_sc);
-	create_syscall2(409, sm_get_fan_policy_sc);
 }
 
 static inline void ps3mapi_unhook_all(void)
@@ -1033,6 +1031,7 @@ int main(void)
 	storage_ext_patches();
 	region_patches();
 	permissions_patches();
+	fan_patches();
 	
 #ifdef DEBUG
 	// "Laboratory"
