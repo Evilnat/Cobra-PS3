@@ -178,8 +178,6 @@
 #define aescbccfb_dec_symbol							0x2CCB7C
 #define aescbccfb_enc_symbol							0x2CC92C
 
-#define sysmem_obj										0x474C38
-
 #define ss_params_get_update_status_symbol				0x50AB4
 
 #define sm_get_temperature_symbol						0x2635A8

@@ -14,6 +14,7 @@
 #include <lv2/synchronization.h>
 #include <lv2/modules.h>
 #include <lv2/io.h>
+#include <lv2/fan.h>
 #include <lv2/time.h>
 #include <lv2/security.h>
 #include <lv2/error.h>

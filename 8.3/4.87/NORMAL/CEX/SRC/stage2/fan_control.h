@@ -6,7 +6,6 @@
 extern uint8_t fan_control_running;
 extern uint8_t fan_speed;
 
-int sm_set_fan_policy(uint8_t unk, uint8_t _fan_mode, uint8_t fan_speed);
 int sm_get_fan_speed(void);
 void do_fan_control();
 void load_fan_control(void);

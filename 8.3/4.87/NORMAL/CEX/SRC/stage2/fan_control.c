@@ -5,23 +5,12 @@
 #include <lv2/memory.h>
 #include <lv2/thread.h>
 #include <lv2/time.h>
+#include <lv2/fan.h>
 #include "common.h"
 #include "fan_control.h"
 
 uint8_t fan_control_running = 0;
 uint8_t fan_speed;
-
-int sm_set_fan_policy(uint8_t unk, uint8_t _fan_mode, uint8_t _fan_speed)
-{
-	f_desc_t f;
-	f.addr = (void *)MKA(sm_set_fan_policy_symbol);
-	f.toc  = (void *)MKA(TOC);
-	int(*func)(uint64_t, uint8_t,uint8_t,uint8_t) = (void *)&f;
-
-	int ret = func(MKA(sysmem_obj), unk, _fan_mode, _fan_speed);
-
-	return ret;
-}
 
 int sm_get_fan_speed(void)
 {
@@ -30,24 +19,9 @@ int sm_get_fan_speed(void)
 	uint8_t _fan_speed;
 	uint8_t unk;
 
-	f_desc_t f;
-	f.addr = (void*)MKA(sm_get_fan_policy_symbol);
-	f.toc  = (void*)MKA(TOC);
-	int(*func)(uint64_t, uint8_t, uint8_t *, uint8_t *, uint8_t *, uint8_t *, uint64_t) = (void*)&f;
-
-	func(MKA(sysmem_obj), 0, &st, &mode, &_fan_speed, &unk, 10000000);
+	sm_get_fan_policy(0, &st, &mode, &_fan_speed, &unk);
 
 	return _fan_speed;
-}
-
-static void get_temperature(uint32_t id, uint32_t *temp)
-{
-	f_desc_t f;
-	f.addr = (void*)MKA(sm_get_temperature_symbol);
-	f.toc  = (void*)MKA(TOC);
-	int(*func)(uint64_t, uint32_t, uint32_t *, uint64_t) = (void*)&f;
-	func(MKA(sysmem_obj), id, temp, 1000000);
-	*temp >>= 24; // return °C
 }
 
 static void fan_control(uint64_t arg0)
@@ -64,8 +38,9 @@ static void fan_control(uint64_t arg0)
 		if(fan_control_running) // Avoids loading previous mode [Evilnat]
 		{
 			t_cpu = t_rsx = 0;
-			get_temperature(0, &t_cpu);
-			get_temperature(1, &t_rsx);
+			
+			sm_get_temperature(0, &t_cpu);
+			sm_get_temperature(1, &t_rsx);
 
 			if(t_rsx > t_cpu) 
 				t_cpu = t_rsx;
