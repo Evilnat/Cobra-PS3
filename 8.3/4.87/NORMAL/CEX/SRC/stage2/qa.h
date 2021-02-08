@@ -17,7 +17,6 @@
 #define HV_PAGE_SIZE		0x0C	
 
 #define TOKEN_SIZE			0x50
-#define IDPS_SIZE			0x10
 
 #define QA_FLAG_OFFSET 		0x48C0A
 
