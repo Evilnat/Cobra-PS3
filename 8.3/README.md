@@ -6,7 +6,7 @@ Thanks to Cobra team, Joonie, Habib, Haxxxen, Alexander, Dean, KW, Nzv, Bguervil
 
 WIP of Cobra 8.3 from @aldostools.
 
-QA Flag and reActPSN are not added yet due to freezes.
+reActPSN are not added yet due to freezes.
 
 This repository will have constant changes.
 
@@ -27,8 +27,8 @@ This repository will have constant changes.
     . Fixed Control FAN payload, avoids loading previous mode (by Evilnat)
     . Disable stage2.bin while Recovery Menu is loaded (by haxxxen)
     . Fixed max FAN speed after shutdown (by Evilnat)
+    . Improved Habib's QA flags code imported by aldostools (by Evilnat)
     
 ###### To do:
     . reActPSN
-    . QA flag (Done, uploading quickly)
     . Improve entire code
