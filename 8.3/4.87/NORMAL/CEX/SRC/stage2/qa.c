@@ -274,13 +274,6 @@ int set_qa_flag(uint8_t value)
 		memcpy(&value, (void *)0x8000000000000000ULL, 8);
 	}
 
-	uint64_t data;
-	for(u16 n = 0; n < 0xA0 ; n += 8)
-	{
-		data = lv1_peekd2(n);
-		DPRINTF("PEEK FROM HV: Offset: %X %016lX\n", n, data);
-	}
-
 	if(lv1_write_virtual_uart(10, vuart_lpar_addr, len, &nwritten) != 0)
 	{
 		restore_patches();
