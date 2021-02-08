@@ -26,8 +26,9 @@ This repository will have constant changes.
     . Added sm_set_fan_policy patch in kernel (by Evilnat)
     . Fixed Control FAN payload, avoids loading previous mode (by Evilnat)
     . Disable stage2.bin while Recovery Menu is loaded (by haxxxen)
+    . Fixed max FAN speed after shutdown (by Evilnat)
     
 ###### To do:
     . reActPSN
-    . QA flag
+    . QA flag (Done, uploading quickly)
     . Improve entire code
