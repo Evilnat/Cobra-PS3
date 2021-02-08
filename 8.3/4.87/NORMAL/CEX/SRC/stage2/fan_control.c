@@ -9,6 +9,9 @@
 #include "common.h"
 #include "fan_control.h"
 
+#define SYS_SHUTDOWN			0x0100
+#define SYS_SHUTDOWN2 			0x1100
+
 uint8_t fan_control_running = 0;
 uint8_t fan_speed;
 
@@ -90,17 +93,32 @@ void load_fan_control(void)
 LV2_HOOKED_FUNCTION_COND_POSTCALL_3(int, sm_set_fan_policy_sc, (uint8_t unk, uint8_t _fan_mode, uint8_t _fan_speed))
 {
 	fan_control_running = 0; // disable internal fan control if fan speed is set manually via syscall 389
+
+	return DO_POSTCALL;
+}
+
+LV2_HOOKED_FUNCTION_COND_POSTCALL_3(int, sys_shutdown, (uint16_t op, const void *buf, uint64_t size))
+{
+	// Avoids max FAN speed after a shutdown by Evilnat
+	if(op == SYS_SHUTDOWN || op == SYS_SHUTDOWN2)
+	{		
+		DPRINTF("Shutdown executed, resetting FAN policy\n");
+		sm_set_fan_policy(0, 1, 0);
+	}
+
 	return DO_POSTCALL;
 }
 
 void fan_patches(void)
 {
-	hook_function_with_cond_postcall(get_syscall_address(389), sm_set_fan_policy_sc, 3);
+	hook_function_with_cond_postcall(get_syscall_address(SYS_SM_SET_FAN_POLICY), sm_set_fan_policy_sc, 3);
+	hook_function_with_cond_postcall(get_syscall_address(SYS_SM_SHUTDOWN), sys_shutdown, 3);
 }
 
 void unhook_all_fan_patches(void)
 {
 	suspend_intr();
-	unhook_function_with_precall(get_syscall_address(389), sm_set_fan_policy_sc, 3);
+	unhook_function_with_precall(get_syscall_address(SYS_SM_SET_FAN_POLICY), sm_set_fan_policy_sc, 3);
+	unhook_function_with_precall(get_syscall_address(SYS_SM_SHUTDOWN), sys_shutdown, 3);
 	resume_intr();
 }
