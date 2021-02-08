@@ -37,6 +37,7 @@
 #include "ps3mapi_core.h"
 #include "fan_control.h"
 #include "homebrew_blocker.h"
+#include "qa.h"
 
 // Format of version:
 // byte 0, 7 MS bits -> reserved
@@ -757,7 +758,19 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				case PS3MAPI_OPCODE_GET_FAN_SPEED:
 					return sm_get_fan_speed();
 				break;
-				
+
+				//----------
+				//QA
+				//----------
+				case PS3MAPI_OPCODE_CHECK_QA:
+					return read_qa_flag();
+				break;
+				case PS3MAPI_OPCODE_ENABLE_QA:
+					return set_qa_flag(1);
+				break;
+				case PS3MAPI_OPCODE_DISABLE_QA:
+					return set_qa_flag(0);
+				break;
 				//----------
 				//DEFAULT
 				//----------

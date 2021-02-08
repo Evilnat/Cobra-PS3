@@ -2,6 +2,7 @@
 #define __STORAGE_EXT_H__
 
 #include <lv2/io.h>
+#include <lv2/storage.h>
 #include <lv2/synchronization.h>
 #include "scsi.h"
 
@@ -52,6 +53,8 @@ typedef struct
 	int disc_emulation;
 	char firstfile_path[MAX_PATH];	
 } __attribute__((packed)) sys_emu_state_t;
+
+int emu_storage_read(device_handle_t device_handle, uint64_t unk, uint64_t start_sector, uint32_t sector_count, void *buf, uint32_t *nread, uint64_t unk2);
 
 int sys_storage_ext_get_disc_type(unsigned int *real_disctype, unsigned int *effective_disctype, unsigned int *fake_disctype);
 int sys_storage_ext_read_ps3_disc(void *buf, uint64_t start_sector, uint32_t count);
