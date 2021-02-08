@@ -12,8 +12,6 @@
 
 uint64_t *sysm_obj;
 
-//LV2_EXPORT int sm_get_temperature(uint64_t *sysm_obj, int id, uint32_t *temp, int time_out);  // WORKS
-
 LV2_EXPORT int sm_get_temperature_internal(uint64_t *sysm_obj, int id, uint32_t *temp, int time_out);
 LV2_EXPORT int sm_get_fan_policy_internal(uint64_t *sysm_obj, uint8_t id, uint8_t *st, uint8_t *mode, uint8_t *speed, uint8_t *unk, int time_out);
 LV2_EXPORT int sm_set_fan_policy_internal(uint64_t *sysm_obj, uint8_t unk, uint8_t mode, uint8_t speed);
