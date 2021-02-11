@@ -28,7 +28,7 @@ This repository will have constant changes.
     . Disable stage2.bin while Recovery Menu is loaded (by haxxxen)
     . Fixed max FAN speed after shutdown (by Evilnat)
     . Improved Habib's QA flags code imported by aldostools (by Evilnat)
-	. Fixed black screen in CFW2OFW converted games
+	. Fixed black screen in CFW2OFW converted games (by Evilnat)
     
 ###### To do:
     . reActPSN
