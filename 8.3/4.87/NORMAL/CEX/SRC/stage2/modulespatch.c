@@ -741,7 +741,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, load_process_hooked, (process_t proce
 
 	// CFW2OFW fix by Evilnat
 	// Restores disc in BD drive, this fixes leftovers of previous game mounted
-	if (!strcmp(path, "/dev_flash/vsh/module/mcore.self") && CFW2OFW_game)
+	if (CFW2OFW_game && !strcmp(path, "/dev_flash/vsh/module/mcore.self"))
 	{
 		#ifdef DEBUG
 			DPRINTF("Resetting BD Drive after CFW2OFW game...\n");

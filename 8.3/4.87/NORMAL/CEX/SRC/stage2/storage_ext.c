@@ -2410,7 +2410,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, post_cellFsUtilMount, (const char *bl
 		#endif*/
 	}
 
-	if(!strcmp(mount_point, "/dev_bdvd/PS3_GAME") && CFW2OFW_game)
+	if(CFW2OFW_game && !strcmp(mount_point, "/dev_bdvd/PS3_GAME"))
 	{
 		// CFW2OFW fix by Evilnat
 		// Fixes black screen while a CFW2OFW game is loaded with a mounted JB folder game

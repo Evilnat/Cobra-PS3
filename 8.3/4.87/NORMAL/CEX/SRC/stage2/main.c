@@ -27,7 +27,6 @@
 #include "mappath.h"
 #include "storage_ext.h"
 #include "region.h"
-#include "permissions.h"
 #include "psp.h"
 #include "config.h"
 #include "sm_ext.h"
@@ -277,16 +276,6 @@ LV2_SYSCALL2(void, sys_cfw_poke, (uint64_t *ptr, uint64_t value))
 				return;
 			}
 		}
-	}
-	else if (addr == MKA(permissions_func_symbol))
-	{
-		#ifdef DEBUG
-			//DPRINTF("poke to permssions %016lx!\n", value);
-			// Block rewrite of permissions functions, already patched in this payload. Instead, give this process permissions with our code
-			sys_permissions_get_access();
-		#endif
-
-		return;
 	}
 	else if (addr == MKA(open_path_symbol))
 	{
@@ -880,11 +869,9 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 			return sys_storage_ext_mount_encrypted_image((char *)param1, (char *)param2, (char *)param3, param4);
 
 		case SYSCALL8_OPCODE_GET_ACCESS:
-			return sys_permissions_get_access();
-		break;
-
 		case SYSCALL8_OPCODE_REMOVE_ACCESS:
-			return sys_permissions_remove_access();
+		case SYSCALL8_OPCODE_COBRA_USB_COMMAND:
+		    return 0; // deprecated opcodes
 		break;
 
 		case SYSCALL8_OPCODE_READ_COBRA_CONFIG:
@@ -893,11 +880,6 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 
 		case SYSCALL8_OPCODE_WRITE_COBRA_CONFIG:
 			return sys_write_cobra_config((CobraConfig *)param1);
-		break;
-
-		case SYSCALL8_OPCODE_COBRA_USB_COMMAND:
-			//return sys_cobra_usb_command(param1, param2, param3, (void *)param4, param5);
-			return 0;
 		break;
 
 		case SYSCALL8_OPCODE_SET_PSP_UMDFILE:
@@ -940,10 +922,6 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 			return sys_map_paths((char **)param1, (char **)param2, param3);
 		break;
 
-		case SYSCALL8_OPCODE_VSH_SPOOF_VERSION:
-			return ENOSYS; //sys_vsh_spoof_version((char *)param1);
-		break;
-
 		case SYSCALL8_OPCODE_LOAD_VSH_PLUGIN:
 			return sys_prx_load_vsh_plugin(param1, (char *)param2, (void *)param3, param4);
 		break;
@@ -952,9 +930,10 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 			return sys_prx_unload_vsh_plugin(param1);
 		break;
 
-		/*case SYSCALL8_OPCODE_DRM_GET_DATA:
-			return sys_drm_get_data((void *)param1, param2);
-		break;*/
+		case SYSCALL8_OPCODE_DRM_GET_DATA:
+		case SYSCALL8_OPCODE_VSH_SPOOF_VERSION:
+			return ENOSYS; // deprecated opcodes
+		break;
 
 		case SYSCALL8_OPCODE_SEND_POWEROFF_EVENT:
 			return sys_sm_ext_send_poweroff_event((int)param1);
@@ -1040,7 +1019,6 @@ int main(void)
 	map_path_patches(1);
 	storage_ext_patches();
 	region_patches();
-	permissions_patches();
 	fan_patches();
 
 	//map_path("/app_home", "/dev_usb000", 0); //Not needed
