@@ -13,8 +13,8 @@
 #include <lv2/thread.h>
 #include <lv2/syscall.h>
 #include "common.h"
+#include "mappath.h"
 #include "modulespatch.h"
-#include "permissions.h"
 #include "crypto.h"
 #include "config.h"
 #include "storage_ext.h"
@@ -738,11 +738,23 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, load_process_hooked, (process_t proce
 			safe_mode = 1;
 		}		
 	}
+
+	// CFW2OFW fix by Evilnat
+	// Restores disc in BD drive, this fixes leftovers of previous game mounted
+	if (!strcmp(path, "/dev_flash/vsh/module/mcore.self") && CFW2OFW_game)
+	{
+		#ifdef DEBUG
+			DPRINTF("Resetting BD Drive after CFW2OFW game...\n");
+		#endif
+		
+		restore_BD();
+		CFW2OFW_game =  0;
+	}
 	
-	#ifndef  DEBUG
+	/*#ifndef DEBUG
 		if (vsh_process) 
-			unhook_function_on_precall_success(load_process_symbol, load_process_hooked, 9); //Hook no more needed
-	#endif
+			unhook_function_on_precall_success(load_process_symbol, load_process_hooked, 9); // Hook no more needed
+	#endif*/
 	
 	return 0;
 }

@@ -11,6 +11,8 @@
 #define FLAG_PROTECT	4
 
 void create_syscalls(void);
+
+extern int CFW2OFW_game;
 extern uint8_t photo_gui;
 
 void	map_path_patches(int syscall);

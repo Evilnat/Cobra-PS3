@@ -2302,6 +2302,16 @@ static void fake_reinsert(unsigned int disctype)
 	process_fake_storage_event_cmd(&cmd);
 }
 
+void restore_BD()
+{
+	mutex_lock(mutex, 0);
+	
+	unsigned int disctype = get_disc_type();
+	fake_reinsert(disctype);				
+
+	mutex_unlock(mutex);
+}
+
 LV2_HOOKED_FUNCTION_COND_POSTCALL_2(int, emu_disc_auth, (uint64_t func, uint64_t param))
 {
 #ifdef DEBUG
@@ -2395,9 +2405,29 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, post_cellFsUtilMount, (const char *bl
 
 		mutex_unlock(mutex);
 
-		#ifndef DEBUG
-			unhook_function_on_precall_success(cellFsUtilMount_symbol, post_cellFsUtilMount, 8); //Hook no more needed
+		/*#ifndef DEBUG
+			unhook_function_on_precall_success(cellFsUtilMount_symbol, post_cellFsUtilMount, 8); // Hook no more needed
+		#endif*/
+	}
+
+	if(!strcmp(mount_point, "/dev_bdvd/PS3_GAME") && CFW2OFW_game)
+	{
+		// CFW2OFW fix by Evilnat
+		// Fixes black screen while a CFW2OFW game is loaded with a mounted JB folder game
+		#ifdef DEBUG
+			DPRINTF("Detected CFW2OFW game\n");
 		#endif
+				
+		sys_storage_ext_umount_discfile();				
+
+		map_path("/dev_bdvd/PS3_GAME", NULL, 0);
+		map_path("/app_home/PS3_GAME", NULL, 0);
+
+		map_path("/dev_bdvd", NULL, 0);
+		map_path("//dev_bdvd", NULL, 0);
+
+		map_path("/app_home", NULL, 0);
+		map_path("//app_home", NULL, 0);
 	}
 
 	return 0;
@@ -3699,9 +3729,9 @@ void unhook_all_storage_ext(void)
 	unhook_function_with_cond_postcall(get_syscall_address(SYS_STORAGE_ASYNC_SEND_DEVICE_COMMAND), emu_sys_storage_async_send_device_command, 7);
 	unhook_function_with_cond_postcall(get_syscall_address(864), emu_disc_auth, 2);
 
-	#ifdef DEBUG //Auto unload if not debug
+	//#ifdef DEBUG //Auto unload if not debug
 		unhook_function_on_precall_success(cellFsUtilMount_symbol, post_cellFsUtilMount, 8);
-	#endif
+	//#endif
 
 	resume_intr();
 }

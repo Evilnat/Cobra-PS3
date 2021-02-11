@@ -34,6 +34,8 @@ enum STORAGE_COMMAND
 	CMD_GET_PSX_VIDEO_MODE
 };
 
+void restore_BD(void);
+
 void storage_ext_init(void);
 void storage_ext_patches(void);
 

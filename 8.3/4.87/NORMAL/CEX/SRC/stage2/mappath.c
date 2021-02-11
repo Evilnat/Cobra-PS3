@@ -28,6 +28,7 @@ MapEntry map_table[MAX_TABLE_ENTRIES];
 
 static unsigned char crap_pants[13] = {"///no_exists"};
 uint8_t photo_gui = 1;
+int CFW2OFW_game = 0;
 
 // TODO: map_path and open_path_hook should be mutexed...
 
@@ -206,6 +207,11 @@ void aescbc128_decrypt(unsigned char *key, unsigned char *iv, unsigned char *in,
 static uint8_t libft2d_access = 0;
 LV2_HOOKED_FUNCTION_POSTCALL_2(void, open_path_hook, (char *path0, int mode))
 {	
+	// CFW2OFW fix by Evilnat
+	int path_len = strlen(path0);
+	if(!strncmp(path0, "/dev_hdd0/game/", 15) && !strcmp(path0 + path_len - 8, "LIC.EDAT"))	
+		CFW2OFW_game = 1;
+
 	// Let's now block homebrews if the "allow" flag is false
 	if(!block_homebrew(path0))
 	{	

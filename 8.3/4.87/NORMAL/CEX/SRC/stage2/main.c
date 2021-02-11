@@ -23,7 +23,6 @@
 #include <lv1/patch.h>
 #include "common.h"
 #include "syscall8.h"
-//#include "cobra.h"
 #include "modulespatch.h"
 #include "mappath.h"
 #include "storage_ext.h"
@@ -31,9 +30,7 @@
 #include "permissions.h"
 #include "psp.h"
 #include "config.h"
-#include "drm.h"
 #include "sm_ext.h"
-#include "laboratory.h"
 #include "ps3mapi_core.h"
 #include "fan_control.h"
 #include "homebrew_blocker.h"
@@ -955,9 +952,9 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 			return sys_prx_unload_vsh_plugin(param1);
 		break;
 
-		case SYSCALL8_OPCODE_DRM_GET_DATA:
+		/*case SYSCALL8_OPCODE_DRM_GET_DATA:
 			return sys_drm_get_data((void *)param1, param2);
-		break;
+		break;*/
 
 		case SYSCALL8_OPCODE_SEND_POWEROFF_EVENT:
 			return sys_sm_ext_send_poweroff_event((int)param1);
@@ -1038,7 +1035,6 @@ int main(void)
 
 	storage_ext_init();
 	modules_patch_init();
-	drm_init();
 
 	apply_kernel_patches();
 	map_path_patches(1);
@@ -1046,18 +1042,6 @@ int main(void)
 	region_patches();
 	permissions_patches();
 	fan_patches();
-	
-#ifdef DEBUG
-	// "Laboratory"
-	//do_hook_all_syscalls();
-	//do_dump_threads_info_test();
-	//do_dump_processes_test();
-	//do_hook_load_module();
-	//do_hook_mutex_create();
-	//do_ps2net_copy_test();
-	//do_dump_modules_info_test();
-	//do_pad_test();
-#endif
 
 	//map_path("/app_home", "/dev_usb000", 0); //Not needed
 	
