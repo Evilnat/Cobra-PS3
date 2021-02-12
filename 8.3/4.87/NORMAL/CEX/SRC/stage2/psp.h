@@ -73,8 +73,8 @@ typedef struct
 extern uint32_t psp_tag;
 extern uint8_t psp_keys[16];
 extern uint8_t psp_code;
-extern char pspemu_path[36];
-extern char psptrans_path[37];
+//extern char pspemu_path[36];
+//extern char psptrans_path[37];
 
 extern void psp_func1(void *unk, uint8_t *elf_buf);
 
@@ -83,7 +83,7 @@ int sys_psp_set_decrypt_options(int decrypt_patch, uint32_t tag, uint8_t *keys, 
 int sys_psp_read_header(int fd, char *buf, uint64_t nbytes, uint64_t *nread);
 int sys_psp_read_umd(int unk, void *buf, uint64_t sector, uint64_t ofs, uint64_t size);
 int sys_psp_prx_patch(uint32_t *unk, uint8_t *elf_buf, void *link_register);
-int sys_psp_set_emu_path(char *path);
+//int sys_psp_set_emu_path(char *path);
 int sys_psp_post_savedata_initstart(int result, void *param);
 int sys_psp_post_savedata_shutdownstart(void);
 

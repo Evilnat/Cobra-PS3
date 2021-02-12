@@ -866,12 +866,13 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 		break;
 
 		case SYSCALL8_OPCODE_MOUNT_ENCRYPTED_IMAGE:
-			return sys_storage_ext_mount_encrypted_image((char *)param1, (char *)param2, (char *)param3, param4);
+			return ENOSYS; // deprecated OPCODE for sys_storage_ext_mount_encrypted_image((char *)param1, (char *)param2, (char *)param3, param4);
+		break;
 
 		case SYSCALL8_OPCODE_GET_ACCESS:
 		case SYSCALL8_OPCODE_REMOVE_ACCESS:
 		case SYSCALL8_OPCODE_COBRA_USB_COMMAND:
-		    return 0; // deprecated opcodes
+		    return 0; // deprecated OPCODES
 		break;
 
 		case SYSCALL8_OPCODE_READ_COBRA_CONFIG:
@@ -903,7 +904,7 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 		break;
 
 		case SYSCALL8_OPCODE_PSP_CHANGE_EMU:
-			return sys_psp_set_emu_path((char *)param1);
+			return 0; // deprecated OPCODE for sys_psp_set_emu_path((char *)param1);
 		break;
 
 		case SYSCALL8_OPCODE_PSP_POST_SAVEDATA_INITSTART:

@@ -142,9 +142,9 @@ int ps2emu_type;
 
 static int video_mode = -2;
 
-static char *encrypted_image;
-static int encrypted_image_fd = -1;
-static uint64_t encrypted_image_nonce;
+//static char *encrypted_image;
+//static int encrypted_image_fd = -1;
+//static uint64_t encrypted_image_nonce;
 
 unsigned int real_disctype; 		/* Real disc in the drive */
 unsigned int effective_disctype; 	/* The type of disc we want it to be, and the one faked in storage event. */
@@ -3192,7 +3192,8 @@ int umount_discfile(void)
 
 }
 
-LV2_PATCHED_FUNCTION(int, fsloop_open, (const char *path, int flags, int *fd, int mode, void *arg, uint64_t size))
+// Deprecated
+/*LV2_PATCHED_FUNCTION(int, fsloop_open, (const char *path, int flags, int *fd, int mode, void *arg, uint64_t size))
 {
 	int ret = cellFsOpen(path, flags, fd, mode, arg, size);
 
@@ -3208,9 +3209,10 @@ LV2_PATCHED_FUNCTION(int, fsloop_open, (const char *path, int flags, int *fd, in
 	}
 
 	return ret;
-}
+}*/
 
-LV2_PATCHED_FUNCTION(int, fsloop_close, (int fd))
+// Deprecated
+/*LV2_PATCHED_FUNCTION(int, fsloop_close, (int fd))
 {
 	int ret = cellFsClose(fd);
 
@@ -3223,9 +3225,10 @@ LV2_PATCHED_FUNCTION(int, fsloop_close, (int fd))
 	}
 
 	return cellFsClose(fd);
-}
+}*/
 
-LV2_PATCHED_FUNCTION(int, fsloop_read, (int fd, void *buf, uint64_t nbytes, uint64_t *nread))
+// Deprecated
+/*LV2_PATCHED_FUNCTION(int, fsloop_read, (int fd, void *buf, uint64_t nbytes, uint64_t *nread))
 {
 	uint64_t pos;
 
@@ -3247,7 +3250,7 @@ LV2_PATCHED_FUNCTION(int, fsloop_read, (int fd, void *buf, uint64_t nbytes, uint
 	}
 
 	return ret;
-}
+}*/
 
 int sys_storage_ext_get_disc_type(unsigned int *rdt, unsigned int *edt, unsigned int *fdt)
 {
@@ -3561,8 +3564,8 @@ int sys_storage_ext_mount_discfile_proxy(sys_event_port_t result_port, sys_event
 	return ret;
 }
 
-
-int sys_storage_ext_mount_encrypted_image(char *image, char *mount_point, char *filesystem, uint64_t nonce)
+// Deprecated
+/*int sys_storage_ext_mount_encrypted_image(char *image, char *mount_point, char *filesystem, uint64_t nonce)
 {
 	int ret;
 	char loop_device[96];
@@ -3612,7 +3615,7 @@ int sys_storage_ext_mount_encrypted_image(char *image, char *mount_point, char *
 
 	map_path(mount_point, "/dev_usb000", FLAG_COPY|FLAG_PROTECT);
 	return 0;
-}
+}*/
 
 static INLINE void patch_ps2emu_entry(int ps2emu_type)
 {
@@ -3711,9 +3714,9 @@ void storage_ext_patches(void)
 	hook_function_on_precall_success(cellFsUtilMount_symbol, post_cellFsUtilMount, 8);
 	
 	// For encrypted fsloop images
-	patch_call(fsloop_open_call, fsloop_open);
-	patch_call(fsloop_close_call, fsloop_close);
-	patch_call(fsloop_read_call, fsloop_read);
+	//patch_call(fsloop_open_call, fsloop_open); // Deprecated
+	//patch_call(fsloop_close_call, fsloop_close); // Deprecated
+	//patch_call(fsloop_read_call, fsloop_read); // Deprecated
 }
 
 void unhook_all_storage_ext(void)
