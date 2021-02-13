@@ -95,10 +95,13 @@ int read_cobra_config(void)
 		cellFsClose(fd);
 	}
 	
-	if (config.size > 4096 || checksum(&config) != config.checksum)	
+	// Removed. 
+	// Cobra config size has different size and maybe conflicts with legacy apps
+	/*if (config.size > 4096 || checksum(&config) != config.checksum)	
 		memset(&config, 0, sizeof(config));		
-	else	
-		check_and_correct(&config);	
+	else	*/
+
+	check_and_correct(&config);	
 	
 	config.size = sizeof(config);
 	
