@@ -32,6 +32,7 @@ see file COPYING or http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 #endif
 
 #include "printf.h"
+#include "fan_control.h"
 
 #undef printf
 
@@ -288,6 +289,7 @@ int64_t debug_print(const char* buffer, size_t msgsize)
 void abort(void)
 {
 	_debug_printf("abort() called! Panicking.\n");
+	sm_set_fan_policy(0, 1, 0);
 	lv1_panic(0);
 	while (1);
 }
@@ -296,6 +298,7 @@ void fatal(const char *msg)
 {
 	_debug_printf("FATAL: %s\n", msg);
 	_debug_printf("Panicking.\n");
+	sm_set_fan_policy(0, 1, 0);
 	lv1_panic(0);
 	while (1);
 }
