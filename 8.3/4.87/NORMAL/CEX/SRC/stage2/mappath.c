@@ -139,6 +139,7 @@ int map_path_user(char *oldpath, char *newpath, uint32_t flags)
 	ret = map_path(oldp, newp, flags | FLAG_COPY);
 	
 	dealloc(oldp, 0x27);	
+
 	if (newp)
 		dealloc(newp, 0x27);
 	
@@ -223,11 +224,11 @@ LV2_HOOKED_FUNCTION_POSTCALL_2(void, open_path_hook, (char *path0, int mode))
 
 	restore_syscalls(path0);
 
-	if (path0[0]=='/')
+	if (path0[0] == '/')
 	{
         char *path = path0;
 
-        if(path[1]=='/') 
+        if(path[1] == '/') 
         	path++; 
     	
 		// Photo_GUI integration with webMAN MOD - DeViL303 & AV		
@@ -271,7 +272,23 @@ LV2_HOOKED_FUNCTION_POSTCALL_2(void, open_path_hook, (char *path0, int mode))
 		
 				if (path && strncmp(path, map_table[i].oldpath, len) == 0)
 				{
-					strcpy(map_table[i].newpath+map_table[i].newpath_len, path+len);
+					strcpy(map_table[i].newpath + map_table[i].newpath_len, path + len);
+
+					// aldostool's partial map path
+					// -- AV: use partial folder remapping when newpath starts with double '/' like //dev_hdd0/blah...
+					if(map_table[i].newpath[1] == '/') // double //
+					{
+						CellFsStat stat;
+						if(cellFsStat(map_table[i].newpath, &stat) != 0)
+						{
+							#ifdef DEBUG
+								DPRINTF("open_path %s\n", path0);
+							#endif
+
+							return; // Do not remap / Use the original file when redirected file does not exist
+						}
+					}
+
 					set_patched_func_param(1, (uint64_t)map_table[i].newpath);
 					
 					#ifdef  DEBUG
