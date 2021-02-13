@@ -30,6 +30,19 @@ static unsigned char crap_pants[13] = {"///no_exists"};
 uint8_t photo_gui = 1;
 int CFW2OFW_game = 0;
 
+// aldostool's prevention of accidental deletion of important paths
+static int init_map_entry(uint8_t index)
+{
+	if( map_table[index].newpath
+		&& (map_table[index].newpath_len > 3)
+		&& (map_table[index].newpath[0] == '/')
+		&& (map_table[index].newpath[1] == '.')
+		&& (map_table[index].newpath[2] == '/')) 
+			return 1; // protect from deletion existing newpath like "/./*"
+
+	return 0;
+}
+
 // TODO: map_path and open_path_hook should be mutexed...
 
 int map_path(char *oldpath, char *newpath, uint32_t flags)
@@ -63,7 +76,10 @@ int map_path(char *oldpath, char *newpath, uint32_t flags)
 					map_table[i].flags = (map_table[i].flags&FLAG_COPY) | (flags&(~FLAG_COPY));
 				}
 				else
-				{
+				{					
+					if(init_map_entry(i))
+							continue;
+
 					if (map_table[i].flags & FLAG_COPY)
 						dealloc(map_table[i].oldpath, 0x27);
 					
@@ -183,6 +199,9 @@ int sys_map_paths(char *paths[], char *new_paths[], unsigned int num)
 		{
 			if (map_table[i].flags & FLAG_TABLE)
 			{
+				if(init_map_entry(i))
+						continue;
+
 				if (map_table[i].flags & FLAG_COPY)	
 					dealloc(map_table[i].oldpath, 0x27);
 				
