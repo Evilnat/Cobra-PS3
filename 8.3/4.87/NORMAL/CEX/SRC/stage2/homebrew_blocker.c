@@ -23,6 +23,8 @@
 
 #define MAX_LIST_ENTRIES	30 // Maximum elements for noth the custom blacklist and whitelist.
 
+int CFW2OFW_game = 0;
+
 uint8_t allow_restore_sc = 1;
 
 static int __initialized_lists = 0; // Are the lists initialized ?
@@ -43,7 +45,7 @@ static int init_list(char *list, char *path, int maxentries)
 
 	if (cellFsOpen(path, CELL_FS_O_RDONLY, &f, 0, NULL, 0) != 0)
 		return 0; // failed to open
-	
+
 	loaded = 0;
 
 	while (loaded < maxentries)
@@ -52,7 +54,7 @@ static int init_list(char *list, char *path, int maxentries)
 		int eof;
 		if (read_text_line(f, line, sizeof(line), &eof) > 0)
 		if (strlen(line) >= 9) // avoid copying empty lines
-		{	
+		{
 			strncpy(list + (9 * loaded), line, 9); // copy only the first 9 chars - if it has lees than 9, it will fail future checks. should correct in file.
 			loaded++;
 		}
@@ -77,7 +79,7 @@ static int listed(int blacklist, char *gameid)
 {
 	char *list;
 	int i, elements;
-	
+
 	if (!__initialized_lists)
 	{
 		// initialize the lists if not yet done
@@ -88,12 +90,12 @@ static int listed(int blacklist, char *gameid)
 
 	if (blacklist)
 	{
-		list = __blacklist; 
+		list = __blacklist;
 		elements = __blacklist_entries;
 	}
 	else
 	{
-		list = __whitelist; 
+		list = __whitelist;
 		elements = __whitelist_entries;
 	}
 
@@ -102,7 +104,7 @@ static int listed(int blacklist, char *gameid)
 		if (!strncmp(list + (9 * i), gameid, 9))
 			return 1; // gameid is in the lists
 	}
-	
+
 	return 0; // if it got here, it is not in the list. return 0
 }
 
@@ -121,7 +123,12 @@ int block_homebrew(const char *path)
 	{
 		int syscalls_disabled = ((*(uint64_t *)MKA(syscall_table_symbol + 8 * 6)) == (*(uint64_t *)MKA(syscall_table_symbol)));
 
-		if (syscalls_disabled && path && !strncmp(path, "/dev_hdd0/game/", 15) && strstr(path + 15, "/EBOOT.BIN"))
+		// CFW2OFW fix by Evilnat
+		int path_len = 15 + strlen(path + 15);
+		if(!strcmp(path + path_len - 8, "LIC.EDAT"))
+			CFW2OFW_game = 1;
+
+		if (syscalls_disabled && path && strstr(path + 15, "/EBOOT.BIN"))
 		{
 			// syscalls are disabled and an EBOOT.BIN is being called from hdd. Let's test it.
 			char *gameid = (char *)path + 15;
@@ -151,12 +158,12 @@ int block_homebrew(const char *path)
 				) allow = 0;
 
 			// test whitelist.cfg and blacklist.cfg
-			if (listed(0, gameid)) // whitelist.cfg test			
+			if (listed(0, gameid)) // whitelist.cfg test
 				allow = 1;
-			if (listed(1, gameid)) // blacklist.cfg test			
+			if (listed(1, gameid)) // blacklist.cfg test
 				allow = 0;
 		}
-	}	
+	}
 
 	return allow;
 }
@@ -169,7 +176,7 @@ void restore_syscalls(const char *path)
 		if(!strcmp(path, "/dev_flash/vsh/module/software_update_plugin.sprx"))
 		{
 			uint8_t syscalls_disabled = ((*(uint64_t *)MKA(syscall_table_symbol + 8 * 6)) == (*(uint64_t *)MKA(syscall_table_symbol)));
-			
+
 			if(syscalls_disabled)
 				create_syscalls();
 		}

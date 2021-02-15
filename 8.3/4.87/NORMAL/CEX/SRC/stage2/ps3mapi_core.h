@@ -96,11 +96,10 @@ int ps3mapi_get_process_module_filename_by_prx_id(process_id_t pid, sys_prx_id_t
 int ps3mapi_get_process_module_segments(process_id_t pid, sys_prx_id_t prx_id, sys_prx_module_info_t *info); // TheRouletteBoi
 int ps3mapi_load_process_modules(process_id_t pid, char *path, void *arg, uint32_t arg_size);
 int ps3mapi_unload_process_modules(process_id_t pid, sys_prx_id_t prx_id);
-int ps3mapi_get_process_module_info(process_id_t pid, sys_prx_id_t prx_id, sys_prx_module_info_t *info);
+int ps3mapi_get_process_module_info(process_t process, sys_prx_id_t prx_id, char *name, char *filename);
 
 int ps3mapi_get_vsh_plugin_info(unsigned int slot, char *name, char *filename);
 int ps3mapi_get_vsh_plugin_slot_by_name(const char *name, uint8_t unload);
-int prx_unload_vsh_plugin(unsigned int slot);
 
 //-----------------------------------------------
 //THREAD

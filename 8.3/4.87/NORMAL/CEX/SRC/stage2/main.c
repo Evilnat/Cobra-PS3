@@ -658,7 +658,7 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 					return ps3mapi_unload_process_modules((process_id_t)param2, (sys_prx_id_t)param3);
 				break;
 				case PS3MAPI_OPCODE_GET_PROC_MODULE_INFO:
-					return ps3mapi_get_process_module_info((process_id_t)param2, (sys_prx_id_t)param3, (sys_prx_module_info_t *)param4);
+					return ps3mapi_get_process_module_info((process_t)param2, (sys_prx_id_t)param3, (char *)param4, (char *)param5);
 				break;
 				case PS3MAPI_OPCODE_GET_PROC_MODULE_SEGMENTS:
 					return ps3mapi_get_process_module_segments((process_id_t)param2, (sys_prx_id_t)param3, (sys_prx_module_info_t *)param4); // TheRouletteBoi
@@ -794,22 +794,20 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 		}
 		break;
 
+		//--------------------------
+		// COBRA VERSION
+		//--------------------------
 		case SYSCALL8_OPCODE_GET_VERSION:
 			return sys_get_version((uint32_t *)param1);
 		break;
-		
-		case SYSCALL8_OPCODE_USE_PS2NETEMU:
-			return bc_to_net((int)param1);
-		break;
 
-		case SYSCALL8_OPCODE_DISABLE_COBRA_STAGE:
-			return disable_cobra_stage();
-		break;
-		
 		case SYSCALL8_OPCODE_GET_VERSION2:
 			return sys_get_version2((uint16_t *)param1);
 		break;
 
+		//--------------------------
+		// STORAGE
+		//--------------------------
 		case SYSCALL8_OPCODE_GET_DISC_TYPE:
 			return sys_storage_ext_get_disc_type((unsigned int *)param1, (unsigned int *)param2, (unsigned int *)param3);
 		break;
@@ -826,6 +824,13 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 			return sys_storage_ext_get_emu_state((sys_emu_state_t *)param1);
 		break;
 
+		case SYSCALL8_OPCODE_USE_PS2NETEMU:
+			return bc_to_net((int)param1);
+		break;
+
+		//--------------------------
+		// MOUNT
+		//--------------------------
 		case SYSCALL8_OPCODE_MOUNT_PS3_DISCFILE:
 			return sys_storage_ext_mount_ps3_discfile(param1, (char **)param2);
 		break;
@@ -837,22 +842,6 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 		case SYSCALL8_OPCODE_MOUNT_BD_DISCFILE:
 			return sys_storage_ext_mount_bd_discfile(param1, (char **)param2);
 		break;
-		
-		case SYSCALL8_OPCODE_RUN_PAYLOAD:
-			return inst_and_run_kernel((uint8_t *)param1, param2);
-		break;
-
-		case SYSCALL8_OPCODE_RUN_PAYLOAD_DYNAMIC:
-			return inst_and_run_kernel_dynamic((uint8_t *)param1, param2, (uint64_t *)param3);
-		break;
-
-		case SYSCALL8_OPCODE_UNLOAD_PAYLOAD_DYNAMIC:
-			return unload_plugin_kernel(param1);
-		break;
-			
-		case SYSCALL8_OPCODE_PROC_CREATE_THREAD:
-			return ps3mapi_create_process_thread((process_id_t)param1, (thread_t *)param2, (void *)param3, (uint64_t)param4, (int)param5, (size_t)param6, (char *)param7);
-		break;	
 
 		case SYSCALL8_OPCODE_MOUNT_PSX_DISCFILE:
 			return sys_storage_ext_mount_psx_discfile((char *)param1, param2, (ScsiTrackDescriptor *)param3);
@@ -871,15 +860,56 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 		break;
 
 		case SYSCALL8_OPCODE_MOUNT_ENCRYPTED_IMAGE:
-			return ENOSYS; // deprecated OPCODE for sys_storage_ext_mount_encrypted_image((char *)param1, (char *)param2, (char *)param3, param4);
+			return SUCCEEDED; // deprecated OPCODE for sys_storage_ext_mount_encrypted_image((char *)param1, (char *)param2, (char *)param3, param4);
+		break;
+
+		//--------------------------
+		// KERNEL PAYLOAD
+		//--------------------------
+		case SYSCALL8_OPCODE_RUN_PAYLOAD:
+			return inst_and_run_kernel((uint8_t *)param1, param2);
+		break;
+
+		case SYSCALL8_OPCODE_RUN_PAYLOAD_DYNAMIC:
+			return inst_and_run_kernel_dynamic((uint8_t *)param1, param2, (uint64_t *)param3);
+		break;
+
+		case SYSCALL8_OPCODE_UNLOAD_PAYLOAD_DYNAMIC:
+			return unload_plugin_kernel(param1);
+		break;
+
+		//--------------------------
+		// PROCESS
+		//--------------------------
+		case SYSCALL8_OPCODE_PROC_CREATE_THREAD:
+			return ps3mapi_create_process_thread((process_id_t)param1, (thread_t *)param2, (void *)param3, (uint64_t)param4, (int)param5, (size_t)param6, (char *)param7);
+		break;
+
+		//--------------------------
+		// MISC
+		//--------------------------
+		case SYSCALL8_OPCODE_SEND_POWEROFF_EVENT:
+			return sys_sm_ext_send_poweroff_event((int)param1);
 		break;
 
 		case SYSCALL8_OPCODE_GET_ACCESS:
 		case SYSCALL8_OPCODE_REMOVE_ACCESS:
 		case SYSCALL8_OPCODE_COBRA_USB_COMMAND:
-		    return 0; // deprecated OPCODES
+			return 0; // deprecated OPCODES
+		break;
+		
+		case SYSCALL8_OPCODE_DISABLE_COBRA_STAGE:
+			return disable_cobra_stage();
+		break;		
+
+		case SYSCALL8_OPCODE_DRM_GET_DATA:
+		case SYSCALL8_OPCODE_VSH_SPOOF_VERSION:
+			return ENOSYS; // deprecated opcodes
 		break;
 
+		//--------------------------
+		// CONFIG
+		//--------------------------
 		case SYSCALL8_OPCODE_READ_COBRA_CONFIG:
 			return sys_read_cobra_config((CobraConfig *)param1);
 		break;
@@ -888,6 +918,9 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 			return sys_write_cobra_config((CobraConfig *)param1);
 		break;
 
+		//--------------------------
+		// PSP
+		//--------------------------
 		case SYSCALL8_OPCODE_SET_PSP_UMDFILE:
 			return sys_psp_set_umdfile((char *)param1, (char *)param2, param3);
 		break;
@@ -920,29 +953,73 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 			return sys_psp_post_savedata_shutdownstart();
 		break;
 
+		//--------------------------
+		// MAP PATHS
+		//--------------------------
 		case SYSCALL8_OPCODE_AIO_COPY_ROOT:
 			return sys_aio_copy_root((char *)param1, (char *)param2);
-		break;
+		break;		
 
 		case SYSCALL8_OPCODE_MAP_PATHS:
 			return sys_map_paths((char **)param1, (char **)param2, param3);
+		break;		
+
+		//--------------------------
+		// ADVANCED POKE (syscall8)
+		//--------------------------
+		case SYSCALL8_OPCODE_POKE_LV2:
+			*(uint64_t *)param1 = param2;
+			clear_icache((void *)param1, 8);
+			return SUCCEEDED;
 		break;
 
+		case SYSCALL8_OPCODE_POKE32_LV2:
+			*(uint32_t *)param1 = (uint32_t)param2;
+			clear_icache((void *)param1, 4);
+			return SUCCEEDED;
+		break;
+
+		case SYSCALL8_OPCODE_POKE16_LV2:
+			*(uint16_t *)param1 = (uint16_t)param2;
+			clear_icache((void *)param1, 2);
+			return SUCCEEDED;
+		break;
+
+		case SYSCALL8_OPCODE_POKE8_LV2:
+			*(uint8_t *)param1 = (uint8_t)param2;
+			clear_icache((void *)param1, 1);
+			return SUCCEEDED;
+		break;
+
+		case SYSCALL8_OPCODE_POKE_LV1:
+			lv1_poked(param1, param2);
+			return SUCCEEDED;
+		break;
+
+		case SYSCALL8_OPCODE_POKE32_LV1:
+			lv1_pokew(param1, (uint32_t)param2);
+			return SUCCEEDED;
+		break;
+
+		case SYSCALL8_OPCODE_POKE16_LV1:
+			lv1_pokeh(param1, (uint16_t)param2);
+			return SUCCEEDED;
+		break;
+
+		case SYSCALL8_OPCODE_POKE8_LV1:
+			lv1_pokeb(param1, (uint8_t)param2);
+			return SUCCEEDED;
+		break;		
+
+		//--------------------------
+		// VSH PLUGINS
+		//--------------------------
 		case SYSCALL8_OPCODE_LOAD_VSH_PLUGIN:
 			return sys_prx_load_vsh_plugin(param1, (char *)param2, (void *)param3, param4);
 		break;
 
 		case SYSCALL8_OPCODE_UNLOAD_VSH_PLUGIN:
 			return sys_prx_unload_vsh_plugin(param1);
-		break;
-
-		case SYSCALL8_OPCODE_DRM_GET_DATA:
-		case SYSCALL8_OPCODE_VSH_SPOOF_VERSION:
-			return ENOSYS; // deprecated opcodes
-		break;
-
-		case SYSCALL8_OPCODE_SEND_POWEROFF_EVENT:
-			return sys_sm_ext_send_poweroff_event((int)param1);
 		break;
 
 #ifdef DEBUG
