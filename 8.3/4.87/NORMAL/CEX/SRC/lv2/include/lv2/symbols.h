@@ -183,6 +183,7 @@
 #define sm_get_temperature_symbol						0x2635A8
 #define sm_get_fan_policy_symbol						0x26293C
 #define sm_set_fan_policy_symbol						0x264734
+#define sm_ring_buzzer_symbol 							0x26337C
 
 #define syscall_table_symbol							0x363BE0
 #define syscall_call_offset								0x275C04

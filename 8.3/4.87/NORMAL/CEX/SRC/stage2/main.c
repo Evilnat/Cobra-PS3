@@ -14,7 +14,7 @@
 #include <lv2/synchronization.h>
 #include <lv2/modules.h>
 #include <lv2/io.h>
-#include <lv2/fan.h>
+#include <lv2/ctrl.h>
 #include <lv2/time.h>
 #include <lv2/security.h>
 #include <lv2/error.h>
@@ -745,6 +745,10 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 					return sm_get_fan_speed();
 				break;
 
+				case PS3MAPI_OPCODE_RING_BUZZER:
+					return sm_ring_buzzer((uint16_t)param2);
+				break;
+
 				//----------
 				//QA
 				//----------
@@ -757,6 +761,7 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				case PS3MAPI_OPCODE_DISABLE_QA:
 					return set_qa_flag(0);
 				break;
+				
 				//----------
 				//DEFAULT
 				//----------

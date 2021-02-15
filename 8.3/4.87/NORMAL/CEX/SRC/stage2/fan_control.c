@@ -5,7 +5,7 @@
 #include <lv2/memory.h>
 #include <lv2/thread.h>
 #include <lv2/time.h>
-#include <lv2/fan.h>
+#include <lv2/ctrl.h>
 #include "common.h"
 #include "fan_control.h"
 

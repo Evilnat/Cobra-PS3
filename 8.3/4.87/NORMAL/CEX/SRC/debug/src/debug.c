@@ -28,7 +28,7 @@ see file COPYING or http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 #include <lv2/interrupt.h>
 #include <lv2/libc.h>
 #include <lv2/symbols.h>
-#include <lv2/fan.h>
+#include <lv2/ctrl.h>
 
 #endif
 

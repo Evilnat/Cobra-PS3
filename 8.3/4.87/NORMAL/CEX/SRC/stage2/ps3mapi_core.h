@@ -174,6 +174,8 @@ int ps3mapi_disable_syscall(int num);
 
 #define PS3MAPI_OPCODE_SKIP_EXISTING_RIF	0x2241
 
+#define PS3MAPI_OPCODE_RING_BUZZER 			0x2245
+
 //-----------------------------------------------
 //QA
 //-----------------------------------------------
