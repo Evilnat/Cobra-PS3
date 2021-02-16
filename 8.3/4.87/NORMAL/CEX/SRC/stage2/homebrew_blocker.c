@@ -44,7 +44,7 @@ static int init_list(char *list, char *path, int maxentries)
 	int loaded, f;
 
 	if (cellFsOpen(path, CELL_FS_O_RDONLY, &f, 0, NULL, 0) != 0)
-		return 0; // failed to open
+		return SUCCEEDED; // failed to open
 
 	loaded = 0;
 
@@ -105,7 +105,7 @@ static int listed(int blacklist, char *gameid)
 			return 1; // gameid is in the lists
 	}
 
-	return 0; // if it got here, it is not in the list. return 0
+	return SUCCEEDED; // if it got here, it is not in the list. return 0
 }
 
 // BEGIN KW & AV block access to homebrews when syscalls are disabled

@@ -3,6 +3,7 @@
 #include <lv2/libc.h>
 #include <lv2/process.h>
 #include <lv2/patch.h>
+#include <lv2/error.h>
 #include <lv2/syscall.h>
 #include "common.h"
 #include "region.h"
@@ -114,7 +115,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_2(int, region_func, (uint64_t func, uint8_t 
 		}		
 	}	
 	
-	return 0;
+	return SUCCEEDED;
 }
 
 void region_patches(void)

@@ -39,7 +39,7 @@ static int init_map_entry(uint8_t index)
 		&& (map_table[index].newpath[2] == '/'))
 			return 1; // protect from deletion existing newpath like "/./*"
 
-	return 0;
+	return SUCCEEDED;
 }
 
 // TODO: map_path and open_path_hook should be mutexed...
@@ -101,7 +101,7 @@ int map_path(char *oldpath, char *newpath, uint32_t flags)
 			return EKRESOURCE;
 
 		if (!newpath || strlen(newpath) == 0)
-			return 0;
+			return SUCCEEDED;
 
 		map_table[firstfree].flags = flags;
 
@@ -121,7 +121,7 @@ int map_path(char *oldpath, char *newpath, uint32_t flags)
 		map_table[firstfree].newpath_len = strlen(newpath);
 	}
 
-	return 0;
+	return SUCCEEDED;
 }
 
 int map_path_user(char *oldpath, char *newpath, uint32_t flags)
@@ -381,7 +381,7 @@ int sys_aio_copy_root(char *src, char *dst)
 		}
 	}
 
-	return 0;
+	return SUCCEEDED;
 }
 
 void unhook_all_map_path(void)

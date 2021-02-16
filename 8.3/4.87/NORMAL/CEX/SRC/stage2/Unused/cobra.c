@@ -17,7 +17,7 @@ int sys_cobra_usb_command(uint8_t command, uint8_t bmRequestType, uint32_t addr,
 	if (size > 4096)
 		return EINVAL;
 	
-	return 0;	
+	return SUCCEEDED;	
 }
 
 

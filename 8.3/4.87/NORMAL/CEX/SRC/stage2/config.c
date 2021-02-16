@@ -117,7 +117,7 @@ int read_cobra_config(void)
 				 bd_video_region, dvd_video_region, config.spoof_version, config.spoof_revision, fan_speed, allow_restore_sc);
 	#endif
 	
-	return 0;
+	return SUCCEEDED;
 }
 
 int write_cobra_config(void)
@@ -160,7 +160,7 @@ int sys_read_cobra_config(CobraConfig *cfg)
 	#endif
 	
 	memcpy(&cfg->checksum, &config.checksum, copy_size);
-	return 0;
+	return SUCCEEDED;
 }
 
 int sys_write_cobra_config(CobraConfig *cfg)

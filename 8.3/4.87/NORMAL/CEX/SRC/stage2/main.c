@@ -125,7 +125,7 @@ int disable_cobra_stage()
 	cellFsOpen("/dev_hdd0/tmp/loadoptical", CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &dst, 0666, NULL, 0);
 	cellFsWrite(dst, &size, 4, &size);
 	cellFsClose(dst);
-	return 0;
+	return SUCCEEDED;
 }
 
 int inst_and_run_kernel(uint8_t *payload, int size)
@@ -144,7 +144,7 @@ int inst_and_run_kernel(uint8_t *payload, int size)
 	f.toc = (void *)MKA(TOC);
 	func = (void *)&f;
 	func();
-	return 0;
+	return SUCCEEDED;
 }
 
 int inst_and_run_kernel_dynamic(uint8_t *payload, int size, uint64_t *residence)
@@ -171,13 +171,13 @@ int inst_and_run_kernel_dynamic(uint8_t *payload, int size, uint64_t *residence)
 		return 1;
 	}
 	
-	return 0;
+	return SUCCEEDED;
 }
 
 int unload_plugin_kernel(uint64_t residence)
 {
 	dealloc((void *)residence, 0x27);
-	return 0;
+	return SUCCEEDED;
 }
 
 f_desc_t extended_syscall8;
@@ -202,7 +202,7 @@ LV2_SYSCALL2(uint64_t, sys_cfw_peek, (uint64_t *addr))
 		if ((uint64_t)addr >= (uint64_t)&_start && (uint64_t)addr < (uint64_t)&__self_end)
 		{
 			DPRINTF("peek to addr %p blocked for compatibility.\n", addr);
-			return 0;
+			return SUCCEEDED;
 		}
 	}
 
@@ -588,14 +588,14 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				break;
 				case PS3MAPI_OPCODE_LV1_POKE:
 					lv1_poked(param2, param3);
-					return 0;
+					return SUCCEEDED;
 				break;
 				case PS3MAPI_OPCODE_LV2_PEEK:
 					return lv1_peekd(param2 + 0x8000000ULL);
 				break;
 				case PS3MAPI_OPCODE_LV2_POKE:
 					lv1_poked(param2 + 0x8000000ULL, param3);
-					return 0;
+					return SUCCEEDED;
 				break;
 
 				//----------
@@ -605,7 +605,7 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 					ps3mapi_key = param2;
 					ps3mapi_access_granted = 0;
 					ps3mapi_access_tries = 0;
-					return 0;
+					return SUCCEEDED;
 
 				//----------
 				//PROCESS
@@ -895,7 +895,7 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 		case SYSCALL8_OPCODE_GET_ACCESS:
 		case SYSCALL8_OPCODE_REMOVE_ACCESS:
 		case SYSCALL8_OPCODE_COBRA_USB_COMMAND:
-			return 0; // deprecated OPCODES
+			return SUCCEEDED; // deprecated OPCODES
 		break;
 		
 		case SYSCALL8_OPCODE_DISABLE_COBRA_STAGE:
@@ -942,7 +942,7 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 		break;
 
 		case SYSCALL8_OPCODE_PSP_CHANGE_EMU:
-			return 0; // deprecated OPCODE for sys_psp_set_emu_path((char *)param1);
+			return SUCCEEDED; // deprecated OPCODE for sys_psp_set_emu_path((char *)param1);
 		break;
 
 		case SYSCALL8_OPCODE_PSP_POST_SAVEDATA_INITSTART:
@@ -1025,7 +1025,7 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 #ifdef DEBUG
 		case SYSCALL8_OPCODE_DUMP_STACK_TRACE:
 			dump_stack_trace3((void *)param1, 16);
-			return 0;
+			return SUCCEEDED;
 		break;
 
 		case SYSCALL8_OPCODE_PSP_SONY_BUG:
@@ -1111,5 +1111,5 @@ int main(void)
 	cellFsRename(CB_LOCATION ".bak", CB_LOCATION);
 	cellFsUtilUmount("/dev_blind", 0, 1);
 
-	return 0;
+	return SUCCEEDED;
 }

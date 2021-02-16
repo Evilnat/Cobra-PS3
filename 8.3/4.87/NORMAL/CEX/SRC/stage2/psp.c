@@ -86,7 +86,7 @@ static INLINE __attribute__((unused)) int is_sce_psp_module(char *name)
 			return 1;
 	}
 
-	return 0;
+	return SUCCEEDED;
 }
 
 int sys_psp_read_header(int fd, char *buf, uint64_t nbytes, uint64_t *nread)
@@ -185,7 +185,7 @@ int sys_psp_read_header(int fd, char *buf, uint64_t nbytes, uint64_t *nread)
 	}
 
 	*nread = 0x100;
-	return 0;
+	return SUCCEEDED;
 }
 
 int sys_psp_read_umd(int unk, void *buf, uint64_t sector, uint64_t ofs, uint64_t size)
@@ -282,7 +282,7 @@ int sys_psp_set_umdfile(char *file, char *id, int prometheus)
 		condition_psp_dec = 0;
 		condition_psp_keys = 0;
 		condition_psp_prometheus = 0;
-		return 0;
+		return SUCCEEDED;
 	}
 
 	strncpy(psp_id, id, 10);
@@ -342,7 +342,7 @@ int sys_psp_set_umdfile(char *file, char *id, int prometheus)
 
 	}
 
-	return 0;
+	return SUCCEEDED;
 }
 
 int sys_psp_set_decrypt_options(int decrypt_patch, uint32_t tag, uint8_t *keys, uint8_t code, uint32_t tag2, uint8_t *keys2, uint8_t code2)
@@ -363,7 +363,7 @@ int sys_psp_set_decrypt_options(int decrypt_patch, uint32_t tag, uint8_t *keys, 
 	}
 
 	condition_psp_dec = decrypt_patch;
-	return 0;
+	return SUCCEEDED;
 }
 
 int sys_psp_prx_patch(uint32_t *unk, uint8_t *elf_buf, void *link_register)
@@ -393,7 +393,7 @@ int sys_psp_prx_patch(uint32_t *unk, uint8_t *elf_buf, void *link_register)
 #endif
 
 	psp_func1(unk, elf_buf);
-	return 0;
+	return SUCCEEDED;
 }
 
 /*int sys_psp_set_emu_path(char *path)
@@ -401,7 +401,7 @@ int sys_psp_prx_patch(uint32_t *unk, uint8_t *elf_buf, void *link_register)
 	if (!path)
 	{
 		condition_psp_change_emu = 0;
-		return 0;
+		return SUCCEEDED;
 	}
 
 	#ifdef DEBUG
@@ -416,7 +416,7 @@ int sys_psp_prx_patch(uint32_t *unk, uint8_t *elf_buf, void *link_register)
 	//snprintf(pspemu_path, sizeof(pspemu_path), "%s/psp_emulator.self", path);
 	//snprintf(psptrans_path, sizeof(psptrans_path), "%s/psp_translator.self", path);
 
-	return 0;
+	return SUCCEEDED;
 }*/
 
 int sys_psp_post_savedata_initstart(int result, void *param)
@@ -446,7 +446,7 @@ int sys_psp_post_savedata_shutdownstart(void)
 		savedata_param = NULL;
 	}
 
-	return 0;
+	return SUCCEEDED;
 }
 
 #ifdef DEBUG
@@ -488,7 +488,7 @@ int sys_psp_sony_bug(uint32_t *mips_registers, void *unk, uint32_t mips_PC)
 		DPRINTF("%04X: %08X %08X\n", i*4, mips_registers[i], mips_registers[i+1]);
 	}*/
 
-	return 0;
+	return SUCCEEDED;
 }
 
 #endif

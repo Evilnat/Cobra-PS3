@@ -34,7 +34,7 @@ uint32_t access_pid;
 			return 1;
 	}
 	
-	return 0;
+	return SUCCEEDED;
 } */
 
 /* LV2_HOOKED_FUNCTION_COND_POSTCALL_4(int, permissions_func_hook, (void *r3, void *r4, void *r5, void *r6))
@@ -78,7 +78,7 @@ LV2_PATCHED_FUNCTION(uint32_t, get_pid_patched, (process_t process))
 int sys_permissions_get_access(void)
 {
 	access_pid = get_current_process_critical()->pid;	
-	return 0;
+	return SUCCEEDED;
 }
 
 int sys_permissions_remove_access(void)
@@ -86,7 +86,7 @@ int sys_permissions_remove_access(void)
 	if (access_pid == get_current_process_critical()->pid)
 	{
 		access_pid = 0;
-		return 0;
+		return SUCCEEDED;
 	}
 	
 	return ENOENT;

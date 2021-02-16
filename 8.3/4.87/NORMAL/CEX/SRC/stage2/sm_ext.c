@@ -2,6 +2,7 @@
 #include <lv2/process.h>
 #include <lv2/memory.h>
 #include <lv2/patch.h>
+#include <lv2/error.h>
 #include <lv2/syscall.h>
 #include "common.h"
 #include "sm_ext.h"
@@ -41,7 +42,7 @@ LV2_HOOKED_FUNCTION_COND_POSTCALL_4(int, send_poweroff_event, (uint64_t *event_d
 	else	
 		return DO_POSTCALL;	
 	
-	return 0;
+	return SUCCEEDED;
 }
 
 int sys_sm_ext_send_poweroff_event(int reboot)
@@ -54,5 +55,5 @@ int sys_sm_ext_send_poweroff_event(int reboot)
 		patch_done = 1;
 	}
 	
-	return 0;
+	return SUCCEEDED;
 }

@@ -218,7 +218,7 @@ static INLINE int process_read_iso_cmd(ReadIsoCmd *cmd)
 			else
 				copy_to_process(cmd->process, discfile->cached_sector, cmd->buf, 2048);
 
-			return 0;
+			return SUCCEEDED;
 		}
 	}
 
@@ -475,7 +475,7 @@ static INLINE int process_read_cd_iso2352_cmd(ReadCdIso2352Cmd *cmd)
 					copy_to_process(cmd->process, copy_ptr, buf+(copy_offset * cd_sector_size), copy_size * cd_sector_size);
 
 				if (remaining == copy_size)
-					return 0;
+					return SUCCEEDED;
 
 				remaining -= copy_size;
 
@@ -570,7 +570,7 @@ static INLINE int process_read_cd_iso2352_cmd(ReadCdIso2352Cmd *cmd)
 				copy_to_process(cmd->process, readbuf, ptr, remaining * cd_sector_size);
 
 			discfile_cd->cached_sector = sector;
-			return 0;
+			return SUCCEEDED;
 		}
 
 		remaining -= readsize;
@@ -685,7 +685,7 @@ int process_proxy_cmd(uint64_t command, process_t process, uint8_t *buf, uint64_
 				else
 					copy_to_process(process, discfile_proxy->cached_sector, buf, 2048);
 
-				return 0;
+				return SUCCEEDED;
 			}
 		}
 
@@ -884,7 +884,7 @@ static uint32_t find_file_sector(uint8_t *buf, char *file)
 		DPRINTF("%s not found\n", file);
 	#endif
 
-	return 0;
+	return SUCCEEDED;
 }
 
 static int process_get_psx_video_mode(void)
@@ -1391,7 +1391,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_2(int, post_storage_get_device_info, (uint64
 		mutex_unlock(mutex);
 	}
 
-	return 0;
+	return SUCCEEDED;
 }
 
 static int get_handle_device(int handle, uint64_t *device)
@@ -1654,7 +1654,7 @@ static INLINE uint16_t calculate_subq_crc(uint8_t *data)
 int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, uint64_t outlen, int is2048)
 {
 	if (inlen < 1)
-		return 0;
+		return SUCCEEDED;
 
 	switch (indata[0])
 	{
@@ -1677,7 +1677,7 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 				#ifdef DEBUG
 					DPRINTF("Requesting something other than TOC: %d!!\nPassing command to real function.", GET_FORMAT(cmd));
 				#endif
-				return 0;
+				return SUCCEEDED;
 			}
 
 			if (GET_MSF(cmd))
@@ -1925,7 +1925,7 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 				#ifdef DEBUG
 					DPRINTF("Read CD on 2048 iso (lba=0x%x, length=0x%x)!!! Not implemented.\n", lba, length);
 				#endif
-				return 0; // Fallback to real disc, let's see what happens :)
+				return SUCCEEDED; // Fallback to real disc, let's see what happens :)
 			}
 
 			if (user_data)
@@ -2029,7 +2029,7 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 				return process_generic_iso_scsi_cmd(indata, inlen, outdata, outlen);
 	}
 
-	return 0;
+	return SUCCEEDED;
 }
 
 static INLINE int get_psx_video_mode(void)
@@ -2333,7 +2333,7 @@ LV2_HOOKED_FUNCTION_COND_POSTCALL_2(int, emu_disc_auth, (uint64_t func, uint64_t
 			if (vsh_process && get_current_process_critical() == vsh_process && effective_disctype == DEVICE_TYPE_PSX_CD)
 			{
 				// Just bypass auth and leave current 0x29 profile
-				return 0;
+				return SUCCEEDED;
 			}
 		}
 		else if (param5004 == 0x29)
@@ -2358,7 +2358,7 @@ LV2_HOOKED_FUNCTION_COND_POSTCALL_2(int, emu_disc_auth, (uint64_t func, uint64_t
 	else if (func == 0x5007)
 	{
 		if (param == 0x43)
-			return 0;
+			return SUCCEEDED;
 
 		if (( (emu_ps3_rec && disc_emulation == EMU_OFF) || disc_emulation == EMU_PS3) && real_disctype != DEVICE_TYPE_PS3_BD)
 		{
@@ -2368,7 +2368,7 @@ LV2_HOOKED_FUNCTION_COND_POSTCALL_2(int, emu_disc_auth, (uint64_t func, uint64_t
 			{
 				inloop = 1;
 				call_hooked_function_2(emu_disc_auth, func, param); // Recursive!
-				return 0; /* return 0 regardless of result */
+				return SUCCEEDED; /* return 0 regardless of result */
 
 			}
 			else
@@ -2436,7 +2436,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, post_cellFsUtilMount, (const char *bl
 		map_path("//app_home", NULL, 0);
 	}
 
-	return 0;
+	return SUCCEEDED;
 }
 
 static INLINE int get_ps2emu_type(void)
@@ -2827,7 +2827,7 @@ LV2_HOOKED_FUNCTION(int, shutdown_copy_params_patched, (uint8_t *argp_user, uint
 
 		copy_ps2emu_stage2(ps2emu_type);
 	}
-	return 0;
+	return SUCCEEDED;
 }
 
 static INLINE void do_umount_discfile(void)
@@ -2940,7 +2940,7 @@ static INLINE int check_files_and_allocate(unsigned int filescount, char *files[
 		p += (strlen(p) + 1);
 	}
 
-	return 0;
+	return SUCCEEDED;
 }
 
 static int mount_common(unsigned int filescount, char *files[])
@@ -2955,7 +2955,7 @@ static int mount_common(unsigned int filescount, char *files[])
 	discfile->cached_sector = NULL;
 	discfile->cached_offset = 0;
 
-	return 0;
+	return SUCCEEDED;
 }
 
 static int mount_ps3_discfile(unsigned int filescount, char *files[])
@@ -3240,7 +3240,7 @@ int sys_storage_ext_get_disc_type(unsigned int *rdt, unsigned int *edt, unsigned
 	copy_to_user(&fake_disctype, get_secure_user_ptr(fdt), sizeof(fake_disctype));
 	mutex_unlock(mutex);
 
-	return 0;
+	return SUCCEEDED;
 }
 
 int sys_storage_ext_read_ps3_disc(void *buf, uint64_t start_sector, uint32_t count)
@@ -3564,7 +3564,7 @@ int sys_storage_ext_mount_discfile_proxy(sys_event_port_t result_port, sys_event
 			encrypted_image_nonce = 0;
 		}
 
-		return 0;
+		return SUCCEEDED;
 	}
 
 	if (encrypted_image)
@@ -3593,7 +3593,7 @@ int sys_storage_ext_mount_discfile_proxy(sys_event_port_t result_port, sys_event
 	}
 
 	map_path(mount_point, "/dev_usb000", FLAG_COPY|FLAG_PROTECT);
-	return 0;
+	return SUCCEEDED;
 }*/
 
 static INLINE void patch_ps2emu_entry(int ps2emu_type)

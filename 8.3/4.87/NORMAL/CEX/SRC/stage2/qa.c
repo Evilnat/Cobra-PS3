@@ -11,6 +11,7 @@
 #include <lv2/security.h>
 #include <lv2/thread.h>
 #include <lv2/patch.h>
+#include <lv2/error.h>
 #include <lv1/patch.h>
 #include <lv1/mm.h>
 #include "ps3mapi_core.h"
@@ -182,7 +183,7 @@ static int get_idps()
 	storage_unmap_io_memory(device, idps);
 	page_free(NULL, idps, 0x2F);
 
-	return 0;
+	return SUCCEEDED;
 }
 
 uint8_t read_qa_flag()
@@ -288,5 +289,5 @@ int set_qa_flag(uint8_t value)
 	
 	restore_patches();
 
-	return 0;
+	return SUCCEEDED;
 }

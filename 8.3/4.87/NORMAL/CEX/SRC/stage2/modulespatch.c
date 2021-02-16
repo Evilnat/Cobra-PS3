@@ -421,7 +421,7 @@ LV2_HOOKED_FUNCTION_PRECALL_2(int, post_lv1_call_99_wrapper, (uint64_t *spu_obj,
 		#endif
 	}
 
-	return 0;
+	return SUCCEEDED;
 }
 
 LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
@@ -660,7 +660,7 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 		
 	}
 
-	return 0;
+	return SUCCEEDED;
 }
 
 #if defined (FIRMWARE_CEX)
@@ -678,7 +678,7 @@ LV2_HOOKED_FUNCTION_COND_POSTCALL_2(int, pre_modules_verification, (uint32_t *re
 	}
 */
 	*ret = 0;
-	return 0;
+	return SUCCEEDED;
 }
 #endif
 
@@ -756,7 +756,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, load_process_hooked, (process_t proce
 			unhook_function_on_precall_success(load_process_symbol, load_process_hooked, 9); // Hook no more needed
 	#endif*/
 	
-	return 0;
+	return SUCCEEDED;
 }
 
 int bc_to_net(int param)
@@ -782,7 +782,7 @@ int bc_to_net(int param)
 		copy_to_process(vsh_process, &main_vsh_patches[2].data, (void *)(uint64_t)(0x10000 + main_vsh_patches[2].offset), 4);
 		copy_to_process(vsh_process, &main_vsh_patches[3].data, (void *)(uint64_t)(0x10000 + main_vsh_patches[3].offset), 4);
 		bc_to_net_status = 0;
-		return 0;
+		return SUCCEEDED;
 	}
 
 	if(param == 2)	
@@ -1028,7 +1028,7 @@ uint64_t load_plugin_kernel(char *path)
 					}
 				}
 				else				
-					return 0;				
+					return SUCCEEDED;				
 			}
 			else			
 				return -1;			
@@ -1173,7 +1173,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, create_process_common_hooked, (proces
 	char *parent_name = get_process_name(parent);
 	DPRINTF("PROCESS %s (%s) (%08X) created from parent process: %s\n", path, get_process_name(*process), *pid, ((int64_t)parent_name < 0) ? parent_name : "KERNEL");
 
-	return 0;
+	return SUCCEEDED;
 }
 
 LV2_HOOKED_FUNCTION_POSTCALL_8(void, create_process_common_hooked_pre, (process_t parent, uint32_t *pid, int fd, char *path, int r7, uint64_t r8,
