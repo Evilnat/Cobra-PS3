@@ -34,6 +34,8 @@ enum STORAGE_COMMAND
 	CMD_GET_PSX_VIDEO_MODE
 };
 
+extern int ps2emu_type;
+
 void restore_BD(void);
 
 void storage_ext_init(void);
@@ -44,8 +46,6 @@ void storage_ext_patches(void);
 //int mount_bd_discfile(unsigned int filescount, char *files[]);
 //int mount_psx_discfile(char *file, unsigned int trackscount, ScsiTrackDescriptor *tracks);
 //int mount_ps2_discfile(unsigned int filescount, char *files[], unsigned int trackscount, ScsiTrackDescriptor *tracks);
-
-extern int ps2emu_type;
 
 /* Syscalls */
 

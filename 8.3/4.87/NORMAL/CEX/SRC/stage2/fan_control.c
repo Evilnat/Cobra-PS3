@@ -100,6 +100,7 @@ LV2_HOOKED_FUNCTION_COND_POSTCALL_3(int, sm_set_fan_policy_sc, (uint8_t unk, uin
 LV2_HOOKED_FUNCTION_COND_POSTCALL_3(int, sys_shutdown, (uint16_t op, const void *buf, uint64_t size))
 {
 	// Avoids max FAN speed after a shutdown by Evilnat
+	// This doesn't work if the PS3 has lv2 panic
 	if(op == SYS_SHUTDOWN || op == SYS_SHUTDOWN2)
 	{		
 		DPRINTF("Shutdown executed, resetting FAN policy\n");

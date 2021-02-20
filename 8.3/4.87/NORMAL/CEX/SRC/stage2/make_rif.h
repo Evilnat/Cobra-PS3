@@ -13,6 +13,8 @@
 #define ALLOC_RIF_BUFFER 	(uint8_t*)(make_rif_buf + 0x20 + 0x28)
 ////////////////////////////////////////////////
 
+extern uint8_t skip_existing_rif;
+
 extern unsigned char RAP_KEY[];
 extern unsigned char RAP_PBOX[];
 extern unsigned char RAP_E1[];

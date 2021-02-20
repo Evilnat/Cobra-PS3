@@ -171,7 +171,7 @@ int sys_psp_read_header(int fd, char *buf, uint64_t nbytes, uint64_t *nread)
 	// Fake header. We will write only values actually used
 	memset(buf, 0, 0x100);
 	*(uint32_t *)(buf + 0x0c) = 0x10;
-	*(uint32_t *)(buf + 0x64) = (umd_size / 0x800)-1; // Last sector of umd
+	*(uint32_t *)(buf + 0x64) = (umd_size / 0x800) - 1; // Last sector of umd
 	strncpy(buf + 0x70, psp_id, 10);
 
 	#ifdef DEBUG
@@ -296,18 +296,19 @@ int sys_psp_set_umdfile(char *file, char *id, int prometheus)
 		return ret;
 
 	int len = strlen(umd_file);
-	if(len > 4)
-	{
-		if(strcmp(file + (len - 4), ".PNG") == 0) base_offset = 0x10000;
-	}
+
+	if(len > 4)	
+		if(strcmp(file + (len - 4), ".PNG") == 0) 
+			base_offset = 0x10000;	
 
 	condition_psp_iso = 1;
 	condition_psp_prometheus = prometheus;
 
-#ifdef DEBUG
-	if (prometheus)
-		DPRINTF("Using prometheus patch.\n");
-#endif
+	#ifdef DEBUG
+		if (prometheus)
+			DPRINTF("Using prometheus patch.\n");
+	#endif
+
 	if (!patches_backup)
 	{
 		switch(vsh_check)
@@ -316,6 +317,7 @@ int sys_psp_set_umdfile(char *file, char *id, int prometheus)
 				#ifdef DEBUG
 					DPRINTF("Now patching PSP DRM In Retail VSH..\n");
 				#endif
+
 				patches_backup = alloc(sizeof(psp_drm_patches), 0x27);
 
 				memcpy(patches_backup, &psp_drm_patches, sizeof(psp_drm_patches));
@@ -339,7 +341,6 @@ int sys_psp_set_umdfile(char *file, char *id, int prometheus)
 				#endif
 			break;
 		}
-
 	}
 
 	return SUCCEEDED;
@@ -422,7 +423,7 @@ int sys_psp_prx_patch(uint32_t *unk, uint8_t *elf_buf, void *link_register)
 int sys_psp_post_savedata_initstart(int result, void *param)
 {
 	#ifdef DEBUG
-	DPRINTF("Savedata init start\n");
+		DPRINTF("Savedata init start\n");
 	#endif
 
 	if (result == 0)
@@ -442,6 +443,7 @@ int sys_psp_post_savedata_shutdownstart(void)
 		#ifdef DEBUG
 			DPRINTF("Original bind: %08X\n", savedata_param[0x34/4]);
 		#endif
+			
 		savedata_param[0x34/4] = swap32(1); // SCE_UTILITY_SAVEDATA_BIND_OK
 		savedata_param = NULL;
 	}

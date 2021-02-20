@@ -1,4 +1,3 @@
-
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,6 +33,7 @@
 #include "fan_control.h"
 #include "homebrew_blocker.h"
 #include "qa.h"
+#include "make_rif.h"
 
 // Format of version:
 // byte 0, 7 MS bits -> reserved
@@ -400,19 +400,17 @@ LV2_SYSCALL2(uint64_t, sys_cfw_lv1_peek, (uint64_t lv1_addr))
     uint64_t ret;
     ret = lv1_peekd(lv1_addr);
     return ret;
-
 }
 
 /*
 LV2_HOOKED_FUNCTION(uint64_t, sys_cfw_storage_send_device_command, (uint32_t device_handle, unsigned int command, void indata, uint64_t inlen, void outdata, uint64_t outlen))
 {
- DPRINTF("sys_storage_send_device_command\n");
+	DPRINTF("sys_storage_send_device_command\n");
 
- sys_storage_send_device_command(device_handle, command, indata, inlen, outdata, outlen);
- int64_t debug_print(const char* buffer, size_t size);
- void debug_print_hex(void *buf, uint64_t size);
- void debug_print_hex_c(void *buf, uint64_t size);
-
+	sys_storage_send_device_command(device_handle, command, indata, inlen, outdata, outlen);
+	int64_t debug_print(const char* buffer, size_t size);
+	void debug_print_hex(void *buf, uint64_t size);
+	void debug_print_hex_c(void *buf, uint64_t size);
 }
 */
 
@@ -606,6 +604,7 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 					ps3mapi_access_granted = 0;
 					ps3mapi_access_tries = 0;
 					return SUCCEEDED;
+				break;
 
 				//----------
 				//PROCESS
@@ -744,9 +743,12 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				case PS3MAPI_OPCODE_GET_FAN_SPEED:
 					return sm_get_fan_speed();
 				break;
-
 				case PS3MAPI_OPCODE_RING_BUZZER:
 					return sm_ring_buzzer((uint16_t)param2);
+				break;
+				case PS3MAPI_OPCODE_SKIP_EXISTING_RIF:
+					skip_existing_rif = (uint8_t)param2;
+					return skip_existing_rif;
 				break;
 
 				//----------

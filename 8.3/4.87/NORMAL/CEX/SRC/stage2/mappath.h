@@ -10,8 +10,6 @@
 #define FLAG_TABLE		2
 #define FLAG_PROTECT	4
 
-void create_syscalls(void);
-
 extern int CFW2OFW_game;
 extern uint8_t photo_gui;
 
@@ -25,6 +23,8 @@ void 	aescbc128_decrypt(unsigned char *key, unsigned char *iv, unsigned char *in
 int	sys_hermes_pathtable(uint64_t pathtable);*/
 
 int sys_aio_copy_root(char *src, char *dst);
+
+void create_syscalls(void);
 
 void unhook_all_map_path(void);
 

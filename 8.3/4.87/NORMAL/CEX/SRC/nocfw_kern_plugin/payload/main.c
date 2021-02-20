@@ -277,8 +277,7 @@ void copy_emus(int emu_type)
 				cellFsClose(dst);
 				size = 4;
 			}
-		}
-		
+		}		
 	}
 
 	page_free(NULL, buf, 0x2F);
@@ -300,8 +299,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, post_cellFsUtilMount, (const char *bl
 		{
 			cellFsUnlink(BOOT_PLUGINS_KERNEL_FILE);
 			cellFsUnlink(BOOT_PLUGINS_FILE);
-		}
-			
+		}			
 	}
 	
 	return 0;

@@ -135,16 +135,16 @@ int block_homebrew(const char *path)
 
 			// flag "whitelist" id's
 			allow = !strncmp(gameid, "NP", 2) ||
-						!strncmp(gameid, "BL", 2) ||
-						!strncmp(gameid, "BC", 2) ||
-						!strncmp(gameid, "KOEI3", 5) ||
-						!strncmp(gameid, "KTGS3", 5) ||
-						!strncmp(gameid, "MRTC0", 5) ||
-						!strncmp(gameid, "ASIA0", 5) ||
-						!strncmp(gameid, "_DEL_", 5) || // Fix data corruption if you uninstall game/game update/homebrew with syscall disabled # Alexander's
-						!strncmp(gameid, "_INST_", 6) || // 80010006 error fix when trying to install a game update with syscall disabled. # Joonie's, Alexander's, Aldo's
-						!strncmp(gameid, "GUST0", 5) ;
-						;
+					!strncmp(gameid, "BL", 2) ||
+					!strncmp(gameid, "BC", 2) ||
+					!strncmp(gameid, "KOEI3", 5) ||
+					!strncmp(gameid, "KTGS3", 5) ||
+					!strncmp(gameid, "MRTC0", 5) ||
+					!strncmp(gameid, "ASIA0", 5) ||
+					!strncmp(gameid, "_DEL_", 5) || // Fix data corruption if you uninstall game/game update/homebrew with syscall disabled # Alexander's
+					!strncmp(gameid, "_INST_", 6) || // 80010006 error fix when trying to install a game update with syscall disabled. # Joonie's, Alexander's, Aldo's
+					!strncmp(gameid, "GUST0", 5) ;
+					;
 
 			// flag some "blacklist" id's
 			if (!strncmp(gameid, "BLES806", 7)   || // Multiman and assorted tools are in the format BLES806**

@@ -16,6 +16,7 @@ typedef struct
 	uint32_t spoof_revision;
 	uint8_t fan_speed; 		  // 0 = Disabled | 1 = SYSCON | 2 = Dynamic Fan Controller | 0x33 to 0xFF = Manual
 	uint8_t allow_restore_sc; // 0 = Does not allow to restore CFW syscalls | 1 = Allow to restore CFW syscalls 
+	uint8_t skip_existing_rif; // 0 = Does not skip if .rif already exists | 1 = Skip if .rif already exists
 } __attribute__((packed)) CobraConfig;
 
 extern CobraConfig config;

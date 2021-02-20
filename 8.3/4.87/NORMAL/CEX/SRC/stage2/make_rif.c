@@ -8,6 +8,8 @@
 #include "ps3mapi_core.h"
 #include "make_rif.h"
 
+uint8_t skip_existing_rif = 0;
+
 unsigned char RAP_KEY[] =  { 0x86, 0x9F, 0x77, 0x45, 0xC1, 0x3F, 0xD8, 0x90, 0xCC, 0xF2, 0x91, 0x88, 0xE3, 0xCC, 0x3E, 0xDF };
 unsigned char RAP_PBOX[] = { 0x0C, 0x03, 0x06, 0x04, 0x01, 0x0B, 0x0F, 0x08, 0x02, 0x07, 0x00, 0x05, 0x0A, 0x0E, 0x0D, 0x09 };
 unsigned char RAP_E1[] =   { 0xA9, 0x3E, 0x1F, 0xD6, 0x7C, 0x55, 0xA3, 0x29, 0xB7, 0x5F, 0xDD, 0xA6, 0x2A, 0x95, 0xC7, 0xA5 };
@@ -34,13 +36,16 @@ static void get_rif_key(unsigned char* rap, unsigned char* rif)
 			int p = RAP_PBOX[i];
 			key[p] ^= RAP_E1[p];
 		}
+
 		for (i = 15; i >= 1; --i)
 		{
 			int p = RAP_PBOX[i];
 			int pp = RAP_PBOX[i - 1];
 			key[p] ^= key[pp];
 		}
+
 		int o = 0;
+
 		for (i = 0; i < 16; ++i)
 		{
 			int p = RAP_PBOX[i];
@@ -108,7 +113,7 @@ void read_act_dat_and_make_rif(uint8_t *rap, uint8_t *act_dat, const char *conte
 		memcpy(rif + 0x68, &expiration_time, 8); // 0x68 expiration time
 
 		uint64_t size;
-		memset(rif+0x70, 0x11, 0x28);			 // 0x70 ECDSA Signature
+		memset(rif + 0x70, 0x11, 0x28);			 // 0x70 ECDSA Signature
 		cellFsWrite(fd, rif, 0x98, &size);
 		cellFsClose(fd);
 	}
@@ -119,6 +124,17 @@ void make_rif(const char *path)
 	int path_len = strlen(path);
 	if(!strncmp(path, "/dev_hdd0/home/", 15) && !strcmp(path + path_len - 4, ".rif"))
 	{
+		// Skip the creation of rif if already exists - By aldostool's
+		CellFsStat stat;
+		if(skip_existing_rif && (cellFsStat(path, &stat) == SUCCEEDED)) 
+		{
+			#ifdef DEBUG
+				DPRINTF("rif already exists, skipping...\n");
+			#endif
+
+			return; // rif already exists
+		}
+
 		#ifdef DEBUG
 			DPRINTF("open_path_hook: %s (looking for rap)\n", path);
 		#endif
@@ -191,7 +207,6 @@ void make_rif(const char *path)
 					DPRINTF("act.dat not found: %s\n", act_path);
 				#endif
 			}
-
 		}
 	}
 }

@@ -9,6 +9,7 @@
 #include "modulespatch.h"
 #include "fan_control.h"
 #include "homebrew_blocker.h"
+#include "make_rif.h"
 
 #define COBRA_CONFIG_FILE	"/dev_hdd0/vm/cobra_cfg.bin"
 
@@ -66,6 +67,9 @@ static void check_and_correct(CobraConfig *cfg)
 
 	if(cfg->allow_restore_sc > 1)
 		cfg->allow_restore_sc = 0;
+
+	if(cfg->skip_existing_rif > 1)
+		cfg->skip_existing_rif = 0;
 		
 	if (cfg->size > sizeof(CobraConfig))
 		cfg->size = sizeof(CobraConfig);
@@ -109,12 +113,13 @@ int read_cobra_config(void)
 	dvd_video_region = config.dvd_video_region;
 	fan_speed = config.fan_speed;
 	allow_restore_sc = config.allow_restore_sc;
+	skip_existing_rif = config.skip_existing_rif;
 
 	// Removed. Now condition_ps2softemu has another meaning and it is set automatically in storage_ext if no BC console
 	//condition_ps2softemu = config.ps2softemu;
 	#ifdef  DEBUG
-		DPRINTF("Configuration read.\n+ bd_video_region = %d, + dvd_video_region = %d\n+ spoof_version = %04X, + spoof_revision = %d\n+ fan_speed = %02X, + allow_restore_sc = %X\n",
-				 bd_video_region, dvd_video_region, config.spoof_version, config.spoof_revision, fan_speed, allow_restore_sc);
+		DPRINTF("Configuration read.\n+ bd_video_region = %d, + dvd_video_region = %d\n+ spoof_version = %04X, + spoof_revision = %d\n+ fan_speed = %02X, + allow_restore_sc = %X\n+ skip_existing_rif = %02X\n",
+				 bd_video_region, dvd_video_region, config.spoof_version, config.spoof_revision, fan_speed, allow_restore_sc, skip_existing_rif);
 	#endif
 	
 	return SUCCEEDED;
@@ -184,6 +189,7 @@ int sys_write_cobra_config(CobraConfig *cfg)
 	dvd_video_region = config.dvd_video_region;
 	fan_speed = config.fan_speed;
 	allow_restore_sc = config.allow_restore_sc;
+	skip_existing_rif = config.skip_existing_rif;
 	
 	return write_cobra_config();
 }
