@@ -30,6 +30,7 @@ This repository will have constant changes.
     . Improved Habib's QA flags code imported by aldostools (by Evilnat)
 	. Fixed black screen in CFW2OFW converted games (by Evilnat)
 	. Added sm_ring_buzzer with single_beep, double_beep and triple_beep (by Evilnat)
+	. Skip the creation of rif if already exists (by aldo)
     
 ###### To do:
     . reActPSN
