@@ -9,7 +9,7 @@ INCLUDE		=  ../lv2/include ../lv1/include ../cryptcode/include ../debug/include
 INCLUDE		+= $(PS3DEV)/ppu/ppu/include
 LIBSDIR     =
 LIBS        =
-BUILD_TYPE  = debug
+BUILD_TYPE  = release
 OUTPUT		= stage2.bin
 
 CFLAGS = -ffunction-sections -fdata-sections -Os -m64 -fno-builtin -fno-exceptions \
@@ -58,19 +58,19 @@ all: $(OUTPUT)
 	@rm -f *.o *.elf *.map *.lzma ../lv2/src/*.o ../lv1/src/*.o ../debug/src/*.o
 
 objdump: $(OUTPUT)
-	@$(OBJDUMP) -D -EB -b binary -m powerpc:common64 $(OUTPUT)	
+	$(OBJDUMP) -D -EB -b binary -m powerpc:common64 $(OUTPUT)	
 
 %.bin: %.elf
-	@$(OBJCOPY) -O binary $< $@	
+	$(OBJCOPY) -O binary $< $@	
 
 stage2.elf: $(OBJS) stage2.ld
-	@$(CC) $(LDFLAGS) -o $@ $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS)
 
 %.o: %.S
-	@$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 %.o: %.c
-	@$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
 	@rm -f *.o *.elf *.bin *.map *.lzma ../lv2/src/*.o ../lv1/src/*.o ../debug/src/*.o
