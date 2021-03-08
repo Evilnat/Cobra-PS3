@@ -1,8 +1,6 @@
 #ifndef __FAN_CONTROL_H__
 #define __FAN_CONTROL_H__
 
-#include <lv2/syscall.h>
-
 extern uint8_t fan_control_running;
 extern uint8_t fan_speed;
 

@@ -59,4 +59,5 @@ ps2netemu_stage2.elf: $(OBJS) ldscript.ld
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
+	@echo -e "\e[1;32mCleaning netemu...\e[0m"
 	@rm -f *.o *.elf *.self *.bin *.map temp.self ../../ps2emu/src/*.o ../../lv1/src/*.o ../../debug/src/*.o

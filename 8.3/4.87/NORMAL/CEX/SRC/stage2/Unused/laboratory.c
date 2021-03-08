@@ -123,7 +123,7 @@ static void dump_process(process_t process)
 	DPRINTF("Dumping process %s\n", get_process_name(process));
 	sprintf(path, "/dev_usb000/%s.main_segment", get_process_name(process));
 	
-	buf = alloc(KB(64), 0x27);
+	buf = malloc(KB(64));
 	if (!buf)
 	{
 		DPRINTF("Not enough memory.\n");
@@ -177,7 +177,7 @@ static void dump_process(process_t process)
 	}
 	
 	cellFsClose(fd);
-	dealloc(buf, 0x27);
+	free(buf);
 }
 
 static void dump_processes(void)
@@ -399,13 +399,13 @@ static void dump_process_modules_info(process_t process)
 	
 	DPRINTF("******** %s ********\n", get_process_name(process));
 	
-	list = alloc(SPRX_NUM * sizeof(sys_prx_module_info_t), 0x35);
-	unk = alloc(SPRX_NUM * sizeof(uint32_t), 0x35);
+	list = kalloc(SPRX_NUM * sizeof(sys_prx_module_info_t));
+	unk = kalloc(SPRX_NUM * sizeof(uint32_t));
 	
 	if (prx_get_module_list(process, list, unk, SPRX_NUM, &n, &unk2) == 0)
 	{
-		char *filename = alloc(256, 0x35);
-		sys_prx_segment_info_t *segments = alloc(sizeof(sys_prx_segment_info_t), 0x35);
+		char *filename = kalloc(256);
+		sys_prx_segment_info_t *segments = kalloc(sizeof(sys_prx_segment_info_t));
 				
 		for (int i = 0; i < n; i++)
 		{
@@ -419,14 +419,14 @@ static void dump_process_modules_info(process_t process)
 				DPRINTF("Module %s\nText_addr:%08lX\n", filename, segments[0].base);			
 		}
 		
-		dealloc(filename, 0x35);
-		dealloc(segments, 0x35);
+		kfree(filename);
+		kfree(segments);
 	}
 	
 	DPRINTF("****************\n");
 	
-	dealloc(list, 0x35);
-	dealloc(unk, 0x35);
+	kfree(list);
+	kfree(unk);
 }
 
 static void dump_processes_modules_info(void)

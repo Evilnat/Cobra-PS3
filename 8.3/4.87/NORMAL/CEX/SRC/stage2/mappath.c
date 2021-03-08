@@ -1,5 +1,4 @@
 #include <lv2/lv2.h>
-#include <lv2/libc.h>
 #include <lv2/memory.h>
 #include <lv2/patch.h>
 #include <lv2/syscall.h>
@@ -16,6 +15,9 @@
 
 #define MAX_TABLE_ENTRIES 32
 
+static unsigned char crap_pants[13] = {"///no_exists"};
+uint8_t photo_gui = 1;
+
 typedef struct _MapEntry
 {
 	char *oldpath;
@@ -25,9 +27,6 @@ typedef struct _MapEntry
 } MapEntry;
 
 MapEntry map_table[MAX_TABLE_ENTRIES];
-
-static unsigned char crap_pants[13] = {"///no_exists"};
-uint8_t photo_gui = 1;
 
 // aldostool's prevention of accidental deletion of important paths
 static int init_map_entry(uint8_t index)
@@ -51,9 +50,7 @@ int map_path(char *oldpath, char *newpath, uint32_t flags)
 	if (!oldpath || strlen(oldpath) == 0)
 		return -1;
 
-	#ifdef  DEBUG
-		DPRINTF("Map path: %s -> %s\n", oldpath, newpath);
-	#endif
+	DPRINTF("Map path: %s -> %s\n", oldpath, newpath);
 
 	if (newpath && strcmp(oldpath, newpath) == 0)
 		newpath = NULL;
@@ -80,9 +77,9 @@ int map_path(char *oldpath, char *newpath, uint32_t flags)
 							continue;
 
 					if (map_table[i].flags & FLAG_COPY)
-						dealloc(map_table[i].oldpath, 0x27);
+						free(map_table[i].oldpath);
 
-					dealloc(map_table[i].newpath, 0x27);
+					free(map_table[i].newpath);
 					map_table[i].oldpath = NULL;
 					map_table[i].newpath = NULL;
 					map_table[i].flags = 0;
@@ -108,14 +105,14 @@ int map_path(char *oldpath, char *newpath, uint32_t flags)
 		if (flags & FLAG_COPY)
 		{
 			int len = strlen(oldpath);
-			map_table[firstfree].oldpath = alloc(len + 1, 0x27);
+			map_table[firstfree].oldpath = malloc(len + 1);
 			strncpy(map_table[firstfree].oldpath, oldpath, len);
 			map_table[firstfree].oldpath[len] = 0;
 		}
 		else
 			map_table[firstfree].oldpath = oldpath;
 
-		map_table[firstfree].newpath = alloc(MAX_PATH, 0x27);
+		map_table[firstfree].newpath = malloc(MAX_PATH);
 		strncpy(map_table[firstfree].newpath, newpath, MAX_PATH - 1);
 		map_table[firstfree].newpath[MAX_PATH - 1] = 0;
 		map_table[firstfree].newpath_len = strlen(newpath);
@@ -124,13 +121,11 @@ int map_path(char *oldpath, char *newpath, uint32_t flags)
 	return SUCCEEDED;
 }
 
-int map_path_user(char *oldpath, char *newpath, uint32_t flags)
+static int map_path_user(char *oldpath, char *newpath, uint32_t flags)
 {
 	char *oldp, *newp;
 
-	#ifdef  DEBUG
-		DPRINTF("map_path_user, called by process %s: %s -> %s\n", get_process_name(get_current_process_critical()), oldpath, newpath);
-	#endif
+	DPRINTF("map_path_user, called by process %s: %s -> %s\n", get_process_name(get_current_process_critical()), oldpath, newpath);
 
 	if (oldpath == 0)
 		return -1;
@@ -146,17 +141,17 @@ int map_path_user(char *oldpath, char *newpath, uint32_t flags)
 		ret = pathdup_from_user(get_secure_user_ptr(newpath), &newp);
 		if (ret != 0)
 		{
-			dealloc(oldp, 0x27);
+			free(oldp);
 			return ret;
 		}
 	}
 
 	ret = map_path(oldp, newp, flags | FLAG_COPY);
 
-	dealloc(oldp, 0x27);
+	free(oldp);
 
 	if (newp)
-		dealloc(newp, 0x27);
+		free(newp);
 
 	return ret;
 }
@@ -202,9 +197,9 @@ int sys_map_paths(char *paths[], char *new_paths[], unsigned int num)
 						continue;
 
 				if (map_table[i].flags & FLAG_COPY)
-					dealloc(map_table[i].oldpath, 0x27);
+					free(map_table[i].oldpath);
 
-				dealloc(map_table[i].newpath, 0x27);
+				free(map_table[i].newpath);
 				map_table[i].oldpath = NULL;
 				map_table[i].newpath = NULL;
 				map_table[i].flags = 0;
@@ -213,14 +208,6 @@ int sys_map_paths(char *paths[], char *new_paths[], unsigned int num)
 	}
 
 	return ret;
-}
-
-void aescbc128_decrypt(unsigned char *key, unsigned char *iv, unsigned char *in, unsigned char *out, int len)
-{
-	aescbccfb_dec(out, in, len, key, 128, iv);
-
-	// Reset the IV.
-	memset(iv, 0, 0x10);
 }
 
 static uint8_t libft2d_access = 0;
@@ -262,9 +249,7 @@ LV2_HOOKED_FUNCTION_POSTCALL_2(void, open_path_hook, (char *path0, int mode))
 					photo += len - 4;
 					if(!strcmp(photo, ".PNG") || !strcmp(photo, ".JPG") || !strcmp(photo -4, "_COV.JPG") || !strncasecmp(photo -4, ".iso.jpg", 8) || !strncasecmp(photo -4, ".iso.png", 8))
 					{
-						#ifdef DEBUG
-							DPRINTF("CREATING /dev_hdd0/tmp/wm_request\n");
-						#endif
+						//DPRINTF("CREATING /dev_hdd0/tmp/wm_request\n");
 
 						int fd;
 						if (cellFsOpen("/dev_hdd0/tmp/wm_request", CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, 0666, NULL, 0) == 0)
@@ -294,19 +279,13 @@ LV2_HOOKED_FUNCTION_POSTCALL_2(void, open_path_hook, (char *path0, int mode))
 						CellFsStat stat;
 						if(cellFsStat(map_table[i].newpath, &stat) != 0)
 						{
-							#ifdef DEBUG
-								DPRINTF("open_path %s\n", path0);
-							#endif
-
+							DPRINTF("open_path %s\n", path0);
 							return; // Do not remap / Use the original file when redirected file does not exist
 						}
 					}
 
 					set_patched_func_param(1, (uint64_t)map_table[i].newpath);
 
-					#ifdef  DEBUG
-						//DPRINTF("=: [%s]\n", map_table[i].newpath);
-					#endif
 					break;
 				}
 			}
@@ -346,7 +325,6 @@ int sys_aio_copy_root(char *src, char *dst)
 		}
 	}
 
-
 	if (strlen(dst) >= 0x20)
 		return EINVAL;
 
@@ -372,9 +350,7 @@ int sys_aio_copy_root(char *src, char *dst)
 					}
 				}
 
-				#ifdef  DEBUG
-					DPRINTF("AIO: root replaced by %s\n", dst);
-				#endif
+				//DPRINTF("AIO: root replaced by %s\n", dst);
 
 				break;
 			}

@@ -1,26 +1,16 @@
-#include <lv2/lv2.h>
-#include <lv2/libc.h>
 #include <lv2/memory.h>
-#include <lv2/storage.h>
 #include <lv2/io.h>
-#include <lv2/thread.h>
-#include <lv2/synchronization.h>
 #include <lv2/object.h>
-#include <lv2/time.h>
-#include <lv2/security.h>
 #include <lv2/patch.h>
 #include <lv2/syscall.h>
 #include <lv2/error.h>
 #include <lv2/symbols.h>
 #include <lv1/lv1.h>
-#include <lv1/lv1call.h>
 #include <lv1/stor.h>
 #include <lv1/patch.h>
 #include "common.h"
 #include "storage_ext.h"
-#include "scsi.h"
 #include "config.h"
-//#include "crypto.h"
 #include "mappath.h"
 #include "modulespatch.h"
 #include "fan_control.h"
@@ -34,7 +24,7 @@
 #define _4KB_	0x1000
 #define _64KB_	0x10000
 
-#define READ_BUF_SIZE				(256*1024)
+#define READ_BUF_SIZE				(256 * 1024)
 #define READ_BUF_SIZE_SECTORS_PSX	(128)
 #define CD_CACHE_SIZE				(64)
 
@@ -185,9 +175,8 @@ static INLINE void get_next_read(int64_t discoffset, uint64_t bufsize, uint64_t 
 
 		base += discfile->sizes[i];
 	}
-	#ifdef DEBUG
-		DPRINTF("Offset or size out of range  %lx   %lx!!!!!!!!\n", discoffset, bufsize);
-	#endif
+
+	DPRINTF("Offset or size out of range  %lx   %lx!!!!!!!!\n", discoffset, bufsize);
 }
 
 static INLINE int process_read_iso_cmd(ReadIsoCmd *cmd)
@@ -203,9 +192,7 @@ static INLINE int process_read_iso_cmd(ReadIsoCmd *cmd)
 	offset = cmd->offset;
 	remaining = cmd->size;
 
-	#ifdef DEBUG
-		//DPRINTF("Read %lx %lx\n", cmd->offset, cmd->size);
-	#endif
+	//DPRINTF("Read %lx %lx\n", cmd->offset, cmd->size);
 
 	if (disc_emulation == EMU_PS3 && remaining == 2048)
 		cache = 1;
@@ -225,7 +212,7 @@ static INLINE int process_read_iso_cmd(ReadIsoCmd *cmd)
 
 	if (discfile->cached_sector)
 	{
-		dealloc(discfile->cached_sector, 0x2F);
+		xfree(discfile->cached_sector);
 		discfile->cached_sector = NULL;
 	}
 
@@ -319,7 +306,7 @@ static INLINE int process_read_iso_cmd(ReadIsoCmd *cmd)
 	{
 		if (cache)
 		{
-			discfile->cached_sector = alloc(2048, 0x2F);
+			discfile->cached_sector = xalloc(2048);
 
 			if (iskernel)
 				memcpy(discfile->cached_sector, cmd->buf, 2048);
@@ -350,8 +337,8 @@ static INLINE int process_read_cd_iso2048_cmd(ReadIsoCmd *cmd)
 	uint32_t remaining, bufsize;
 	int iskernel, ret, doseek;
 
-	sector = cmd->offset/2048;
-	remaining = cmd->size/2048;
+	sector = cmd->offset / 2048;
+	remaining = cmd->size / 2048;
 	iskernel = (((uint64_t)cmd->buf) >> 63);
 
 	if (discfd == -1)
@@ -473,7 +460,7 @@ static INLINE int process_read_cd_iso2352_cmd(ReadCdIso2352Cmd *cmd)
 				if (iskernel)
 					memcpy(buf+(copy_offset * cd_sector_size), copy_ptr, copy_size * cd_sector_size);
 				else
-					copy_to_process(cmd->process, copy_ptr, buf+(copy_offset * cd_sector_size), copy_size * cd_sector_size);
+					copy_to_process(cmd->process, copy_ptr, buf + (copy_offset * cd_sector_size), copy_size * cd_sector_size);
 
 				if (remaining == copy_size)
 					return SUCCEEDED;
@@ -545,7 +532,7 @@ static INLINE int process_read_cd_iso2352_cmd(ReadCdIso2352Cmd *cmd)
 				break;
 
 			if (v < (readsize * cd_sector_size))
-				memset(readbuf+v, 0, (readsize * cd_sector_size)-v);
+				memset(readbuf+v, 0, (readsize * cd_sector_size) - v);
 		}
 		else
 			memset(readbuf, 0, readsize * cd_sector_size);
@@ -641,27 +628,19 @@ int process_proxy_cmd(uint64_t command, process_t process, uint8_t *buf, uint64_
 
 	if (!do_copy)
 	{
-		#ifdef DEBUG
-			DPRINTF("Native VSH read\n");
-		#endif
+		DPRINTF("Native VSH read\n");
 
-		ret = event_port_send(proxy_command_port, command, offset, (((uint64_t)buf)<<32ULL) | remaining);		
+		ret = event_port_send(proxy_command_port, command, offset, (((uint64_t)buf) << 32ULL) | remaining);		
 		if (ret)
 		{
-			#ifdef DEBUG
-				DPRINTF("event_port send failed: %x\n", ret);
-			#endif
-
+			DPRINTF("event_port send failed: %x\n", ret);
 			return ret;
 		}
 
 		ret = event_queue_receive(proxy_result_queue, &event, 0);
 		if (ret)
 		{
-			#ifdef DEBUG
-				DPRINTF("event_queue_receive failed: %x\n", ret);
-			#endif
-
+			DPRINTF("event_queue_receive failed: %x\n", ret);
 			return ret;
 		}
 
@@ -694,7 +673,7 @@ int process_proxy_cmd(uint64_t command, process_t process, uint8_t *buf, uint64_
 
 		if (discfile_proxy->cached_sector)
 		{
-			dealloc(discfile_proxy->cached_sector, 0x2F);
+			xfree(discfile_proxy->cached_sector);
 			discfile_proxy->cached_sector = NULL;
 		}
 
@@ -703,18 +682,14 @@ int process_proxy_cmd(uint64_t command, process_t process, uint8_t *buf, uint64_
 		ret = page_allocate_auto(vsh_process, read_size, 0x2F, &kbuf);
 		if (ret)
 		{
-			#ifdef DEBUG
-				DPRINTF("page_allocate failed: %x\n", ret);
-			#endif
+			DPRINTF("page_allocate failed: %x\n", ret);
 			return ret;
 		}
 
 		ret = page_export_to_proc(vsh_process, kbuf, 0x40000, &vbuf);
 		if (ret)
 		{
-			#ifdef DEBUG
-				DPRINTF("page_export_to_proc failed: %x\n", ret);
-			#endif
+			DPRINTF("page_export_to_proc failed: %x\n", ret);
 
 			page_free(vsh_process, kbuf, 0x2F);
 			return ret;
@@ -752,20 +727,20 @@ int process_proxy_cmd(uint64_t command, process_t process, uint8_t *buf, uint64_
 
 		if (cache)
 		{
-			discfile_proxy->cached_sector = alloc(2048, 0x2F);
+			discfile_proxy->cached_sector = xalloc(2048);
 
 			if (iskernel)
 				memcpy(discfile_proxy->cached_sector, obuf, 2048);
 			else
 				copy_from_process(process, obuf, discfile_proxy->cached_sector, 2048);
 
-			discfile_proxy->cached_offset = offset-2048;
+			discfile_proxy->cached_offset = offset - 2048;
 		}
 	}
 
 	#ifdef DEBUG
-	if (ret)
-		DPRINTF("proxy read failed: %x\n", ret);
+		if (ret)
+			DPRINTF("proxy read failed: %x\n", ret);
 	#endif
 
 	return ret;
@@ -886,10 +861,7 @@ static uint32_t find_file_sector(uint8_t *buf, char *file)
 		p += p[0];
 	}
 
-
-	#ifdef DEBUG
-		DPRINTF("%s not found\n", file);
-	#endif
+	DPRINTF("%s not found\n", file);
 
 	return SUCCEEDED;
 }
@@ -958,9 +930,7 @@ static int process_get_psx_video_mode(void)
 							}
 						}
 
-						#ifdef DEBUG
-							DPRINTF("PSX EXE: %s\n", exe_path);
-						#endif
+						DPRINTF("PSX EXE: %s\n", exe_path);
 
 						// detect PAL by title_id
 						if ((exe_path[4] == '_') &&
@@ -993,9 +963,9 @@ static int process_get_psx_video_mode(void)
 					}
 				}
 
-				if(exe_path) dealloc(exe_path, 0x27);
+				if(exe_path) free(exe_path);
 			}
-			if(buf) dealloc(buf, 0x27);
+			if(buf) free(buf);
 		}
 
 		#ifdef DEBUG
@@ -1005,7 +975,7 @@ static int process_get_psx_video_mode(void)
 				DPRINTF("PAL\n");
 		#endif
 
-		dealloc(bbuf, 0x27);
+		free(bbuf);
 		page_free(NULL, dma, 0x2F);
 	}
 
@@ -1030,7 +1000,6 @@ void dispatch_thread_entry(uint64_t arg)
 		switch (event.data1)
 		{
 			case CMD_READ_ISO:
-
 				if (discfile_proxy)
 					cmd_result = process_read_iso_cmd_proxy((ReadIsoCmd *)event.data2);
 				else if (discfile_cd)
@@ -1062,9 +1031,7 @@ void dispatch_thread_entry(uint64_t arg)
 		event_port_send(result_port, cmd_result, 0, 0);
 	}
 
-	#ifdef DEBUG
-		//DPRINTF("Exiting dispatch thread %d\n", ret);
-	#endif
+	//DPRINTF("Exiting dispatch thread %d\n", ret);
 
 	ppu_thread_exit(0);
 }
@@ -1078,9 +1045,7 @@ static int read_real_disc_sector (void *buf, uint64_t lba, uint32_t size, int re
 	cmd.start_sector = lba;
 	cmd.sector_count = size;
 
-	#ifdef DEBUG
-		//DPRINTF("Read sector %lx\n", lba);
-	#endif
+	//DPRINTF("Read sector %lx\n", lba);
 
 	for (int i = 0; i < retries && ret != 0; i++)
 	{
@@ -1190,9 +1155,7 @@ static void process_disc_insert(uint32_t disctype)
 	fake_disctype = 0;
 	emu_ps3_rec = 0;
 
-	#ifdef DEBUG
-		DPRINTF("real disc type = %x\n", real_disctype);
-	#endif
+	DPRINTF("real disc type = %x\n", real_disctype);
 
 	switch (disc_emulation)
 	{
@@ -1261,18 +1224,14 @@ static void process_disc_insert(uint32_t disctype)
 		break;
 	}
 
-	#ifdef DEBUG
-		DPRINTF("effective disc type = %x, fake disc type = %x\n", effective_disctype, fake_disctype);
-	#endif
+	DPRINTF("effective disc type = %x, fake disc type = %x\n", effective_disctype, fake_disctype);
 }
 
 LV2_PATCHED_FUNCTION(int, device_event, (event_port_t event_port, uint64_t event, uint64_t param, uint64_t device))
 {
 	int lock = !loop;
 
-	#ifdef DEBUG
-		DPRINTF("Storage event: %lx  %lx  %lx\n", event, param, device);
-	#endif
+	DPRINTF("Storage event: %lx  %lx  %lx\n", event, param, device);
 
 	if (device == BDVD_DRIVE)
 	{
@@ -1284,8 +1243,8 @@ LV2_PATCHED_FUNCTION(int, device_event, (event_port_t event_port, uint64_t event
 			if (lock)
 				mutex_lock(mutex, 0);
 
-			process_disc_insert(param>>32);
-			param = (uint64_t)(effective_disctype)<<32;
+			process_disc_insert(param >> 32);
+			param = (uint64_t)(effective_disctype) << 32;
 
 			if (lock)
 				mutex_unlock(mutex);
@@ -1295,9 +1254,7 @@ LV2_PATCHED_FUNCTION(int, device_event, (event_port_t event_port, uint64_t event
 			if (lock)
 				mutex_lock(mutex, 0);
 
-			#ifdef DEBUG
-				DPRINTF("Disc removed.\n");
-			#endif
+			DPRINTF("Disc removed.\n");
 
 			if (effective_disctype == DEVICE_TYPE_PSX_CD)
 				video_mode = -1;
@@ -1414,9 +1371,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_2(int, post_storage_get_device_info, (uint64
 			else
 				device_info->sector_count = discfile->totalsize / device_info->sector_size;
 
-			#ifdef DEBUG
-				DPRINTF("Faked size to %lx\n", device_info->sector_count);
-			#endif
+			DPRINTF("Faked size to %lx\n", device_info->sector_count);
 		}
 
 		mutex_unlock(mutex);
@@ -1542,7 +1497,7 @@ static int process_generic_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t
 				ScsiMediaEventResponse *resp;
 				int alloc_size = sizeof(ScsiMediaEventResponse);
 
-				resp = alloc(alloc_size, 0x27);
+				resp = malloc(alloc_size);
 				memset(resp, 0, alloc_size);
 
 				resp->event_header.event_length = sizeof(ScsiMediaEventResponse) - sizeof(ScsiEventHeader);
@@ -1551,7 +1506,7 @@ static int process_generic_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t
 				resp->media_status = 2;
 
 				memcpy(outdata, resp, (outlen <= alloc_size) ? outlen : alloc_size);
-				dealloc(resp, 0x27);
+				free(resp);
 			}
 			#ifdef DEBUG
 				else
@@ -1567,7 +1522,7 @@ static int process_generic_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t
 			ScsiCmdReadDiscInformation *cmd = (ScsiCmdReadDiscInformation *)indata;
 
 			int alloc_size = sizeof(ScsiReadDiscInformationResponse);
-			ScsiReadDiscInformationResponse *resp = alloc(alloc_size, 0x27);
+			ScsiReadDiscInformationResponse *resp = malloc(alloc_size);
 
 			memset(resp, 0, sizeof(ScsiReadDiscInformationResponse));
 			resp->length = sizeof(ScsiReadDiscInformationResponse) - sizeof(resp->length);
@@ -1581,7 +1536,7 @@ static int process_generic_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t
 			resp->last_session_leadin = 0xFFFFFFFF;
 			resp->last_session_leadout = 0xFFFFFFFF;
 			memcpy(outdata, resp, (outlen <= cmd->alloc_length) ? outlen : cmd->alloc_length);
-			dealloc(resp, 0x27);
+			free(resp);
 		}
 		break;
 
@@ -1705,17 +1660,13 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 
 			if (GET_FORMAT(cmd) != FORMAT_TOC)
 			{
-				#ifdef DEBUG
-					DPRINTF("Requesting something other than TOC: %d!!\nPassing command to real function.", GET_FORMAT(cmd));
-				#endif
+				DPRINTF("Requesting something other than TOC: %d!!\nPassing command to real function.", GET_FORMAT(cmd));
 				return SUCCEEDED;
 			}
 
 			if (GET_MSF(cmd))
 			{
-				#ifdef DEBUG
-					DPRINTF("Warning: requesting tracks in MSF format. Not implemented.\n");
-				#endif
+				DPRINTF("Warning: requesting tracks in MSF format. Not implemented.\n");
 				return -1;
 			}
 
@@ -1764,7 +1715,7 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 			if (cmd->alloc_length > sizeof(ScsiTocResponse))			
 				alloc_size += (sizeof(ScsiTrackDescriptor)*(numtracks+1));			
 
-			ScsiTocResponse *resp = alloc(alloc_size, 0x27);
+			ScsiTocResponse *resp = malloc(alloc_size);
 			resp->toc_length = sizeof(ScsiTocResponse) - sizeof(resp->toc_length) + (sizeof(ScsiTrackDescriptor)*(numtracks+1));
 			resp->first_track = 1;
 			resp->last_track = numtracks;
@@ -1782,9 +1733,9 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 					track->track_start_addr = 0;
 				}
 				else
-					memcpy(resp+1, (discfile_proxy) ? discfile_proxy->tracks : discfile_cd->tracks, numtracks * sizeof(ScsiTrackDescriptor));
+					memcpy(resp + 1, (discfile_proxy) ? discfile_proxy->tracks : discfile_cd->tracks, numtracks * sizeof(ScsiTrackDescriptor));
 
-				ScsiTrackDescriptor *leadout = &((ScsiTrackDescriptor *)(resp+1))[numtracks];
+				ScsiTrackDescriptor *leadout = &((ScsiTrackDescriptor *)(resp + 1))[numtracks];
 
 				memset(leadout, 0, sizeof(ScsiTrackDescriptor));
 				leadout->adr_control = 0x10;
@@ -1798,7 +1749,7 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 			}
 
 			memcpy(outdata, resp, (outlen <= cmd->alloc_length) ? outlen : cmd->alloc_length);
-			dealloc(resp, 0x27);
+			free(resp);
 			return 1;
 		}
 		break;
@@ -1815,17 +1766,13 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 
 			if (is2048)
 			{
-				#ifdef DEBUG
-					DPRINTF("READ TRACK INFORMATION not implemented for 2048 cd iso!\n");
-				#endif
+				DPRINTF("READ TRACK INFORMATION not implemented for 2048 cd iso!\n");
 				return -1;
 			}
 
 			if (cmd->rv_o_type != 1)
 			{
-				#ifdef DEBUG
-					DPRINTF("rv_o_type = %x, not implemented\n", cmd->rv_o_type);
-				#endif
+				DPRINTF("rv_o_type = %x, not implemented\n", cmd->rv_o_type);
 				return -1;
 			}
 
@@ -1833,9 +1780,7 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 
 			if (cmd->lba_tsn == 0 || cmd->lba_tsn > numtracks)
 			{
-				#ifdef DEBUG
-					DPRINTF("Invalid track %d\n", cmd->lba_tsn);
-				#endif
+				DPRINTF("Invalid track %d\n", cmd->lba_tsn);
 				return -1;
 			}
 
@@ -1857,11 +1802,11 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 			}
 
 			int alloc_size = sizeof(ScsiReadTrackInformationResponse);
-			ScsiReadTrackInformationResponse *resp = alloc(alloc_size, 0x27);
+			ScsiReadTrackInformationResponse *resp = malloc(alloc_size);
 
 			memset(resp, 0, sizeof(ScsiReadTrackInformationResponse));
 			resp->length = sizeof(ScsiReadTrackInformationResponse) - sizeof(resp->length);
-			resp->ltn = cmd->lba_tsn&0xFF;
+			resp->ltn = cmd->lba_tsn & 0xFF;
 			resp->sn = 1;
 			resp->misc2 = (cmd->lba_tsn == 1) ? 2 : 0xF;
 			resp->lt_start_addr = track->track_start_addr;
@@ -1869,7 +1814,7 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 
 			memset(outdata, 0, outlen);
 			memcpy(outdata, resp, (outlen <= resp->length) ? outlen : resp->length);
-			dealloc(resp, 0x27);
+			free(resp);
 			return 1;
 
 		}
@@ -1883,7 +1828,7 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 				return -1;
 
 			int alloc_size = sizeof(ScsiReadDiscInformationResponse);
-			ScsiReadDiscInformationResponse *resp = alloc(alloc_size, 0x27);
+			ScsiReadDiscInformationResponse *resp = malloc(alloc_size);
 
 			memset(resp, 0, sizeof(ScsiReadDiscInformationResponse));
 			resp->length = sizeof(ScsiReadDiscInformationResponse) - sizeof(resp->length);
@@ -1904,7 +1849,7 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 			resp->last_session_leadout = 0xFFFFFFFF;
 
 			memcpy(outdata, resp, (outlen <= cmd->alloc_length) ? outlen : cmd->alloc_length);
-			dealloc(resp, 0x27);
+			free(resp);
 			return 1;
 		}
 		break;
@@ -1924,25 +1869,19 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 
 			else if (cmd->misc != 0xF8 && cmd->misc != 0x10)
 			{
-				#ifdef DEBUG
-					DPRINTF("Unexpected value for misc: %02X\n", cmd->misc);
-				#endif
+				DPRINTF("Unexpected value for misc: %02X\n", cmd->misc);
 				return -1;
 			}
 
 			if (cmd->rv_scsb != 0 && cmd->rv_scsb != 2)
 			{
-				#ifdef DEBUG
-					DPRINTF("Unexpected value for subchannel: %02X\n", cmd->rv_scsb);
-				#endif
+				DPRINTF("Unexpected value for subchannel: %02X\n", cmd->rv_scsb);
 				return -1;
 			}
 
 			if (GET_EXPECTED_SECTOR_TYPE(cmd) != 0)
 			{
-				#ifdef DEBUG
-					DPRINTF("Unexpected value for expected sector type: %d\n", GET_EXPECTED_SECTOR_TYPE(cmd));
-				#endif
+				DPRINTF("Unexpected value for expected sector type: %d\n", GET_EXPECTED_SECTOR_TYPE(cmd));
 				return -1;
 			}
 
@@ -1952,9 +1891,7 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 
 			if (is2048)
 			{
-				#ifdef DEBUG
-					DPRINTF("Read CD on 2048 iso (lba=0x%x, length=0x%x)!!! Not implemented.\n", lba, length);
-				#endif
+				DPRINTF("Read CD on 2048 iso (lba=0x%x, length=0x%x)!!! Not implemented.\n", lba, length);
 				return SUCCEEDED; // Fallback to real disc, let's see what happens :)
 			}
 
@@ -2023,14 +1960,14 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 					memset(subq, 0, sizeof(SubChannelQ));
 
 					ScsiTrackDescriptor *track = find_track_by_lba(lba);
-					subq->control_adr = ((track->adr_control << 4)&0xF0) | (track->adr_control >> 4);
+					subq->control_adr = ((track->adr_control << 4) & 0xF0) | (track->adr_control >> 4);
 					subq->track_number = track->track_number;
 					subq->index_number = 1;
 
 					if (user_data)
 						lba_to_msf_bcd(lba, &subq->min, &subq->sec, &subq->frame);
 
-					lba_to_msf_bcd(lba+150, &subq->amin, &subq->asec, &subq->aframe);
+					lba_to_msf_bcd(lba + 150, &subq->amin, &subq->asec, &subq->aframe);
 					subq->crc = calculate_subq_crc((uint8_t *)subq);
 
 					p += sizeof(SubChannelQ);
@@ -2088,7 +2025,7 @@ static INLINE void do_video_mode_patch(void)
 			{
 				int ret = get_psx_video_mode();
 				if (ret >= 0) //{
-										video_mode = ret;/*condition_game_ext_psx=0;}
+					video_mode = ret;/*condition_game_ext_psx=0;}
 				 if(ret == -1 || ps2emu_type!=PS2EMU_SW) {condition_game_ext_psx=1;}*/
 			}
 		}
@@ -2117,22 +2054,16 @@ static INLINE void do_video_mode_patch(void)
 			switch(vsh_check)
 			{
 				case VSH_HASH:
-					#ifdef DEBUG
-						DPRINTF("Patching Video mode in Retail VSH..\n");
-					#endif
+					DPRINTF("Patching Video mode in Retail VSH..\n");
 
 					if(vmode_patch_offset)
 						copy_to_user(&patch, (void *)(vmode_patch_offset + _64KB_), 4);
 
-					#ifdef DEBUG
-						DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)vmode_patch_offset, (uint32_t)patch);
-					#endif
+					DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)vmode_patch_offset, (uint32_t)patch);
 				break;
 
 				default:
-					#ifdef DEBUG
-						DPRINTF("Unknown VSH HASH, Video mode was not patched!\n");
-					#endif
+					DPRINTF("Unknown VSH HASH, Video mode was not patched!\n");
 				break;
 			}
 		}
@@ -2165,9 +2096,7 @@ int process_cmd(unsigned int command, void *indata, uint64_t inlen, void *outdat
 				memset(outdata, 0, outlen);
 				memcpy(outdata, &ret, (sizeof(ret) > outlen) ? sizeof(ret) : outlen);
 
-				#ifdef DEBUG
-					DPRINTF("FAKING to %16lx\n", ret);
-				#endif
+				DPRINTF("FAKING to %16lx\n", ret);
 
 				return 1;
 			}
@@ -2255,7 +2184,7 @@ LV2_HOOKED_FUNCTION_COND_POSTCALL_7(int, emu_sys_storage_async_send_device_comma
 
 	if (open_shared_kernel_object(table, device_handle, (void **)&sys_storage_object, &obj_handle, SYS_STORAGE_HANDLE_OBJECT, 1) == 0)
 	{
-		uint64_t device = sys_storage_object[8/8];
+		uint64_t device = sys_storage_object[8 / 8];
 
 		if (device == BDVD_DRIVE)
 		{
@@ -2265,7 +2194,7 @@ LV2_HOOKED_FUNCTION_COND_POSTCALL_7(int, emu_sys_storage_async_send_device_comma
 			storage_mutex = (mutex_t)sys_storage_object[0x98/8];
 			mutex_lock(storage_mutex, 0);
 
-			async_port = (event_port_t) ((uint64_t *)sys_storage_object[(0x28+8)/8])[0x30/8];
+			async_port = (event_port_t) ((uint64_t *)sys_storage_object[(0x28 + 8) / 8])[0x30 / 8];
 			mutex_lock(mutex, 0);
 
 			int tri = process_cmd(command, get_secure_user_ptr(indata), inlen, get_secure_user_ptr(outdata), outlen);
@@ -2351,9 +2280,7 @@ void restore_BD()
 
 LV2_HOOKED_FUNCTION_COND_POSTCALL_2(int, emu_disc_auth, (uint64_t func, uint64_t param))
 {
-	#ifdef DEBUG
-		DPRINTF("Disc auth: %lx %lx (process: %s)\n", func, param, get_process_name(get_current_process_critical()));
-	#endif
+	DPRINTF("Disc auth: %lx %lx (process: %s)\n", func, param, get_process_name(get_current_process_critical()));
 
 	if (func == 0x5004)
 	{
@@ -2411,9 +2338,7 @@ LV2_HOOKED_FUNCTION_COND_POSTCALL_2(int, emu_disc_auth, (uint64_t func, uint64_t
 
 LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, post_cellFsUtilMount, (const char *block_dev, const char *filesystem, const char *mount_point, int unk, int read_only, int unk2, char *argv[], int argc))
 {
-	#ifdef DEBUG
-		DPRINTF("cellFsUtilMount: %s\n", mount_point);
-	#endif
+	DPRINTF("cellFsUtilMount: %s\n", mount_point);
 
 	if (!hdd0_mounted && strcmp(mount_point, "/dev_hdd0") == 0 && strcmp(filesystem, "CELL_FS_UFS") == 0)
 	{
@@ -2450,9 +2375,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, post_cellFsUtilMount, (const char *bl
 	{
 		// CFW2OFW fix by Evilnat
 		// Fixes black screen while a CFW2OFW game is loaded with a mounted JB folder game
-		#ifdef DEBUG
-			DPRINTF("Detected CFW2OFW game\n");
-		#endif
+		//DPRINTF("Detected CFW2OFW game\n");
 
 		sys_storage_ext_umount_discfile();
 
@@ -2476,9 +2399,9 @@ static INLINE int get_ps2emu_type(void)
 
 	lv1_get_repository_node_value(PS3_LPAR_ID_PME, FIELD_FIRST("sys", 0), FIELD("hw", 0), FIELD("config", 0), 0, (u64 *)config, &v2);
 
-	if (config[6]&1) // has emotion engine
+	if (config[6] & 1) // has emotion engine
 		return PS2EMU_HW;
-	else if (config[0]&0x20) // has graphics synthesizer
+	else if (config[0] & 0x20) // has graphics synthesizer
 		return PS2EMU_GX;
 
 	return PS2EMU_SW;
@@ -2510,7 +2433,7 @@ void copy_ps2emu_stage2(int emu_type)
 		cellFsRead(src, buf, _64KB_, &size);
 		cellFsClose(src);
 
-		if (cellFsOpen(PS2EMU_STAGE2_FILE, CELL_FS_O_WRONLY|CELL_FS_O_CREAT|CELL_FS_O_TRUNC, &dst, 0666, NULL, 0) == 0)
+		if (cellFsOpen(PS2EMU_STAGE2_FILE, CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &dst, 0666, NULL, 0) == 0)
 		{
 			cellFsWrite(dst, buf, size, &size);
 			cellFsClose(dst);
@@ -2534,14 +2457,12 @@ static void build_netemu_params(uint8_t *ps2_soft, uint8_t *ps2_net)
 	memcpy(ps2_net, ps2_soft, 8);
 	ps2_net[8] = 3;
 	strcpy((char *)ps2_net + 9, "--COBRA--");
-	memcpy(ps2_net+0x2A, ps2_soft+0x118, 6);
+	memcpy(ps2_net + 0x2A, ps2_soft + 0x118, 6);
 
 	// Now ps2bootparam
 	if (cellFsOpen("/dev_hdd0/tmp/game/ps2bootparam.dat", CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, 0666, NULL, 0) != 0)
 	{
-		#ifdef DEBUG
-			DPRINTF("Cannot open ps2bootparam.dat\n");
-		#endif
+		DPRINTF("Cannot open ps2bootparam.dat\n");
 		return;
 	}
 
@@ -2555,7 +2476,7 @@ static void build_netemu_params(uint8_t *ps2_soft, uint8_t *ps2_net)
 	ps2_soft[0x4d0] = 8;
 	ps2_soft[0x4d7] = 6;
 	strcpy((char *)ps2_soft+12, "--COBRA--");
-	memset(ps2_soft+0x4f0, 0, 0x2204);
+	memset(ps2_soft + 0x4f0, 0, 0x2204);
 	int controller_count=0;
 
 	// patch controllers
@@ -2567,7 +2488,7 @@ static void build_netemu_params(uint8_t *ps2_soft, uint8_t *ps2_net)
 		{
 			offset = (0x218*i);
 			memcpy(ps2_soft + offset + 0x4f4, &controller, 8);
-			memcpy(ps2_soft + offset + 0x4f4+0x8, &static_one, 8);
+			memcpy(ps2_soft + offset + 0x4f4 + 0x8, &static_one, 8);
 			ps2_soft[offset + 0x515] = 9;
 			memcpy(ps2_soft + offset + 0x516, &static_two, 8);
 			controller_count++;
@@ -2757,17 +2678,13 @@ LV2_HOOKED_FUNCTION(int, shutdown_copy_params_patched, (uint8_t *argp_user, uint
 		prepare_ps2emu = 1;
 	else if (param == 0x8204) /* Reboot into ps2_netemu LPAR */
 	{
-		#ifdef DEBUG
-			DPRINTF("Reboot into ps2_netemu LPAR (0x8204), ps2emu_type = %i\n", ps2emu_type);
-		#endif
+		DPRINTF("Reboot into ps2_netemu LPAR (0x8204), ps2emu_type = %i\n", ps2emu_type);
 
 		// Delete ps2emu config file when ps2_netemu is loaded on BC/Semi-BC Consoles to fix the issue with ISO redirection
 		// Credits @Habib and @aldostools
 		if(ps2emu_type == PS2EMU_HW || ps2emu_type == PS2EMU_GX)
 		{
-			#ifdef DEBUG
-				DPRINTF("Deleting %s\n", PS2EMU_CONFIG_FILE);
-			#endif
+			DPRINTF("Deleting %s\n", PS2EMU_CONFIG_FILE);
 
 			cellFsUnlink(PS2EMU_CONFIG_FILE);
 		}
@@ -2779,9 +2696,9 @@ LV2_HOOKED_FUNCTION(int, shutdown_copy_params_patched, (uint8_t *argp_user, uint
 			if (disc_emulation == EMU_OFF)
 			{
 				// If optical disc, let's just panic
-				if (effective_disctype == DEVICE_TYPE_PS2_CD || effective_disctype == DEVICE_TYPE_PS2_DVD)
-				{				
-					fatal("Sorry, no optical disc support in ps2_netemu\n");				
+				if (effective_disctype == DEVICE_TYPE_PS2_CD || effective_disctype == DEVICE_TYPE_PS2_DVD)							
+				{
+					fatal("Sorry, no optical disc support in ps2_netemu\n");		
 				}
 				else
 				{
@@ -2825,8 +2742,8 @@ LV2_HOOKED_FUNCTION(int, shutdown_copy_params_patched, (uint8_t *argp_user, uint
 				memset(buf, 0, _4KB_);
 				// bit 0-> is cd
 				// bit 1 -> total emulation
-				buf[0] = (disc_emulation == EMU_PS2_CD) | ((real_disctype == 0)<<1);
-				strncpy((char *)buf+1, (discfile_cd) ? discfile_cd->file : discfile->files[0], 0x7FE);
+				buf[0] = (disc_emulation == EMU_PS2_CD) | ((real_disctype == 0) << 1);
+				strncpy((char *)buf + 1, (discfile_cd) ? discfile_cd->file : discfile->files[0], 0x7FE);
 
 				// TODO: this will need change when adding proxy to PS2
 				if (discfile_cd)
@@ -2872,9 +2789,9 @@ static INLINE void do_umount_discfile(void)
 	if (discfile)
 	{
 		if (discfile->cached_sector)
-			dealloc(discfile->cached_sector, 0x2F);
+			xfree(discfile->cached_sector);
 
-		dealloc(discfile, 0x27);
+		free(discfile);
 		discfile = NULL;
 	}
 
@@ -2883,16 +2800,16 @@ static INLINE void do_umount_discfile(void)
 		if (discfile_cd->cache)
 			page_free(NULL, discfile_cd->cache, 0x2F);
 
-		dealloc(discfile_cd, 0x27);
+		free(discfile_cd);
 		discfile_cd = NULL;
 	}
 
 	if (discfile_proxy)
 	{
 		if (discfile_proxy->cached_sector)
-			dealloc(discfile_proxy->cached_sector, 0x2F);
+			xfree(discfile_proxy->cached_sector);
 
-		dealloc(discfile_proxy, 0x27);
+		free(discfile_proxy);
 		discfile_proxy = NULL;
 
 		if (proxy_command_port)
@@ -2930,14 +2847,14 @@ static INLINE int check_files_and_allocate(unsigned int filescount, char *files[
 		allocsize += (len + 1);
 	}
 
-	discfile = alloc(allocsize, 0x27);
+	discfile = malloc(allocsize);
 	if (!discfile)
 		return ENOMEM;
 
 	discfile->count = filescount;
 	discfile->activefile = 0;
 	discfile->totalsize = 0;
-	discfile->files = (char **)(discfile+1);
+	discfile->files = (char **)(discfile + 1);
 	discfile->sizes = (uint64_t *)(discfile->files+filescount);
 	char *p = (char *)(discfile->sizes+filescount);
 
@@ -2948,18 +2865,16 @@ static INLINE int check_files_and_allocate(unsigned int filescount, char *files[
 		int ret = cellFsStat(files[i], &stat);
 		if (ret)
 		{
-			dealloc(discfile, 0x27);
+			free(discfile);
 			discfile = NULL;
 			return ret;
 		}
 
-		#ifdef DEBUG
-			DPRINTF("%s, filesize: %lx\n", files[i], stat.st_size);
-		#endif
+		DPRINTF("%s, filesize: %lx\n", files[i], stat.st_size);
 
 		if (stat.st_size < (4096 + base_offset))
 		{
-			dealloc(discfile, 0x27);
+			free(discfile);
 			discfile = NULL;
 			return EINVAL;
 		}
@@ -3089,13 +3004,13 @@ static int mount_ps_cd(char *file, unsigned int trackscount, ScsiTrackDescriptor
 			}
 			// --
 
-			discfile_cd = alloc(sizeof(DiscFileCD) + (len+1) + (trackscount * sizeof(ScsiTrackDescriptor)) , 0x27);
+			discfile_cd = malloc(sizeof(DiscFileCD) + (len+1) + (trackscount * sizeof(ScsiTrackDescriptor)));
 			page_allocate_auto(NULL, CD_CACHE_SIZE * cd_sector_size, 0x2F, (void **)&discfile_cd->cache);
 
 			discfile_cd->num_sectors = stat.st_size / cd_sector_size;
 			discfile_cd->numtracks = trackscount;
 			discfile_cd->cached_sector = 0x80000000;
-			discfile_cd->tracks = (ScsiTrackDescriptor *)(discfile_cd+1);
+			discfile_cd->tracks = (ScsiTrackDescriptor *)(discfile_cd + 1);
 			discfile_cd->file = (char *)(discfile_cd->tracks + trackscount);
 
 			strcpy(discfile_cd->file, file);
@@ -3161,7 +3076,7 @@ static int mount_ps2_discfile(unsigned int filescount, char *files[], unsigned i
 		else if (nread != sizeof(buf))
 			return EINVAL;
 
-		if (buf[0] == 1 && memcmp(buf+1, "CD001", 5) == 0)
+		if (buf[0] == 1 && memcmp(buf + 1, "CD001", 5) == 0)
 		{
 			// rootToc.tocSize == 0x800 -> CD; else DVD
 			if (*(uint32_t *)&buf[0xAA] == 0x800)
@@ -3340,9 +3255,7 @@ int sys_storage_ext_get_emu_state(sys_emu_state_t *state)
 
 	if (state->size != sizeof(sys_emu_state_t))
 	{
-		#ifdef DEBUG
-			DPRINTF("Unknown structure size: %d, expected %ld\n", state->size, sizeof(sys_emu_state_t));
-		#endif
+		DPRINTF("Unknown structure size: %d, expected %ld\n", state->size, sizeof(sys_emu_state_t));
 		return EINVAL;
 	}
 
@@ -3355,9 +3268,9 @@ int sys_storage_ext_get_emu_state(sys_emu_state_t *state)
 		if (disc_emulation != EMU_OFF)
 		{
 			if (discfile_cd)
-				ret = copy_to_user(discfile_cd->file, state->firstfile_path, strlen(discfile_cd->file)+1);
+				ret = copy_to_user(discfile_cd->file, state->firstfile_path, strlen(discfile_cd->file) + 1);
 			else if (discfile)
-				ret = copy_to_user(discfile->files[0], state->firstfile_path, strlen(discfile->files[0])+1);
+				ret = copy_to_user(discfile->files[0], state->firstfile_path, strlen(discfile->files[0]) + 1);
 			else
 			{
 				char c = 0;
@@ -3375,7 +3288,7 @@ static char **copy_user_pointer_array(char *input[], unsigned int count)
 	if (!count || !input)
 		return NULL;
 
-	char **out = alloc(count * sizeof(char *), 0x27);
+	char **out = malloc(count * sizeof(char *));
 	uint32_t *input32 = get_secure_user_ptr(input);
 
 	for (int i = 0; i < count; i++)
@@ -3393,7 +3306,7 @@ int sys_storage_ext_mount_ps3_discfile(unsigned int filescount, char *files[])
 	umount_discfile();
 
 	int ret = mount_ps3_discfile(filescount, array);
-	dealloc(array, 0x27);
+	free(array);
 	return ret;
 }
 
@@ -3406,7 +3319,7 @@ int sys_storage_ext_mount_dvd_discfile(unsigned int filescount, char *files[])
 	umount_discfile();
 
 	int ret = mount_dvd_discfile(filescount, array);
-	dealloc(array, 0x27);
+	free(array);
 	return ret;
 }
 
@@ -3420,7 +3333,7 @@ int sys_storage_ext_mount_bd_discfile(unsigned int filescount, char *files[])
 	umount_discfile();
 
 	int ret = mount_bd_discfile(filescount, array);
-	dealloc(array, 0x27);
+	free(array);
 	return ret;
 }
 
@@ -3446,14 +3359,14 @@ int sys_storage_ext_mount_ps2_discfile(unsigned int filescount, char *files[], u
 	tracks = get_secure_user_ptr(tracks);
 	if (!tracks)
 	{
-		dealloc(array, 0x27);
+		free(array);
 		return EINVAL;
 	}
 
 	umount_discfile();
 
 	int ret = mount_ps2_discfile(filescount, array, trackscount, tracks);
-	dealloc(array, 0x27);
+	free(array);
 	return ret;
 }
 
@@ -3520,9 +3433,7 @@ int sys_storage_ext_mount_discfile_proxy(sys_event_port_t result_port, sys_event
 				ret = event_port_connect(proxy_result_port, proxy_result_queue);
 				if (ret)
 				{
-					#ifdef DEBUG
-						DPRINTF("Failed in connecting proxy result port/queue: %x\n", ret);
-					#endif
+					DPRINTF("Failed in connecting proxy result port/queue: %x\n", ret);
 
 					event_port_disconnect(proxy_command_port);
 				}
@@ -3552,9 +3463,9 @@ int sys_storage_ext_mount_discfile_proxy(sys_event_port_t result_port, sys_event
 	if (ret == 0)
 	{
 		if (emu_type == EMU_PSX)
-			discfile_proxy = alloc(sizeof(DiscFileProxy) + (trackscount * sizeof(ScsiTrackDescriptor)), 0x27);
+			discfile_proxy = malloc(sizeof(DiscFileProxy) + (trackscount * sizeof(ScsiTrackDescriptor)));
 		else
-			discfile_proxy = alloc(sizeof(DiscFileProxy), 0x27);
+			discfile_proxy = malloc(sizeof(DiscFileProxy));
 
 		discfile_proxy->size = disc_size_bytes;
 		discfile_proxy->read_size = read_size;
@@ -3564,7 +3475,7 @@ int sys_storage_ext_mount_discfile_proxy(sys_event_port_t result_port, sys_event
 		{
 			tracks = get_secure_user_ptr(tracks);
 			discfile_proxy->numtracks = trackscount;
-			discfile_proxy->tracks = (ScsiTrackDescriptor *)(discfile_proxy+1);
+			discfile_proxy->tracks = (ScsiTrackDescriptor *)(discfile_proxy + 1);
 			copy_from_user(tracks, discfile_proxy->tracks, sizeof(ScsiTrackDescriptor)*trackscount);
 		}
 		else
@@ -3597,7 +3508,7 @@ int sys_storage_ext_mount_discfile_proxy(sys_event_port_t result_port, sys_event
 		{
 			map_path(mount_point, NULL, 0);
 			cellFsUtilUmount(mount_point, 0, 0);
-			dealloc(encrypted_image, 0x27);
+			free(encrypted_image);
 			encrypted_image = NULL;
 			encrypted_image_nonce = 0;
 		}

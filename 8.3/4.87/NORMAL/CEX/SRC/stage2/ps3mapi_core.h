@@ -9,7 +9,7 @@
 #ifndef __PS3MAPI_H__
 #define __PS3MAPI_H__
 
-#include <lv2/process.h>
+//#include <lv2/process.h>
 #include <lv2/modules.h>
 
 #define SYSCALL8_OPCODE_PS3MAPI			 		0x7777
@@ -108,7 +108,6 @@ int ps3mapi_get_vsh_plugin_slot_by_name(const char *name, uint8_t unload);
 #define SYSCALL8_OPCODE_PROC_CREATE_THREAD		0x6E03 // not eough params for PS3MAPI_OPCODE
 
 int ps3mapi_create_process_thread(process_id_t pid, thread_t *thread, void *entry, uint64_t arg, int prio, size_t stacksize, char *threadname);
-
 
 //-----------------------------------------------
 //SYSCALL

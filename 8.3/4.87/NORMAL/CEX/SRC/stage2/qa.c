@@ -4,10 +4,6 @@
 
 // Improved by Evilnat
 
-#include <stdlib.h>
-#include <string.h>
-#include <lv1/lv1.h>
-#include <lv2/io.h>
 #include <lv2/security.h>
 #include <lv2/thread.h>
 #include <lv2/patch.h>
@@ -49,6 +45,11 @@ static u8 iv_qa[0x10] =
 	0x4a, 0x76, 0x1e, 0x72, 0x8c, 0x7c, 0x25, 0x4e
 };
 
+static void lv1_poked2(u64 addr, u64 value)
+{
+	*(u64 *)(HV_BASE + addr) = value;
+}
+
 /**
 * Function to compute the digest
 *
@@ -59,7 +60,6 @@ static u8 iv_qa[0x10] =
 * @param out Digest output
 * @param t   Size of digest output
 */
-
 static void hmac_sha1(const u8 *k, u8 lk, const u8 *d, size_t ld, u8 *out)	
 {
 	SHACtx *ictx = malloc(0x100); 
@@ -163,7 +163,7 @@ static int get_idps()
 	if(!device)	
 		start_flash_sector = 0x20D;
 
-	DPRINTF("Flash Device: %016lX\n", device);
+	//DPRINTF("Flash Device: %016lX\n", device);
 
 	if(storage_open(device, 0, &handle, 0))
 		return 1;
@@ -177,7 +177,7 @@ static int get_idps()
 	memcpy(&IDPS_1, (void *)&idps[0x3A], 8);
 	memcpy(&IDPS_2, (void *)&idps[0x3B], 8);
 
-	DPRINTF("IDPS from EID5: %016lX%016lX\n", IDPS_1, IDPS_2);
+	//DPRINTF("IDPS from EID5: %016lX%016lX\n", IDPS_1, IDPS_2);
 			
 	storage_close(handle);
 	storage_unmap_io_memory(device, idps);
@@ -207,7 +207,7 @@ int set_qa_flag(uint8_t value)
 
 	if(seed[0x07] != 0x01)
 	{
-		DPRINTF("QA Flag: IDPS is not valid!!\n");
+		//DPRINTF("QA Flag: IDPS is not valid!!\n");
 		return 1;
 	}
 
@@ -228,7 +228,7 @@ int set_qa_flag(uint8_t value)
 	hmac_sha1(hmac, 0x40, seed, 60, seed + 60);
 	aescbccfb_enc(token, seed, 0x50, erk, 0x100, iv_qa);
 
-	DPRINTF("QA Flag: %s...\n", (value) ? "Enabling" : "Disabling");
+	//DPRINTF("QA Flag: %s...\n", (value) ? "Enabling" : "Disabling");
 
 	lv1_patches();
 
@@ -285,7 +285,7 @@ int set_qa_flag(uint8_t value)
 
 	update_mgr_write_eeprom(QA_FLAG_OFFSET, (value) ? 0x00 : 0xFF, LV2_AUTH_ID); 
 
-	DPRINTF("QA Flag: %s\n", (value) ? "Enabled (Value: 0x00)" : "Disabled (Value: 0xFF)");
+	//DPRINTF("QA Flag: %s\n", (value) ? "Enabled (Value: 0x00)" : "Disabled (Value: 0xFF)");
 	
 	restore_patches();
 

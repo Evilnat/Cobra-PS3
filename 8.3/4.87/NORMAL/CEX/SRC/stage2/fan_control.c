@@ -1,8 +1,5 @@
-#include <lv2/lv2.h>
 #include <lv2/symbols.h>
-#include <lv2/patch.h>
 #include <lv2/syscall.h>
-#include <lv2/memory.h>
 #include <lv2/thread.h>
 #include <lv2/time.h>
 #include <lv2/ctrl.h>
@@ -29,7 +26,7 @@ int sm_get_fan_speed(void)
 
 static void fan_control(uint64_t arg0)
 {
-	DPRINTF("CONTROL FAN Payload: Started.\n");
+	//DPRINTF("CONTROL FAN Payload: Started.\n");
 
 	uint32_t t_cpu, t_rsx, prev = 0; 
 	fan_control_running = 1;
@@ -103,7 +100,7 @@ LV2_HOOKED_FUNCTION_COND_POSTCALL_3(int, sys_shutdown, (uint16_t op, const void 
 	// This doesn't work if the PS3 has lv2 panic
 	if(op == SYS_SHUTDOWN || op == SYS_SHUTDOWN2)
 	{		
-		DPRINTF("Shutdown executed, resetting FAN policy\n");
+		//DPRINTF("Shutdown executed, resetting FAN policy\n");
 		sm_set_fan_policy(0, 1, 0);
 	}
 

@@ -25,8 +25,8 @@ LV2_EXPORT void sha1_init(SHACtx *ctx);
 LV2_EXPORT void sha1_update(SHACtx *ctx, const void *buf, uint64_t len);
 LV2_EXPORT void sha1_final(uint8_t *out, SHACtx *ctx);
 
-LV2_EXPORT void aescbccfb_dec(uint8_t *out, uint8_t *in,uint32_t len,uint8_t *key,uint32_t bits,uint8_t *iv);
-LV2_EXPORT void aescbccfb_enc(uint8_t *out, uint8_t *in,uint32_t len,uint8_t *key,uint32_t bits,uint8_t *iv);
+LV2_EXPORT void aescbccfb_dec(uint8_t *out, uint8_t *in, uint32_t len, uint8_t *key, uint32_t bits, uint8_t *iv);
+LV2_EXPORT void aescbccfb_enc(uint8_t *out, uint8_t *in, uint32_t len, uint8_t *key, uint32_t bits, uint8_t *iv);
 
 
 static INLINE void md5_once(void *buf, uint32_t size, void *hash)

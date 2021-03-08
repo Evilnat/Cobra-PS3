@@ -6,13 +6,7 @@
 //																					//
 //////////////////////////////////////////////////////////////////////////////////////
 
-#include <lv2/lv2.h>
-#include <lv2/symbols.h>
-#include <lv2/patch.h>
-#include <lv2/syscall.h>
-#include <lv2/memory.h>
 #include <lv2/thread.h>
-#include <lv2/time.h>
 #include <lv2/io.h>
 #include <lv2/error.h>
 #include "mappath.h"
@@ -33,12 +27,8 @@ static char __blacklist[9 * MAX_LIST_ENTRIES];
 static int __whitelist_entries = 0; // Module global var to hold the current whitelist entries.
 static char __whitelist[9 * MAX_LIST_ENTRIES];
 
-//
-// init_list()
-//
 // inits a list.
 // returns the number of elements read from file
-
 static int init_list(char *list, char *path, int maxentries)
 {
 	int loaded, f;
@@ -67,14 +57,10 @@ static int init_list(char *list, char *path, int maxentries)
 	return loaded;
 }
 
-//
-// listed()
-//
 // tests if a char gameid[9] is in the blacklist or whitelist
 // initialize the both lists, if not yet initialized;
 // receives the list to test blacklist (1) or whitelist (0), and the gameid
 // to initialize the lists, tries to read them from file BLACKLIST_FILENAME and WHITELIST_FILENAME
-
 static int listed(int blacklist, char *gameid)
 {
 	char *list;

@@ -8,6 +8,6 @@ set PATH=%WIN_PS3SDK%/mingw/msys/1.0/bin;%WIN_PS3SDK%/mingw/bin;%PS3DEV%/ppu/bin
 set CYGWIN=nodosfilewarning
 
 if not exist ..\BIN mkdir ..\BIN
-make all
+make --silent all
 
 pause

@@ -76,16 +76,6 @@ static inline void ps3dm_init_ss_header( struct ps3dm_ss_header *hdr, uint64_t p
 	hdr->paid = paid;
 }
 
-static inline u64 lv1_peekd2(u64 addr)
-{
-	return *(u64 *)(HV_BASE + addr);
-}
-
-static inline void lv1_poked2(u64 addr, u64 value)
-{
-	*(u64 *)(HV_BASE + addr) = value;
-}
-
 uint8_t read_qa_flag();
 int set_qa_flag(uint8_t value);
 

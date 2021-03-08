@@ -19,7 +19,7 @@ all: $(BIN)
 $(BIN): $(ELF)
 	$(STRIP) -s $^
 	$(OBJCOPY) -j .start -j .text -j .data -j .got -j .bss -O binary $^ $@
-	../ps2emu_gen/ps2emu_gen $@ $(SRC_SELF) $(OUT_SELF) $(TEXT_OFFSET) $(PAYLOAD_ADDR) $(SH_ADDR) $(DATA_ADDR) $(PATCH_ADDR) $(PATCH_DATA)
+	../ps2emu_gen/ps2emu_gen $@ $(SRC_SELF) $(OUT_SELF) $(TEXT_OFFSET) $(PAYLOAD_ADDR) $(SH_ADDR) $(DATA_ADDR) $(PATCH_ADDR) $(PATCH_DATA) 
 	@cp $(OUT_SELF) ../../BIN
 	@rm -f $(BIN) temp.self $(ELF) $(OBJ)
 

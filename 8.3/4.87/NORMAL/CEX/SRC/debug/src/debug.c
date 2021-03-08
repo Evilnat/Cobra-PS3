@@ -298,7 +298,7 @@ void fatal(const char *msg)
 {
 	_debug_printf("FATAL: %s\n", msg);
 	_debug_printf("Panicking.\n");
-	sm_set_fan_policy(0, 1, 0);
+	sm_set_fan_policy(0, 1, 0);		
 	lv1_panic(0);
 	while (1);
 }

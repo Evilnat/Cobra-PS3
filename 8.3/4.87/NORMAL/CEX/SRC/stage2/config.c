@@ -1,12 +1,9 @@
-#include <lv2/lv2.h>
 #include <lv2/error.h>
-#include <lv2/libc.h>
 #include <lv2/io.h>
 #include <lv2/memory.h>
 #include "common.h"
 #include "config.h"
 #include "region.h"
-#include "modulespatch.h"
 #include "fan_control.h"
 #include "homebrew_blocker.h"
 #include "make_rif.h"
@@ -117,10 +114,9 @@ int read_cobra_config(void)
 
 	// Removed. Now condition_ps2softemu has another meaning and it is set automatically in storage_ext if no BC console
 	//condition_ps2softemu = config.ps2softemu;
-	#ifdef  DEBUG
-		DPRINTF("Configuration read.\n+ bd_video_region = %d, + dvd_video_region = %d\n+ spoof_version = %04X, + spoof_revision = %d\n+ fan_speed = %02X, + allow_restore_sc = %X\n+ skip_existing_rif = %02X\n",
-				 bd_video_region, dvd_video_region, config.spoof_version, config.spoof_revision, fan_speed, allow_restore_sc, skip_existing_rif);
-	#endif
+
+	DPRINTF("Configuration read.\n+ bd_video_region = %d, + dvd_video_region = %d\n+ spoof_version = %04X, + spoof_revision = %d\n+ fan_speed = %02X, + allow_restore_sc = %X\n+ skip_existing_rif = %02X\n",
+		bd_video_region, dvd_video_region, config.spoof_version, config.spoof_revision, fan_speed, allow_restore_sc, skip_existing_rif);
 	
 	return SUCCEEDED;
 }
@@ -150,7 +146,7 @@ int sys_read_cobra_config(CobraConfig *cfg)
 	if (cfg->size > 4096)
 		return EINVAL;	
 	
-	erase_size = cfg->size-sizeof(config.size);
+	erase_size = cfg->size - sizeof(config.size);
 	if (erase_size < 0)
 		erase_size = 0;
 	
@@ -159,10 +155,6 @@ int sys_read_cobra_config(CobraConfig *cfg)
 	copy_size = ((cfg->size > config.size) ? config.size : cfg->size) - sizeof(config.size);
 	if (copy_size < 0)
 		copy_size = 0;
-	
-	#ifdef  DEBUG
-		//DPRINTF("erase = %d, copy = %d\n", erase_size, copy_size);
-	#endif
 	
 	memcpy(&cfg->checksum, &config.checksum, copy_size);
 	return SUCCEEDED;

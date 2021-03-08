@@ -26,7 +26,8 @@ static void get_rif_key(unsigned char* rap, unsigned char* rif)
 	memset(iv, 0, 0x10);
 
 	// Initial decrypt.
-	aescbc128_decrypt(RAP_KEY, iv, rap, key, 0x10);
+	aescbccfb_dec(key, rap, 0x10, RAP_KEY, 0x80, iv);
+	memset(iv, 0, 0x10);
 
 	// rap2rifkey round.
 	for (round = 0; round < 5; ++round)
@@ -66,14 +67,14 @@ static void get_rif_key(unsigned char* rap, unsigned char* rif)
 	memcpy(rif, key, 0x10);
 }
 
-void read_act_dat_and_make_rif(uint8_t *rap, uint8_t *act_dat, const char *content_id, const char *rif_path)
+static void read_act_dat_and_make_rif(uint8_t *rap, uint8_t *act_dat, const char *content_id, const char *rif_path)
 {
 	int fd;
 
 	if(cellFsOpen(rif_path, CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, 0666, NULL, 0) == SUCCEEDED)
 	{
-		uint8_t idps_const[0x10]    = {0x5E, 0x06, 0xE0, 0x4F, 0xD9, 0x4A, 0x71, 0xBF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
-		uint8_t rif_key_const[0x10] = {0xDA, 0x7D, 0x4B, 0x5E, 0x49, 0x9A, 0x4F, 0x53, 0xB1, 0xC1, 0xA1, 0x4A, 0x74, 0x84, 0x44, 0x3B};
+		uint8_t idps_const[0x10]    = { 0x5E, 0x06, 0xE0, 0x4F, 0xD9, 0x4A, 0x71, 0xBF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 };
+		uint8_t rif_key_const[0x10] = { 0xDA, 0x7D, 0x4B, 0x5E, 0x49, 0x9A, 0x4F, 0x53, 0xB1, 0xC1, 0xA1, 0x4A, 0x74, 0x84, 0x44, 0x3B };
 
 		uint8_t *rif = ALLOC_RIF_BUFFER;
 		uint8_t *key_index = rif + 0x40;
@@ -128,16 +129,11 @@ void make_rif(const char *path)
 		CellFsStat stat;
 		if(skip_existing_rif && (cellFsStat(path, &stat) == SUCCEEDED)) 
 		{
-			#ifdef DEBUG
-				DPRINTF("rif already exists, skipping...\n");
-			#endif
-
+			//DPRINTF("rif already exists, skipping...\n");
 			return; // rif already exists
 		}
 
-		#ifdef DEBUG
-			DPRINTF("open_path_hook: %s (looking for rap)\n", path);
-		#endif
+		DPRINTF("open_path_hook: %s (looking for rap)\n", path);
 
 		char *content_id = ALLOC_CONTENT_ID;
 		memset(content_id, 0, 0x25);
@@ -171,18 +167,14 @@ void make_rif(const char *path)
 				cellFsClose(fd);
 			}
 
-			#ifdef DEBUG
-				DPRINTF("rap_path:%s output:%s\n", rap_path, path);
-			#endif
+			DPRINTF("rap_path:%s output:%s\n", rap_path, path);
 
 			char *act_path = ALLOC_PATH_BUFFER;
 			memset(act_path, 0, 0x50);
 			strncpy(act_path, path, strrchr(path, '/') - path);
 			strcpy(act_path + strlen(act_path), "/act.dat\0");
 
-			#ifdef DEBUG
-				DPRINTF("act_path:%s content_id:%s\n", act_path, content_id);
-			#endif
+			DPRINTF("act_path:%s content_id:%s\n", act_path, content_id);
 
 			if(cellFsOpen(act_path, CELL_FS_O_RDONLY, &fd, 0666, NULL, 0) == SUCCEEDED)
 			{
@@ -196,17 +188,13 @@ void make_rif(const char *path)
 					sprintf(rif_path, "/%s", path);
 					read_act_dat_and_make_rif(rap, act_dat, content_id, rif_path);
 
-					#ifdef DEBUG
-						DPRINTF("rif_path:%s\n", rif_path);
-					#endif
+					DPRINTF("rif_path:%s\n", rif_path);
 				}
 			}
 			else
-			{
-				#ifdef DEBUG
-					DPRINTF("act.dat not found: %s\n", act_path);
-				#endif
-			}
+			{			
+				//DPRINTF("act.dat not found: %s\n", act_path);
+			}			
 		}
 	}
 }

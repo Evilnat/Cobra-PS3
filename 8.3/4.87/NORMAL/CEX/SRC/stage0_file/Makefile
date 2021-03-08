@@ -46,4 +46,5 @@ $(TARGET).elf: $(OBJS) $(TARGET).ld
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
+	@echo -e "\e[1;32mCleaning stage0_file...\e[0m"
 	@rm -f *.o *.elf *.self *.bin *.map ../lv1/src/*.o ../debug/src/*.o ../lv2/src/*.o

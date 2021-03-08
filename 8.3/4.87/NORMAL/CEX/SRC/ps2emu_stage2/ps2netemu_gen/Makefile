@@ -7,6 +7,7 @@ INC 		= -I. -I../../ps2emu/include
 all: $(OUTPUT)
 
 clean:
+	@echo -e "\e[1;32mCleaning ps2netemu_gen...\e[0m"
 	@rm -f *.exe *.o
 
 $(OUTPUT): $(OBJS)

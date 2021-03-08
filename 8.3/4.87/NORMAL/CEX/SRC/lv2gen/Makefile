@@ -7,6 +7,7 @@ LDFLAGS 	= -L. -lstdc++
 all: $(OUTPUT)
 
 clean:
+	@echo -e "\e[1;32mCleaning lv2gen...\e[0m"
 	@rm -f *.o *.exe
 
 $(OUTPUT): $(OBJS)

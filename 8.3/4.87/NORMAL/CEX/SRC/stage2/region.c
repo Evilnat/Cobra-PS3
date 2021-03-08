@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <lv2/lv2.h>
-#include <lv2/libc.h>
 #include <lv2/process.h>
-#include <lv2/patch.h>
 #include <lv2/error.h>
 #include <lv2/syscall.h>
 #include "common.h"
@@ -95,9 +93,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_2(int, region_func, (uint64_t func, uint8_t 
 {
 	if (func == 0x19004)
 	{
-		#ifdef DEBUG
-			DPRINTF("We are originally in region %02X\n", buf[3]);
-		#endif
+		DPRINTF("We are originally in region %02X\n", buf[3]);
 		
 		char *procname = get_process_name(get_current_process_critical());
 		if (procname)

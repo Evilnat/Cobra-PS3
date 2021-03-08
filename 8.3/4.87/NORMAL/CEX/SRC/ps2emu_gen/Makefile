@@ -6,6 +6,7 @@ LDFLAGS		= -L. -lstdc++
 all: $(OUTPUT)
 
 clean:
+	@echo -e "\e[1;32mCleaning ps2emu_gen...\e[0m"
 	@rm -f *.exe *.o
 
 $(OUTPUT): $(OBJS)

@@ -73,4 +73,5 @@ stage2.elf: $(OBJS) stage2.ld
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
+	@echo -e "\e[1;32mCleaning stage2...\e[0m"
 	@rm -f *.o *.elf *.bin *.map *.lzma ../lv2/src/*.o ../lv1/src/*.o ../debug/src/*.o

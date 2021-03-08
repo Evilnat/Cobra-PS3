@@ -54,4 +54,5 @@ ps2gxemu_stage2.elf: $(OBJS) ldscript.ld
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
+	@echo -e "\e[1;32mCleaning gxemu...\e[0m"
 	@rm -f *.o *.elf *.bin *.map ../../ps2emu/src/*.o ../../lv1/src/*.o ../../debug/src/*.o

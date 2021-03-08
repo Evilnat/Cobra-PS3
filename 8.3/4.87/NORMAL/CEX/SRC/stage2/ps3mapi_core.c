@@ -6,18 +6,11 @@
  * source code distributions.
  */
 
-#include <lv2/lv2.h>
-#include <lv2/libc.h>
 #include <lv2/memory.h>
-#include <lv2/patch.h>
 #include <lv2/syscall.h>
-#include <lv2/thread.h>
-#include <lv2/modules.h>
-#include <lv2/io.h>
 #include <lv2/error.h>
 #include <lv2/symbols.h>
 #include <lv1/patch.h>
-
 #include "modulespatch.h"
 #include "ps3mapi_core.h"
 
@@ -78,6 +71,7 @@ process_t ps3mapi_internal_get_process_by_pid(process_id_t pid)
 
 		if ((((uint64_t)p) & 0xFFFFFFFF00000000ULL) != MKA(0))
 			continue;
+
 		if (p->pid == pid)
 			return p;
 	}
@@ -110,6 +104,7 @@ int ps3mapi_get_process_by_pid(process_id_t pid, process_t process)
 
 		if ((((uint64_t)p) & 0xFFFFFFFF00000000ULL) != MKA(0))
 			continue;
+
 		if (p->pid == pid)
 			return copy_to_user(&p, get_secure_user_ptr(process), sizeof(process_t));
 	}
@@ -161,7 +156,7 @@ int ps3mapi_get_process_mem(process_id_t pid, uint64_t addr, char *buf, int size
 	if (process <= 0)
 		return ESRCH;
 
-	buff = alloc(size, 0x27);
+	buff = malloc(size);
 
 	if (!buff)
 		return ENOMEM;
@@ -169,12 +164,12 @@ int ps3mapi_get_process_mem(process_id_t pid, uint64_t addr, char *buf, int size
 	int ret = copy_from_process(process, (void *)addr, buff, size);
 	if (ret != SUCCEEDED)
 	{
-		dealloc(buff, 0x27);
+		free(buff);
 		return ret;
 	}
 
 	ret = copy_to_user(buff, (void *)get_secure_user_ptr(buf), size);
-	dealloc(buff, 0x27);
+	free(buff);
 	return ret;
 }
 
@@ -249,15 +244,18 @@ int ps3mapi_get_all_process_modules_prx_id(process_id_t pid, sys_prx_id_t *prx_i
 	sys_prx_id_t *list;
 	uint32_t *unk;
 	uint32_t n, unk2;
-	list = alloc(MAX_MODULES*sizeof(sys_prx_module_info_t), 0x35);
+	list = kalloc(MAX_MODULES * sizeof(sys_prx_module_info_t));
 
 	if (!list)
 		return ENOMEM;
 
-	unk = alloc(MAX_MODULES*sizeof(uint32_t), 0x35);
+	unk = kalloc(MAX_MODULES*sizeof(uint32_t));
 
-	if (!unk) {dealloc(list, 0x35);
-		return ENOMEM;}
+	if (!unk) 
+	{
+		kfree(list);
+		return ENOMEM;
+	}
 
 	int ret = prx_get_module_list(process, list, unk, MAX_MODULES, &n, &unk2);
 	if (ret == SUCCEEDED)
@@ -273,8 +271,8 @@ int ps3mapi_get_all_process_modules_prx_id(process_id_t pid, sys_prx_id_t *prx_i
 		ret =copy_to_user(&tmp_prx_id_list, get_secure_user_ptr(prx_id_list), sizeof(tmp_prx_id_list));
 	}
 
-	dealloc(list, 0x35);
-	dealloc(unk, 0x35);
+	kfree(list);
+	kfree(unk);
 	return ret;
 }
 
@@ -285,16 +283,16 @@ int ps3mapi_get_process_module_name_by_prx_id(process_id_t pid, sys_prx_id_t prx
 	if (process <= 0)
 		return ESRCH;
 
-	char *filename = alloc(256, 0x35);
+	char *filename = kalloc(256);
 
 	if (!filename)
 		return ENOMEM;
 
-	sys_prx_segment_info_t *segments = alloc(sizeof(sys_prx_segment_info_t), 0x35);
+	sys_prx_segment_info_t *segments = kalloc(sizeof(sys_prx_segment_info_t));
 
 	if (!segments)
 	{
-		dealloc(filename, 0x35);
+		kfree(filename);
 		return ENOMEM;
 	}
 
@@ -303,6 +301,7 @@ int ps3mapi_get_process_module_name_by_prx_id(process_id_t pid, sys_prx_id_t prx
 	memset(&modinfo, 0, sizeof(sys_prx_module_info_t));
 	modinfo.filename_size = 256;
 	modinfo.segments_num = 1;
+
 	int ret = prx_get_module_info(process, prx_id, &modinfo, filename, segments);
 
 	if (ret == SUCCEEDED)
@@ -311,8 +310,8 @@ int ps3mapi_get_process_module_name_by_prx_id(process_id_t pid, sys_prx_id_t prx
 		ret = copy_to_user(&tmp_name, get_secure_user_ptr(name), strlen(tmp_name));
 	}
 
-	dealloc(filename, 0x35);
-	dealloc(segments, 0x35);
+	kfree(filename);
+	kfree(segments);
 	return ret;
 }
 
@@ -323,16 +322,16 @@ int ps3mapi_get_process_module_filename_by_prx_id(process_id_t pid, sys_prx_id_t
 	if (process <= 0)
 		return ESRCH;
 
-	char *filename = alloc(256, 0x35);
+	char *filename = kalloc(256);
 
 	if (!filename)
 		return ENOMEM;
 
-	sys_prx_segment_info_t *segments = alloc(sizeof(sys_prx_segment_info_t), 0x35);
+	sys_prx_segment_info_t *segments = kalloc(sizeof(sys_prx_segment_info_t));
 
 	if (!segments)
 	{
-		dealloc(filename, 0x35);
+		kfree(filename);
 		return ENOMEM;
 	}
 
@@ -349,8 +348,8 @@ int ps3mapi_get_process_module_filename_by_prx_id(process_id_t pid, sys_prx_id_t
 		ret = copy_to_user(&tmp_name, get_secure_user_ptr(name), strlen(tmp_name));
 	}
 
-	dealloc(filename, 0x35);
-	dealloc(segments, 0x35);
+	kfree(filename);
+	kfree(segments);
 	return ret;
 }
 
@@ -359,14 +358,14 @@ int ps3mapi_get_process_module_filename_by_prx_id(process_id_t pid, sys_prx_id_t
 
 int ps3mapi_get_vsh_plugin_slot_by_name(const char *name, uint8_t unload)
 {
-	char *tmp_name = alloc(30, 0x35);
+	char *tmp_name = kalloc(30);
 	if (!tmp_name)
 		return ENOMEM;
 
-	char *tmp_filename = alloc(MAX_FILE_LEN, 0x35);
+	char *tmp_filename = kalloc(MAX_FILE_LEN);
 	if (!tmp_filename)
 	{
-		dealloc(tmp_name, 0x35);
+		kfree(tmp_name);
 		return ENOMEM;
 	}
 
@@ -389,13 +388,15 @@ int ps3mapi_get_vsh_plugin_slot_by_name(const char *name, uint8_t unload)
 		}
 		else if(!strcmp(tmp_name, name) || strstr(tmp_filename, name))
 		{
-			if(unload) sys_prx_unload_vsh_plugin(slot);
+			if(unload) 
+				sys_prx_unload_vsh_plugin(slot);
+
 			break;
 		}
 	}
 
-	dealloc(tmp_name, 0x35);
-	dealloc(tmp_filename, 0x35);
+	kfree(tmp_name);
+	kfree(tmp_filename);
 
 	return slot;
 }
@@ -470,7 +471,7 @@ int ps3mapi_get_process_module_info(process_t process, sys_prx_id_t prx_id, char
 	if (process <= 0)
 		return ESRCH;
 
-	sys_prx_segment_info_t *segments = alloc(sizeof(sys_prx_segment_info_t), 0x35);
+	sys_prx_segment_info_t *segments = kalloc(sizeof(sys_prx_segment_info_t));
 	if (!segments)
 		return ENOMEM;
 
@@ -497,7 +498,7 @@ int ps3mapi_get_process_module_info(process_t process, sys_prx_id_t prx_id, char
 		}
 	}
 
-	dealloc(segments, 0x35);
+	kfree(segments);
 	return ret;
 }
 
@@ -520,16 +521,16 @@ int ps3mapi_get_process_module_segments(process_id_t pid, sys_prx_id_t prx_id, s
 	if ((modinfo.segments == 0) || (modinfo.filename == 0) || (modinfo.segments_num == 0) || (modinfo.filename_size == 0))
 		return EFAULT;
 
-	char *filename = alloc(modinfo.filename_size, 0x35);
+	char *filename = kalloc(modinfo.filename_size);
 
 	if (!filename)
 		return ENOMEM;
 
-	sys_prx_segment_info_t *segments = alloc(modinfo.segments_num * sizeof(sys_prx_segment_info_t), 0x35);
+	sys_prx_segment_info_t *segments = kalloc(modinfo.segments_num * sizeof(sys_prx_segment_info_t));
 
 	if (!segments)
 	{
-		dealloc(filename, 0x35);
+		kfree(filename);
 		return ENOMEM;
 	}
 
@@ -548,8 +549,8 @@ int ps3mapi_get_process_module_segments(process_id_t pid, sys_prx_id_t prx_id, s
 		}
 	}
 
-	dealloc(filename, 0x35);
-	dealloc(segments, 0x35);
+	kfree(filename);
+	kfree(segments);
 	return ret;
 }
 
@@ -620,7 +621,6 @@ int ps3mapi_get_idps(uint64_t *idps)
 	idps_tmp[1] = *(uint64_t *)(PS3MAPI_IDPS_1 + 8);
 	return copy_to_user(&idps_tmp, get_secure_user_ptr(idps), sizeof(idps_tmp));
 }
-
 
 int ps3mapi_set_idps(uint64_t part1, uint64_t part2)
 {

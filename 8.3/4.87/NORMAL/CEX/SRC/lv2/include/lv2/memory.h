@@ -4,15 +4,24 @@
 #include <lv2/lv2.h>
 #include <lv2/process.h>
 
-#define KB(n) (1024*n)
-#define MB(n) (1048576*n)
-#define GB(n) (1073741824*n)
+#define KB(n) (1024 * n)
+#define MB(n) (1048576 * n)
+#define GB(n) (1073741824 * n)
 
 #define MEMORY_PAGE_SIZE_4K		0x100
 #define MEMORY_PAGE_SIZE_64K	0x200
 #define MEMORY_PAGE_SIZE_1M		0x400
 
 typedef uint32_t sys_memory_container_t;
+
+void *malloc(size_t size);
+void free(void *ptr);
+
+void *kalloc(size_t size);
+void kfree(void *ptr);
+
+void *xalloc(size_t size);
+void xfree(void *ptr);
 
 LV2_EXPORT void *alloc(int size, uint64_t flags);
 

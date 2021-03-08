@@ -1,24 +1,7 @@
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <lv2/lv2.h>
-#include <lv2/libc.h>
-#include <lv2/memory.h>
-#include <lv2/patch.h>
 #include <lv2/syscall.h>
-#include <lv2/usb.h>
-#include <lv2/storage.h>
-#include <lv2/thread.h>
-#include <lv2/synchronization.h>
 #include <lv2/modules.h>
-#include <lv2/io.h>
 #include <lv2/ctrl.h>
-#include <lv2/time.h>
-#include <lv2/security.h>
 #include <lv2/error.h>
-#include <lv2/symbols.h>
-#include <lv1/stor.h>
 #include <lv1/patch.h>
 #include "common.h"
 #include "syscall8.h"
@@ -74,8 +57,6 @@
 #define MAKE_VERSION(cobra, fw, type) ((cobra & 0xFF) | ((fw & 0xffff) << 8) | ((type & 0x1) << 24))
 #define N_KERNEL_PATCHES	(sizeof(kernel_patches) / sizeof(Patch))
 
-//uint8_t auto_dev_blind = 1;
-
 typedef struct
 {
 	uint32_t address;
@@ -118,7 +99,7 @@ static Patch kernel_patches[] =
 int disable_cobra_stage()
 {
 	cellFsUtilMount_h("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0, 0, 0, 0, 0);
-	cellFsRename(CB_LOCATION, CB_LOCATION".bak");
+	cellFsRename(CB_LOCATION, CB_LOCATION ".bak");
 	uint64_t size = 0x5343450000000000;
 
 	int dst;
@@ -144,6 +125,7 @@ int inst_and_run_kernel(uint8_t *payload, int size)
 	f.toc = (void *)MKA(TOC);
 	func = (void *)&f;
 	func();
+
 	return SUCCEEDED;
 }
 
@@ -155,7 +137,8 @@ int inst_and_run_kernel_dynamic(uint8_t *payload, int size, uint64_t *residence)
 	if(!payload)
 		return -2;
 	
-	void *skprx=alloc(size, 0x27);
+	void *skprx = malloc(size);
+
 	if(skprx)
 	{
 		memcpy(skprx, get_secure_user_ptr(payload), size);
@@ -166,8 +149,9 @@ int inst_and_run_kernel_dynamic(uint8_t *payload, int size, uint64_t *residence)
 		f.toc = (void *)MKA(TOC);
 		func = (void *)&f;
 		func();
-		uint64_t resident=(uint64_t)skprx;
+		uint64_t resident = (uint64_t)skprx;
 		copy_to_user(&resident, get_secure_user_ptr(residence), 8);
+
 		return 1;
 	}
 	
@@ -176,7 +160,7 @@ int inst_and_run_kernel_dynamic(uint8_t *payload, int size, uint64_t *residence)
 
 int unload_plugin_kernel(uint64_t residence)
 {
-	dealloc((void *)residence, 0x27);
+	free((void *)residence);
 	return SUCCEEDED;
 }
 
@@ -186,11 +170,6 @@ int64_t syscall8(uint64_t function, uint64_t param1, uint64_t param2, uint64_t p
 
 LV2_SYSCALL2(uint64_t, sys_cfw_peek, (uint64_t *addr))
 {
-	/* if (block_peek)
-		return (uint64_t)ENOSYS; */
-
-	//DPRINTF("peek %p\n", addr);
-
 	uint64_t ret = *addr;
 
 	// Fix compatibilty issue with prx loader. It searches for a string... that is also in this payload, and then lv2_peek((vsh_str + 0x70)) crashes the system.
@@ -201,7 +180,7 @@ LV2_SYSCALL2(uint64_t, sys_cfw_peek, (uint64_t *addr))
 
 		if ((uint64_t)addr >= (uint64_t)&_start && (uint64_t)addr < (uint64_t)&__self_end)
 		{
-			DPRINTF("peek to addr %p blocked for compatibility.\n", addr);
+			//DPRINTF("peek to addr %p blocked for compatibility.\n", addr);
 			return SUCCEEDED;
 		}
 	}
@@ -256,23 +235,23 @@ LV2_SYSCALL2(void, sys_cfw_poke, (uint64_t *ptr, uint64_t value))
 				// First check if it is trying to restore our syscall8
 				if (*(uint64_t *)syscall8 == value)
 				{
-					DPRINTF("Removing syscall 8 extension\n");
+					//DPRINTF("Removing syscall 8 extension\n");
 
 					extended_syscall8.addr = 0;
 					return;
 				}
 
 				extended_syscall8.addr = (void *) *(uint64_t *)value;
-				extended_syscall8.toc = (void *) *(uint64_t *)(value+8);
+				extended_syscall8.toc = (void *) *(uint64_t *)(value + 8);
 
-				DPRINTF("Adding syscall 8 extension %p %p\n", extended_syscall8.addr, extended_syscall8.toc);
+				//DPRINTF("Adding syscall 8 extension %p %p\n", extended_syscall8.addr, extended_syscall8.toc);
 				return;
 			}
 			else if (((value == sc_null) ||(value == syscall_not_impl)) && (syscall_num != 8)) //Allow removing protected syscall 6 7 9 10 35 NOT 8			
 				DPRINTF("HB remove syscall %ld\n", syscall_num);			
 			else //Prevent syscall 6 7 9 10 and 35 from being re-written
 			{
-				DPRINTF("HB has been blocked from rewritting syscall %ld\n", syscall_num);
+				//DPRINTF("HB has been blocked from rewritting syscall %ld\n", syscall_num);
 				return;
 			}
 		}
@@ -283,17 +262,18 @@ LV2_SYSCALL2(void, sys_cfw_poke, (uint64_t *ptr, uint64_t value))
 
 		if (value == 0xf821ff617c0802a6ULL)
 		{
-			DPRINTF("Restoring map_path patches\n");
+			//DPRINTF("Restoring map_path patches\n");
 
 			*ptr = value;
 			clear_icache(ptr, 8);
 			map_path_patches(0);
+
 			return;
 		}
 	}
 	else
 	{
-		uint64_t sc813 = get_syscall_address(813);
+		uint64_t sc813 = get_syscall_address(SYS_FS_RMDIR);
 
 		if (addr == sc813)
 		{
@@ -330,7 +310,7 @@ LV2_SYSCALL2(void, sys_cfw_poke, (uint64_t *ptr, uint64_t value))
 				// Assume app is trying to restore sc 813
 				if (current_813)
 				{
-					DPRINTF("Restoring syscall 813\n");
+					//DPRINTF("Restoring syscall 813\n");
 
 					unhook_function(sc813, current_813);
 					current_813 = NULL;
@@ -343,7 +323,7 @@ LV2_SYSCALL2(void, sys_cfw_poke, (uint64_t *ptr, uint64_t value))
 				return;
 			}
 		}
-		else if (addr > sc813 && addr < (sc813+0x20))		
+		else if (addr > sc813 && addr < (sc813 + 0x20))		
 			return;		
 	}
 
@@ -405,7 +385,7 @@ LV2_SYSCALL2(uint64_t, sys_cfw_lv1_peek, (uint64_t lv1_addr))
 /*
 LV2_HOOKED_FUNCTION(uint64_t, sys_cfw_storage_send_device_command, (uint32_t device_handle, unsigned int command, void indata, uint64_t inlen, void outdata, uint64_t outlen))
 {
-	DPRINTF("sys_storage_send_device_command\n");
+	//DPRINTF("sys_storage_send_device_command\n");
 
 	sys_storage_send_device_command(device_handle, command, indata, inlen, outdata, outlen);
 	int64_t debug_print(const char* buffer, size_t size);
@@ -431,7 +411,6 @@ static inline void ps3mapi_unhook_all(void)
 	unhook_all_region();
 	unhook_all_map_path();
     unhook_all_storage_ext();
-	//unhook_all_permissions();
 }
 
 static uint64_t ps3mapi_key = 0;
@@ -455,16 +434,15 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 	if(ps3mapi_partial_disable_syscall8 == 0 && extended_syscall8.addr == 0 && ps3mapi_access_granted)
 	{
 		if((function >= 0x9800) || (function & 3)) 
-			tmp_lv1peek=0; else
-
-		if(function <= 0x1000) 
+			tmp_lv1peek = 0; 
+		else if(function <= 0x1000) 
 		{
 			tmp_lv1peek = 1; 
 
 			if(function <= SYSCALL8_OPCODE_ENABLE_COBRA) 
 			{
-				if(param1>=SYSCALL8_DISABLE_COBRA_CAPABILITY) 
-					return (param1==SYSCALL8_DISABLE_COBRA_CAPABILITY) ? SYSCALL8_DISABLE_COBRA_OK : disable_cobra; 
+				if(param1 >= SYSCALL8_DISABLE_COBRA_CAPABILITY) 
+					return (param1 == SYSCALL8_DISABLE_COBRA_CAPABILITY) ? SYSCALL8_DISABLE_COBRA_OK : disable_cobra; 
 				else 
 					disable_cobra = (function == SYSCALL8_OPCODE_DISABLE_COBRA && param1 == 1);
 			}
@@ -475,7 +453,6 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 	}
 	else 
 		tmp_lv1peek=0;
-	// --
 
 /*
 	static uint32_t pid_blocked = 0;
@@ -565,12 +542,15 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				case PS3MAPI_OPCODE_GET_CORE_VERSION:
 					return PS3MAPI_CORE_VERSION;
 				break;
+
 				case PS3MAPI_OPCODE_GET_CORE_MINVERSION:
 					return PS3MAPI_CORE_MINVERSION;
 				break;
+
 				case PS3MAPI_OPCODE_GET_FW_VERSION:
 					return PS3MAPI_FW_VERSION;
 				break;
+
 				case PS3MAPI_OPCODE_GET_FW_TYPE:
 					return ps3mapi_get_fw_type((char *)param2);
 				break;
@@ -581,16 +561,20 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				case PS3MAPI_OPCODE_SUPPORT_SC8_PEEK_POKE:
 					return PS3MAPI_OPCODE_SUPPORT_SC8_PEEK_POKE_OK;
 				break;
+
 				case PS3MAPI_OPCODE_LV1_PEEK:
 					return lv1_peekd(param2);
 				break;
+
 				case PS3MAPI_OPCODE_LV1_POKE:
 					lv1_poked(param2, param3);
 					return SUCCEEDED;
 				break;
+
 				case PS3MAPI_OPCODE_LV2_PEEK:
 					return lv1_peekd(param2 + 0x8000000ULL);
 				break;
+
 				case PS3MAPI_OPCODE_LV2_POKE:
 					lv1_poked(param2 + 0x8000000ULL, param3);
 					return SUCCEEDED;
@@ -612,15 +596,19 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				case PS3MAPI_OPCODE_GET_ALL_PROC_PID:
 					return ps3mapi_get_all_processes_pid((process_id_t *)param2);
 				break;
+
 				case PS3MAPI_OPCODE_GET_PROC_NAME_BY_PID:
 					return ps3mapi_get_process_name_by_pid((process_id_t)param2, (char *)param3);
 				break;
+
 				case PS3MAPI_OPCODE_GET_PROC_BY_PID:
 					return ps3mapi_get_process_by_pid((process_id_t)param2, (process_t)param3);
 				break;
+
 				case PS3MAPI_OPCODE_GET_CURRENT_PROC:
 					return ps3mapi_get_current_process((process_t)param2);
 				break;
+
 				case PS3MAPI_OPCODE_GET_CURRENT_PROC_CRIT:
 					return ps3mapi_get_current_process_critical((process_t)param2);
 				break;
@@ -631,9 +619,11 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				case PS3MAPI_OPCODE_GET_PROC_MEM:
 					return ps3mapi_get_process_mem((process_id_t)param2, param3, (char *)param4, (int)param5);
 				break;
+
 				case PS3MAPI_OPCODE_SET_PROC_MEM:
 					return ps3mapi_set_process_mem((process_id_t)param2, param3, (char *)param4, (int)param5);
 				break;
+
 				case PS3MAPI_OPCODE_PROC_PAGE_ALLOCATE:
 					return ps3mapi_process_page_allocate((process_id_t)param2, param3, param4, param5, param6, (uint64_t *)param7);
 				break;
@@ -644,21 +634,27 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				case PS3MAPI_OPCODE_GET_ALL_PROC_MODULE_PID:
 					return ps3mapi_get_all_process_modules_prx_id((process_id_t)param2, (sys_prx_id_t *)param3);
 				break;
+
 				case PS3MAPI_OPCODE_GET_PROC_MODULE_NAME:
 					return ps3mapi_get_process_module_name_by_prx_id((process_id_t)param2, (sys_prx_id_t)param3, (char *)param4);
 				break;
+
 				case PS3MAPI_OPCODE_GET_PROC_MODULE_FILENAME:
 					return ps3mapi_get_process_module_filename_by_prx_id((process_id_t)param2, (sys_prx_id_t)param3, (char *)param4);
 				break;
+
 				case PS3MAPI_OPCODE_LOAD_PROC_MODULE:
 					return ps3mapi_load_process_modules((process_id_t)param2, (char *)param3, (void *)param4, (uint32_t)param5);
 				break;
+
 				case PS3MAPI_OPCODE_UNLOAD_PROC_MODULE:
 					return ps3mapi_unload_process_modules((process_id_t)param2, (sys_prx_id_t)param3);
 				break;
+
 				case PS3MAPI_OPCODE_GET_PROC_MODULE_INFO:
 					return ps3mapi_get_process_module_info((process_t)param2, (sys_prx_id_t)param3, (char *)param4, (char *)param5);
 				break;
+
 				case PS3MAPI_OPCODE_GET_PROC_MODULE_SEGMENTS:
 					return ps3mapi_get_process_module_segments((process_id_t)param2, (sys_prx_id_t)param3, (sys_prx_module_info_t *)param4); // TheRouletteBoi
 				break;
@@ -669,9 +665,11 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				case PS3MAPI_OPCODE_UNLOAD_VSH_PLUGIN:
 					return ps3mapi_unload_vsh_plugin((char *)param2);
 				break;
+
 				case PS3MAPI_OPCODE_GET_VSH_PLUGIN_INFO:
 					return ps3mapi_get_vsh_plugin_info((unsigned int)param2, (char *)param3, (char *)param4);
 				break;
+
 				case PS3MAPI_OPCODE_GET_VSH_PLUGIN_BY_NAME:
 					return ps3mapi_get_vsh_plugin_slot_by_name((char *)param2, (uint8_t)param3);
 				break;
@@ -682,20 +680,25 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				case PS3MAPI_OPCODE_DISABLE_SYSCALL:
 					return ps3mapi_disable_syscall((int)param2);
 				break;
+
 				case PS3MAPI_OPCODE_CHECK_SYSCALL:
 					return ps3mapi_check_syscall((int)param2);
 				break;
+
 				case PS3MAPI_OPCODE_PDISABLE_SYSCALL8:
 					ps3mapi_partial_disable_syscall8 = (int)param2;
 					return SUCCEEDED;
 				break;
+
 				case PS3MAPI_OPCODE_PCHECK_SYSCALL8:
 					return ps3mapi_partial_disable_syscall8;
 				break;
+
 				case PS3MAPI_OPCODE_CREATE_CFW_SYSCALLS:
 					create_syscalls();
 					return SUCCEEDED;
 				break;
+
 				case PS3MAPI_OPCODE_ALLOW_RESTORE_SYSCALLS:
 					allow_restore_sc = (uint8_t)param2; // 1 = allow, 0 = do not allow
 					return SUCCEEDED;
@@ -715,12 +718,15 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				case PS3MAPI_OPCODE_GET_IDPS:
 					return ps3mapi_get_idps((uint64_t *)param2);
 				break;
+
 				case PS3MAPI_OPCODE_SET_IDPS:
 					return ps3mapi_set_idps(param2, param3);
 				break;
+
 				case PS3MAPI_OPCODE_GET_PSID:
 					return ps3mapi_get_psid((uint64_t *)param2);
 				break;
+
 				case PS3MAPI_OPCODE_SET_PSID:
 					return ps3mapi_set_psid(param2, param3);
 				break;
@@ -732,6 +738,7 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 					photo_gui = (uint8_t)param2;
 					return photo_gui;
 				break;
+
 				case PS3MAPI_OPCODE_SET_FAN_SPEED:
 					if(param2 == 2)
 						do_fan_control();
@@ -740,12 +747,15 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 
 					return sm_set_fan_policy(0, (uint8_t)(param2 >= 0x33 ? 2 : 1), (uint8_t)(param2 >= 0x33 ? param2 : 0));
 				break;
+
 				case PS3MAPI_OPCODE_GET_FAN_SPEED:
 					return sm_get_fan_speed();
 				break;
+
 				case PS3MAPI_OPCODE_RING_BUZZER:
 					return sm_ring_buzzer((uint16_t)param2);
 				break;
+
 				case PS3MAPI_OPCODE_SKIP_EXISTING_RIF:
 					skip_existing_rif = (uint8_t)param2;
 					return skip_existing_rif;
@@ -757,9 +767,11 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				case PS3MAPI_OPCODE_CHECK_QA:
 					return read_qa_flag();
 				break;
+
 				case PS3MAPI_OPCODE_ENABLE_QA:
 					return set_qa_flag(1);
 				break;
+
 				case PS3MAPI_OPCODE_DISABLE_QA:
 					return set_qa_flag(0);
 				break;
@@ -780,18 +792,18 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 
 		case SYSCALL8_OPCODE_STEALTH_ACTIVATE: //KW PSNPatch stealth extension compatibility
 		{
-				uint64_t syscall_not_impl = *(uint64_t *)MKA(syscall_table_symbol);
-				//*(uint64_t *)MKA(syscall_table_symbol+ 8* 8) = syscall_not_impl;
-				ps3mapi_partial_disable_syscall8 = 2; //NzV Edit: Keep PS3M_API Features only.
-				*(uint64_t *)MKA(syscall_table_symbol + 8 * 9) = syscall_not_impl;
-				*(uint64_t *)MKA(syscall_table_symbol + 8 * 10) = syscall_not_impl;
-				*(uint64_t *)MKA(syscall_table_symbol + 8 * 11) = syscall_not_impl;
-				*(uint64_t *)MKA(syscall_table_symbol + 8 * 15) = syscall_not_impl;
-				*(uint64_t *)MKA(syscall_table_symbol + 8 * 35) = syscall_not_impl;
-				*(uint64_t *)MKA(syscall_table_symbol + 8 * 36) = syscall_not_impl;
-				*(uint64_t *)MKA(syscall_table_symbol + 8 * 38) = syscall_not_impl;
-				*(uint64_t *)MKA(syscall_table_symbol + 8 * 6) = syscall_not_impl;
-				*(uint64_t *)MKA(syscall_table_symbol + 8 * 7) = syscall_not_impl;
+			uint64_t syscall_not_impl = *(uint64_t *)MKA(syscall_table_symbol);
+			//*(uint64_t *)MKA(syscall_table_symbol+ 8* 8) = syscall_not_impl;
+			ps3mapi_partial_disable_syscall8 = 2; //NzV Edit: Keep PS3M_API Features only.
+			*(uint64_t *)MKA(syscall_table_symbol + 8 * 9) = syscall_not_impl;
+			*(uint64_t *)MKA(syscall_table_symbol + 8 * 10) = syscall_not_impl;
+			*(uint64_t *)MKA(syscall_table_symbol + 8 * 11) = syscall_not_impl;
+			*(uint64_t *)MKA(syscall_table_symbol + 8 * 15) = syscall_not_impl;
+			*(uint64_t *)MKA(syscall_table_symbol + 8 * 35) = syscall_not_impl;
+			*(uint64_t *)MKA(syscall_table_symbol + 8 * 36) = syscall_not_impl;
+			*(uint64_t *)MKA(syscall_table_symbol + 8 * 38) = syscall_not_impl;
+			*(uint64_t *)MKA(syscall_table_symbol + 8 * 6) = syscall_not_impl;
+			*(uint64_t *)MKA(syscall_table_symbol + 8 * 7) = syscall_not_impl;
 			return SYSCALL8_STEALTH_OK;
 		}
 		break;
