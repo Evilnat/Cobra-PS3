@@ -289,7 +289,11 @@ int64_t debug_print(const char* buffer, size_t msgsize)
 void abort(void)
 {
 	_debug_printf("abort() called! Panicking.\n");
-	sm_set_fan_policy(0, 1, 0);
+
+	#ifdef LV2
+		sm_set_fan_policy(0, 1, 0);
+	#endif
+
 	lv1_panic(0);
 	while (1);
 }
@@ -298,7 +302,11 @@ void fatal(const char *msg)
 {
 	_debug_printf("FATAL: %s\n", msg);
 	_debug_printf("Panicking.\n");
-	sm_set_fan_policy(0, 1, 0);		
+
+	#ifdef LV2
+		sm_set_fan_policy(0, 1, 0);
+	#endif	
+		
 	lv1_panic(0);
 	while (1);
 }
