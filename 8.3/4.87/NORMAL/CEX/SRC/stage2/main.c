@@ -752,9 +752,10 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 					return sm_get_fan_speed();
 				break;
 
-				case PS3MAPI_OPCODE_RING_BUZZER:
+				// Useless in Cobra (Except for testing)
+				/*case PS3MAPI_OPCODE_RING_BUZZER:
 					return sm_ring_buzzer((uint16_t)param2);
-				break;
+				break;*/
 
 				case PS3MAPI_OPCODE_SKIP_EXISTING_RIF:
 					skip_existing_rif = (uint8_t)param2;
