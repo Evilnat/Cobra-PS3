@@ -179,8 +179,7 @@ int ps3mapi_disable_syscall(int num);
 //-----------------------------------------------
 
 #define PS3MAPI_OPCODE_CHECK_QA 			0x2242
-#define PS3MAPI_OPCODE_ENABLE_QA 			0x2243
-#define PS3MAPI_OPCODE_DISABLE_QA 			0x2244
+#define PS3MAPI_OPCODE_SET_QA 				0x2243
 
 
 int ps3mapi_get_idps(uint64_t *idps);

@@ -769,12 +769,8 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 					return read_qa_flag();
 				break;
 
-				case PS3MAPI_OPCODE_ENABLE_QA:
-					return set_qa_flag(1);
-				break;
-
-				case PS3MAPI_OPCODE_DISABLE_QA:
-					return set_qa_flag(0);
+				case PS3MAPI_OPCODE_SET_QA:
+					return set_qa_flag((uint8_t)param2);
 				break;
 				
 				//----------
