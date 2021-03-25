@@ -6,7 +6,7 @@ Thanks to Cobra team, Joonie, Habib, Haxxxen, Alexander, Dean, KW, Nzv, Bguervil
 
 WIP of Cobra 8.3 from @aldostools.
 
-reActPSN are not added yet due to freezes.
+reactPSN added, testing...
 
 This repository will have constant changes.
 
@@ -34,5 +34,5 @@ This repository will have constant changes.
 	. Added cellFsMkdir symbol (by Evilnat)
     
 ###### To do:
-    . reActPSN
+    . All done
 	
