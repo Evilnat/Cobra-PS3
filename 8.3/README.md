@@ -31,6 +31,7 @@ This repository will have constant changes.
 	. Fixed black screen in CFW2OFW converted games (by Evilnat)
 	. Added sm_ring_buzzer with single_beep, double_beep and triple_beep (by Evilnat)
 	. Skip the creation of rif if already exists (by aldo)
+	. Added cellFsMkdir symbol (by Evilnat)
     
 ###### To do:
     . reActPSN
