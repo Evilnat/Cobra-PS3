@@ -28,11 +28,13 @@ This repository will have constant changes.
     . Disable stage2.bin while Recovery Menu is loaded (by haxxxen)
     . Fixed max FAN speed after shutdown (by Evilnat)
     . Improved Habib's QA flags code imported by aldostools (by Evilnat)
-	. Fixed black screen in CFW2OFW converted games (by Evilnat)
-	. Added sm_ring_buzzer with single_beep, double_beep and triple_beep (by Evilnat)
-	. Skip the creation of rif if already exists (by aldo)
-	. Added cellFsMkdir symbol (by Evilnat)
+    . Fixed black screen in CFW2OFW converted games (by Evilnat)
+    . Added sm_ring_buzzer with single_beep, double_beep and triple_beep (by Evilnat)
+    . Skip the creation of rif if already exists (by aldo)
+    . Added cellFsMkdir symbol (by Evilnat)
+    . Fixed freezes on NAND with payload new address (by Evilnat)
+    . Added constant FAN Speed while a PS2 ISO is launched (by Evilnat)
     
 ###### To do:
     . All done
-	
+    
