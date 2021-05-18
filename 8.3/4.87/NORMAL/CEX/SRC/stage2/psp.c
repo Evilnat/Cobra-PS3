@@ -437,10 +437,8 @@ Known values:
 
 int sys_psp_sony_bug(uint32_t *mips_registers, void *unk, uint32_t mips_PC)
 {
-	// Disabled to reduce payload size
-	// Uncomment it if you need it but be sure payload size is not higher than 0x20000!!!
+	DPRINTF("sys_psp_sony_bug, game is gonna crash\n");
 
-	/*DPRINTF("sys_psp_sony_bug, game is gonna crash\n");
 	DPRINTF("PSP registers info:\n");
 	DPRINTF("PC: %08X\n", mips_PC);
 	DPRINTF("zr: %08X   at: %08X\n", mips_registers[0], mips_registers[1]);
@@ -458,7 +456,7 @@ int sys_psp_sony_bug(uint32_t *mips_registers, void *unk, uint32_t mips_PC)
 	DPRINTF("t8: %08X   t9: %08X\n", mips_registers[24], mips_registers[25]);
 	DPRINTF("k0: %08X   k1: %08X\n", mips_registers[26], mips_registers[27]);
 	DPRINTF("gp: %08X   sp: %08X\n", mips_registers[28], mips_registers[29]);
-	DPRINTF("s8: %08X   ra: %08X\n", mips_registers[30], mips_registers[31]);*/
+	DPRINTF("s8: %08X   ra: %08X\n", mips_registers[30], mips_registers[31]);
 
 	/*for (int i = 32; i < 1024; i += 2)
 	{

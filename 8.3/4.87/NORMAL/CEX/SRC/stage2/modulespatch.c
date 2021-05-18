@@ -13,7 +13,6 @@
 #include <lv2/thread.h>
 #include <lv2/syscall.h>
 #include "common.h"
-#include "mappath.h"
 #include "modulespatch.h"
 #include "crypto.h"
 #include "config.h"
@@ -313,7 +312,7 @@ SprxPatch libfs_external_patches[] =
 	{ 0 }
 };
 
-static PatchTableEntry patch_table[] =
+PatchTableEntry patch_table[] =
 {
 	{ VSH_HASH, main_vsh_patches },
 	{ EXPLORE_PLUGIN_HASH, explore_plugin_patches },
@@ -333,9 +332,7 @@ static PatchTableEntry patch_table[] =
 
 #ifdef DEBUG
 
-// Disabled to reduce payload size
-// Uncomment it if you need it but be sure payload size is not higher than 0x20000!!!
-/*static char *hash_to_name(uint64_t hash)
+static char *hash_to_name(uint64_t hash)
 {
     switch(hash)
 	{
@@ -391,7 +388,7 @@ static PatchTableEntry patch_table[] =
 			return "UNKNOWN";
 		break;		
 	}
-}*/
+}
 
 #endif
 
@@ -424,7 +421,7 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 	uint32_t *ptr32;
 	uint8_t *sce_hdr;
 
-	ptr = (uint64_t *)(*(uint64_t *)MKA(TOC+decrypt_rtoc_entry_2));
+	ptr = (uint64_t *)(*(uint64_t *)MKA(TOC + decrypt_rtoc_entry_2));
 	ptr = (uint64_t *)ptr[0x68 / 8];
 	ptr = (uint64_t *)ptr[0x18 / 8];
 	ptr32 = (uint32_t *)ptr;
@@ -583,7 +580,7 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 		{
 			if (patch_table[i].hash == hash)
 			{		
-				//DPRINTF("Now patching  %s %lx\n", hash_to_name(hash), hash);
+				DPRINTF("Now patching  %s %lx\n", hash_to_name(hash), hash);
 
 				int j = 0;
 				SprxPatch *patch = &patch_table[i].patch_table[j];

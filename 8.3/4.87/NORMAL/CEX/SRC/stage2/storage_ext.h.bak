@@ -3,7 +3,6 @@
 
 #include <lv2/io.h>
 #include <lv2/synchronization.h>
-#include <lv2/storage.h>
 #include "scsi.h"
 
 enum EMU_TYPE

@@ -63,13 +63,13 @@ static INLINE void *get_call_address2(uint64_t *stack, unsigned int idx)
 	for (int i = 0; i < idx; i++)
 	{
 		if (!stack)
-			return 0;
+			return SUCCEEDED;
 		
 		stack = (uint64_t *)stack[0];
 	}
 	
 	if (!stack)
-		return 0;
+		return SUCCEEDED;
 	
 	return (void *)(stack[2]-4);
 }

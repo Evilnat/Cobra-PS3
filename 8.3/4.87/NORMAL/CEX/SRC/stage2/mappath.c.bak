@@ -122,7 +122,7 @@ int map_path(char *oldpath, char *newpath, uint32_t flags)
 	return SUCCEEDED;
 }
 
-int map_path_user(char *oldpath, char *newpath, uint32_t flags)
+static int map_path_user(char *oldpath, char *newpath, uint32_t flags)
 {
 	char *oldp, *newp;
 

@@ -806,6 +806,9 @@ static void get_cd_sector_size(unsigned int trackscount)
 		cd_sector_size = 2352;
 }
 
+int emu_read_bdvd1(void *object, void *buf, uint64_t size, uint64_t offset);
+int emu_storage_read(device_handle_t device_handle, uint64_t unk, uint64_t start_sector, uint32_t sector_count, void *buf, uint32_t *nread, uint64_t unk2);
+
 int read_psx_sector(void *dma, void *buf, uint64_t sector)
 {
 	if (disc_emulation == EMU_OFF)

@@ -292,4 +292,3 @@ int set_qa_flag(uint8_t value)
 
 	return SUCCEEDED;
 }
-

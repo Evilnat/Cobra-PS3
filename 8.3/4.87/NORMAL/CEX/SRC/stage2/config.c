@@ -71,6 +71,7 @@ static void check_and_correct(CobraConfig *cfg)
 
 	if(cfg->skip_existing_rif > 1)
 		cfg->skip_existing_rif = 0;
+
 	if(cfg->ps2_speed != 1 && cfg->ps2_speed < 0x60)
 		cfg->ps2_speed = 1;
 		
@@ -115,14 +116,15 @@ int read_cobra_config(void)
 	bd_video_region = config.bd_video_region;
 	dvd_video_region = config.dvd_video_region;
 	fan_speed = config.fan_speed;
+	ps2_speed = config.ps2_speed;
 	allow_restore_sc = config.allow_restore_sc;
 	skip_existing_rif = config.skip_existing_rif;
 
 	// Removed. Now condition_ps2softemu has another meaning and it is set automatically in storage_ext if no BC console
 	//condition_ps2softemu = config.ps2softemu;
 
-	DPRINTF("Configuration read.\n+ bd_video_region = %d, + dvd_video_region = %d\n+ spoof_version = %04X, + spoof_revision = %d\n+ fan_speed = %02X, + allow_restore_sc = %X\n+ skip_existing_rif = %02X\n",
-		bd_video_region, dvd_video_region, config.spoof_version, config.spoof_revision, fan_speed, allow_restore_sc, skip_existing_rif);
+	DPRINTF("Configuration read.\n+ bd_video_region = %d, + dvd_video_region = %d\n+ spoof_version = %04X, + spoof_revision = %d\n+ fan_speed = %02X, + ps2_speed = %02X\n+ allow_restore_sc = %X, + skip_existing_rif = %02X\n",
+		bd_video_region, dvd_video_region, config.spoof_version, config.spoof_revision, fan_speed, ps2_speed, allow_restore_sc, skip_existing_rif);
 	
 	return SUCCEEDED;
 }
@@ -186,6 +188,7 @@ int sys_write_cobra_config(CobraConfig *cfg)
 	bd_video_region = config.bd_video_region;
 	dvd_video_region = config.dvd_video_region;
 	fan_speed = config.fan_speed;
+	ps2_speed = config.ps2_speed;
 	allow_restore_sc = config.allow_restore_sc;
 	skip_existing_rif = config.skip_existing_rif;
 	
@@ -209,8 +212,8 @@ int save_config_value(char *member, uint8_t value)
 		config.ps2_speed = value;  
 	else if(!strcmp(member, "allow_restore_sc"))
 		config.allow_restore_sc = value;   
-	/*else if(!strcmp(member, "skip_existing_rif"))
-		cobra_config.skip_existing_rif = value; */
+	else if(!strcmp(member, "skip_existing_rif"))
+		config.skip_existing_rif = value;
 	else
 		return 1;
 
