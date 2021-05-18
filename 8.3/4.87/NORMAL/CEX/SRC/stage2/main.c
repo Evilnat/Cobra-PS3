@@ -28,7 +28,6 @@
 #include "region.h"
 #include "psp.h"
 #include "config.h"
-#include "sm_ext.h"
 #include "ps3mapi_core.h"
 #include "fan_control.h"
 #include "homebrew_blocker.h"
@@ -922,9 +921,9 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 		//--------------------------
 		// MISC
 		//--------------------------
-		case SYSCALL8_OPCODE_SEND_POWEROFF_EVENT:
+		/*case SYSCALL8_OPCODE_SEND_POWEROFF_EVENT:
 			return sys_sm_ext_send_poweroff_event((int)param1);
-		break;
+		break;*/
 
 		case SYSCALL8_OPCODE_GET_ACCESS:
 		case SYSCALL8_OPCODE_REMOVE_ACCESS:
