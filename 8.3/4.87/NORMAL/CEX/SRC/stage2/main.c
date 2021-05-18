@@ -762,7 +762,13 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 					else
 						fan_control_running = 0;
 
+					save_config_value("fan_speed", param2);
+
 					return sm_set_fan_policy(0, (uint8_t)(param2 >= 0x33 ? 2 : 1), (uint8_t)(param2 >= 0x33 ? param2 : 0));
+				break;
+
+				case PS3MAPI_OPCODE_SET_PS2_FAN_SPEED:
+					save_config_value("ps2_speed", (uint8_t)param2);
 				break;
 
 				case PS3MAPI_OPCODE_GET_FAN_SPEED:

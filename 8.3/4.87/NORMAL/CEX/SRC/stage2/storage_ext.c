@@ -2743,6 +2743,9 @@ LV2_HOOKED_FUNCTION(int, shutdown_copy_params_patched, (uint8_t *argp_user, uint
 	{
 		int fd;
 
+		// Set constant FAN Speed while you are in a PS2 game
+		sm_set_fan_policy(0, (ps2_speed == 1) ? 1 : 2, (ps2_speed == 1) ? 0 : ps2_speed);
+
 		if (cellFsOpen(PS2EMU_CONFIG_FILE, CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, 0666, NULL, 0) == 0)
 		{
 			if (disc_emulation == EMU_PS2_DVD || disc_emulation == EMU_PS2_CD)

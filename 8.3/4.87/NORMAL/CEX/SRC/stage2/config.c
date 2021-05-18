@@ -71,6 +71,8 @@ static void check_and_correct(CobraConfig *cfg)
 
 	if(cfg->skip_existing_rif > 1)
 		cfg->skip_existing_rif = 0;
+	if(cfg->ps2_speed != 1 && cfg->ps2_speed < 0x60)
+		cfg->ps2_speed = 1;
 		
 	if (cfg->size > sizeof(CobraConfig))
 		cfg->size = sizeof(CobraConfig);
@@ -188,4 +190,31 @@ int sys_write_cobra_config(CobraConfig *cfg)
 	skip_existing_rif = config.skip_existing_rif;
 	
 	return write_cobra_config();
+}
+
+int save_config_value(char *member, uint8_t value)
+{
+	int fd;
+	uint64_t r;
+	
+	if (cellFsOpen(COBRA_CONFIG_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != SUCCEEDED)
+		return 1;
+		
+	cellFsRead(fd, &config, sizeof(config), &r);
+	cellFsClose(fd);
+
+	if(!strcmp(member, "fan_speed"))		
+	config.fan_speed = value;   
+	else if(!strcmp(member, "ps2_speed"))
+		config.ps2_speed = value;  
+	else if(!strcmp(member, "allow_restore_sc"))
+		config.allow_restore_sc = value;   
+	/*else if(!strcmp(member, "skip_existing_rif"))
+		cobra_config.skip_existing_rif = value; */
+	else
+		return 1;
+
+	sys_write_cobra_config((CobraConfig *)&config);
+
+	return SUCCEEDED;
 }

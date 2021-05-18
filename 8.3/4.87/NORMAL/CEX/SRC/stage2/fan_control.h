@@ -3,6 +3,7 @@
 
 extern uint8_t fan_control_running;
 extern uint8_t fan_speed;
+extern uint8_t ps2_speed;
 
 int sm_get_fan_speed(void);
 void do_fan_control();

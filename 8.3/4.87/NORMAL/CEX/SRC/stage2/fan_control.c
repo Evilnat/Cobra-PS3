@@ -11,6 +11,7 @@
 
 uint8_t fan_control_running = 0;
 uint8_t fan_speed;
+uint8_t ps2_speed;
 
 int sm_get_fan_speed(void)
 {
