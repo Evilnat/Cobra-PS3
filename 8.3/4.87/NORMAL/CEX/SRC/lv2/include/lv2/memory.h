@@ -48,18 +48,18 @@ static INLINE int page_allocate_auto(process_t process, uint64_t size, uint64_t 
 	
 	if (size >= 0x100000)
 	{
-		size = (size+0xFFFFF) & ~0xFFFFF;
+		size = (size + 0xFFFFF) & ~0xFFFFF;
 		page_size = MEMORY_PAGE_SIZE_1M;
 	}
 	else if (size >= 0x10000)
 	{
-		size = (size+0xFFFF) & ~0xFFFF; 
+		size = (size + 0xFFFF) & ~0xFFFF; 
 		page_size = MEMORY_PAGE_SIZE_64K;
 	}
 	else
 	{
 		if (size > 0x1000)		
-			size = (size+0xFFF) & ~0xFFF;	
+			size = (size + 0xFFF) & ~0xFFF;	
 		else		
 			size = 0x1000;		
 		
@@ -76,7 +76,7 @@ static INLINE int process_ea_to_lpar_addr(process_t process, void *ea_addr, uint
 
 static INLINE void *get_secure_user_ptr(void *ptr)
 {
-	return (void *)(((uint64_t)ptr)&0xFFFFFFFF);
+	return (void *)(((uint64_t)ptr) & 0xFFFFFFFF);
 }
 
 static INLINE void get_slb(uint64_t entry, uint64_t *esid, uint64_t *vsid)

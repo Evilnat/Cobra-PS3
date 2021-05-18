@@ -1,6 +1,10 @@
+#include <lv2/lv2.h>
+#include <lv2/process.h>
 #include <lv2/memory.h>
-#include <lv2/error.h>
+#include <lv2/patch.h>
 #include <lv2/syscall.h>
+#include <lv2/error.h>
+#include "common.h"
 #include "sm_ext.h"
 #include "modulespatch.h"
 
