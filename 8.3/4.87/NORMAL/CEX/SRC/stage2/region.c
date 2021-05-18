@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <lv2/lv2.h>
+#include <lv2/libc.h>
 #include <lv2/process.h>
-#include <lv2/error.h>
+#include <lv2/patch.h>
 #include <lv2/syscall.h>
+#include <lv2/error.h>
 #include "common.h"
 #include "region.h"
 

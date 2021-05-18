@@ -1,4 +1,7 @@
+#include <lv2/lv2.h>
 #include <lv2/libc.h>
+
+#include "common.h"
 #include "crypto.h"
 
 // For whatever reason, if this function gets inlined automatically, it fucks everything

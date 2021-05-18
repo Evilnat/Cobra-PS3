@@ -8,6 +8,8 @@
 #include <debug.h>
 #include <debug_util.h>
 #include <lv2/patch.h>
+#include <lv2/error.h>
+
 #undef  printf
 #define printf			_debug_printf
 #define DPRINTF			_debug_printf

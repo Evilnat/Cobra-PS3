@@ -9,7 +9,7 @@
 #ifndef __PS3MAPI_H__
 #define __PS3MAPI_H__
 
-//#include <lv2/process.h>
+#include <lv2/process.h>
 #include <lv2/modules.h>
 
 #define SYSCALL8_OPCODE_PS3MAPI			 		0x7777

@@ -1,5 +1,6 @@
 #include <lv2/lv2.h>
 #include <lv2/libc.h>
+#include <lv2/error.h>
 
 char *strstr(const char *haystack, const char *needle)
 {

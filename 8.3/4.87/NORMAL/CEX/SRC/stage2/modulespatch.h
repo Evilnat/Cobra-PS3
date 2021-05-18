@@ -1,6 +1,7 @@
 #ifndef __MODULESPATCH_H__
 #define __MODULESPATCH_H__
 
+#include <lv2/process.h>
 #include <lv2/thread.h>
 
 #if defined(FIRMWARE_CEX)

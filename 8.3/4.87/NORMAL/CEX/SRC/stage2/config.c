@@ -1,12 +1,16 @@
+#include <lv2/lv2.h>
 #include <lv2/error.h>
+#include <lv2/libc.h>
 #include <lv2/io.h>
 #include <lv2/memory.h>
 #include "common.h"
 #include "config.h"
 #include "region.h"
+#include "modulespatch.h"
 #include "fan_control.h"
 #include "homebrew_blocker.h"
 #include "make_rif.h"
+#include "storage_ext.h"
 
 #define COBRA_CONFIG_FILE	"/dev_hdd0/vm/cobra_cfg.bin"
 

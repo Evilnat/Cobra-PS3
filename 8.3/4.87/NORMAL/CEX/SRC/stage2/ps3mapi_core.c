@@ -5,12 +5,19 @@
  * It may be used for any purpose as long as this notice remains intact on all
  * source code distributions.
  */
-
+ 
+#include <lv2/lv2.h>
+#include <lv2/libc.h>
 #include <lv2/memory.h>
+#include <lv2/patch.h>
 #include <lv2/syscall.h>
+#include <lv2/thread.h>
+#include <lv2/modules.h>
+#include <lv2/io.h>
 #include <lv2/error.h>
 #include <lv2/symbols.h>
 #include <lv1/patch.h>
+
 #include "modulespatch.h"
 #include "ps3mapi_core.h"
 

@@ -1,6 +1,8 @@
 #ifndef __MAPPATH_H__
 #define __MAPPATH_H__
 
+#include <lv2/memory.h>
+
 #define SYS_MAP_PATH	35
 #define SYS_MAP_GAME	36
 

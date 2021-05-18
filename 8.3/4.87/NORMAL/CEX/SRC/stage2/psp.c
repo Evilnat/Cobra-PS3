@@ -1,8 +1,13 @@
+#include <lv2/lv2.h>
 #include <lv2/error.h>
 #include <lv2/io.h>
 #include <lv2/memory.h>
 #include <lv2/modules.h>
+#include <lv2/object.h>
+#include <lv2/thread.h>
 #include <lv2/synchronization.h>
+#include <lv2/time.h>
+#include <lv2/libc.h>
 #include <lv2/patch.h>
 #include "common.h"
 #include "psp.h"

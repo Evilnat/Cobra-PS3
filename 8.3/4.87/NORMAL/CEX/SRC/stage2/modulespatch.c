@@ -1,19 +1,27 @@
+#include <lv2/lv2.h>
 #include <lv2/libc.h>
+#include <lv2/interrupt.h>
 #include <lv2/modules.h>
+#include <lv2/process.h>
 #include <lv2/memory.h>
 #include <lv2/io.h>
+#include <lv2/pad.h>
 #include <lv2/symbols.h>
 #include <lv2/patch.h>
 #include <lv2/error.h>
 #include <lv2/security.h>
+#include <lv2/thread.h>
+#include <lv2/syscall.h>
 #include "common.h"
 #include "mappath.h"
 #include "modulespatch.h"
 #include "crypto.h"
+#include "config.h"
 #include "storage_ext.h"
 #include "psp.h"
 #include "syscall8.h"
 #include "self.h"
+#include "mappath.h"
 
 #define MAX_VSH_PLUGINS 			7
 #define BOOT_PLUGINS_FILE			"/dev_hdd0/boot_plugins.txt"

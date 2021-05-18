@@ -1,19 +1,32 @@
+#include <lv2/lv2.h>
+#include <lv2/libc.h>
+#include <lv2/ctrl.h>
 #include <lv2/memory.h>
+#include <lv2/storage.h>
 #include <lv2/io.h>
+#include <lv2/thread.h>
+#include <lv2/synchronization.h>
 #include <lv2/object.h>
+#include <lv2/time.h>
+#include <lv2/security.h>
 #include <lv2/patch.h>
 #include <lv2/syscall.h>
 #include <lv2/error.h>
 #include <lv2/symbols.h>
 #include <lv1/lv1.h>
+#include <lv1/lv1call.h>
 #include <lv1/stor.h>
 #include <lv1/patch.h>
 #include "common.h"
 #include "storage_ext.h"
+#include "scsi.h"
 #include "config.h"
+#include "crypto.h"
 #include "mappath.h"
 #include "modulespatch.h"
 #include "fan_control.h"
+
+
 
 //#define ps2emu_entry1_bc 0x165B44
 //#define ps2emu_entry2_bc 0x165CC0
