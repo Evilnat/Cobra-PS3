@@ -6,7 +6,7 @@ Thanks to Cobra team, Joonie, Habib, Haxxxen, Alexander, Dean, KW, Nzv, Bguervil
 
 WIP of Cobra 8.3 from @aldostools.
 
-reactPSN added, testing...
+Testing now...
 
 This repository will have constant changes.
 
