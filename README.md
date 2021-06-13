@@ -1,4 +1,4 @@
-# COBRA 7.55 / 8.01 / 8.2 / 8.3 (WIP)
+# COBRA 7.55 / 8.01 / 8.2 / 8.3
 
 Cobra for PS3 CEX/DEX
 
