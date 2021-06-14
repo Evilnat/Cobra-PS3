@@ -42,8 +42,8 @@ static Patch patches[] =
 
 static INLINE void *get_data_buffer(void)
 {
-	uint64_t *p = (uint64_t *) *(uint64_t *)(TOC+DATA_TOC_OFFSET);
-	return  (void *) p[DATA_SUBTOC_OFFSET/8];	
+	uint64_t *p = (uint64_t *) *(uint64_t *)(TOC + DATA_TOC_OFFSET);
+	return  (void *) p[DATA_SUBTOC_OFFSET / 8];	
 }
 
 static INLINE uint8_t *get_buffer_from_lpar(uint64_t lpar)

@@ -8,16 +8,14 @@
 #include <lv2/thread.h>
 #include <lv2/patch.h>
 #include <lv2/error.h>
-#include <lv2/storage.h>
 #include <lv1/patch.h>
 #include <lv1/mm.h>
 #include "ps3mapi_core.h"
 #include "common.h"
 #include "storage_ext.h"
+#include "savegames.h"
 #include "qa.h"
 
-uint64_t *idps;
-uint64_t IDPS_1, IDPS_2;
 uint32_t UM_ori_patch, DM_ori_patch1, DM_ori_patch2, DM_ori_patch3, DM_ori_patch4;
 
 static u8 erk[0x20] = 
@@ -51,81 +49,6 @@ static void lv1_poked2(u64 addr, u64 value)
 	*(u64 *)(HV_BASE + addr) = value;
 }
 
-/**
-* Function to compute the digest
-*
-* @param k   Secret key
-* @param lk  Length of the key in bytes
-* @param d   Data
-* @param ld  Length of data in bytes
-* @param out Digest output
-* @param t   Size of digest output
-*/
-static void hmac_sha1(const u8 *k, u8 lk, const u8 *d, size_t ld, u8 *out)	
-{
-	SHACtx *ictx = malloc(0x100); 
-
-	if(!ictx) 
-		return;
-
-	SHACtx *octx = malloc(0x100); 
-
-	if(!octx) 
-	{
-		free(ictx); 
-		return;
-	}
-
-	u8 isha[SHA_DIGEST_LENGTH];
-	u8 key[SHA_DIGEST_LENGTH];
-	u8 buf[SHA_BLOCKSIZE];
-	u8 i;
-
-	if (lk > SHA_BLOCKSIZE)
-	{
-		SHACtx *tctx = malloc(0x100);
-		sha1_init(tctx);
-		sha1_update(tctx, k, lk);
-		sha1_final(key, tctx);
-		free(tctx);
-
-		k = key;
-		lk = SHA_DIGEST_LENGTH;
-	}
-
-	// Inner Digest
-	sha1_init(ictx);
-
-	// Pad the key for inner digest
-	for (i = 0; i < lk; ++i)	
-		buf[i] = k[i] ^ 0x36;	
-	for (i = lk; i < SHA_BLOCKSIZE; ++i)	
-		buf[i] = 0x36;	
-
-	sha1_update(ictx, buf, SHA_BLOCKSIZE);
-	sha1_update(ictx, d, ld);
-
-	sha1_final(isha, ictx);
-
-	// Outer Digest 
-	sha1_init(octx);
-
-	// Pad the key for outter digest 
-
-	for (i = 0; i < lk; ++i)	
-		buf[i] = k[i] ^ 0x5c;	
-	for (i = lk; i < SHA_BLOCKSIZE; ++i)	
-		buf[i] = 0x5c;	
-
-	sha1_update(octx, buf, SHA_BLOCKSIZE);
-	sha1_update(octx, isha, SHA_DIGEST_LENGTH);
-
-	sha1_final(out, octx);
-
-	free(ictx);
-	free(octx);
-}
-
 static void lv1_patches()
 {
 	UM_ori_patch = lv1_peekw(UM_PATCH_OFFSET);
@@ -150,43 +73,6 @@ static void restore_patches()
     lv1_pokew(DM_PATCH4_OFFSET, DM_ori_patch4); 
 }
 
-static int get_idps()
-{
-	uint32_t nread;	
-	uint64_t device;
-	uint64_t start_flash_sector = 0x181;
-	device_handle_t handle;
-
-	page_allocate_auto(NULL, 4096, 0x2F, (void **)&idps);
-
-	device = storage_get_flash_device();
-
-	if(!device)	
-		start_flash_sector = 0x20D;
-
-	//DPRINTF("Flash Device: %016lX\n", device);
-
-	if(storage_open(device, 0, &handle, 0))
-		return 1;
-	
-	if(storage_map_io_memory(device, idps, 4096))
-		return 1;	
-
-	if(call_hooked_function_7(emu_storage_read, (uint64_t)handle, 0, start_flash_sector, 1, (uint64_t)idps, (uint64_t)&nread, 0))
-		return 1;	
-
-	memcpy(&IDPS_1, (void *)&idps[0x3A], 8);
-	memcpy(&IDPS_2, (void *)&idps[0x3B], 8);
-
-	//DPRINTF("IDPS from EID5: %016lX%016lX\n", IDPS_1, IDPS_2);
-			
-	storage_close(handle);
-	storage_unmap_io_memory(device, idps);
-	page_free(NULL, idps, 0x2F);
-
-	return SUCCEEDED;
-}
-
 uint8_t read_qa_flag()
 {
 	uint8_t value = 0;
@@ -199,8 +85,8 @@ int set_qa_flag(uint8_t value)
 	uint8_t seed[TOKEN_SIZE];
 	uint8_t token[TOKEN_SIZE];	
 
-	if(get_idps())
-		return 2;
+	uint64_t IDPS_1 = lv1_peekd(IDPS_LV1);
+	uint64_t IDPS_2 = lv1_peekd(IDPS_LV1 + 8);
 
 	memset(seed, 0, TOKEN_SIZE);
 	memcpy(seed + 4, (void *)&IDPS_1, 8);
@@ -208,7 +94,7 @@ int set_qa_flag(uint8_t value)
 
 	if(seed[0x07] != 0x01)
 	{
-		//DPRINTF("QA Flag: IDPS is not valid!!\n");
+		DPRINTF("QA Flag: IDPS is not valid!!\n");
 		return 1;
 	}
 
@@ -226,7 +112,7 @@ int set_qa_flag(uint8_t value)
 		seed[51] |= 0x2; // QA_FLAG_FORCE_UPDATE
 	}
 
-	hmac_sha1(hmac, 0x40, seed, 60, seed + 60);
+	sha1_hmac(hmac, 0x40, seed, 60, seed + 60);
 	aescbccfb_enc(token, seed, 0x50, erk, 0x100, iv_qa);
 
 	//DPRINTF("QA Flag: %s...\n", (value) ? "Enabling" : "Disabling");
@@ -247,7 +133,7 @@ int set_qa_flag(uint8_t value)
 	if(mm_map_lpar_memory_region(vuart_lpar_addr, HV_BASE, HV_SIZE2, HV_PAGE_SIZE, 0) != 0)
 	{
 		restore_patches();
-		return 2;
+		return 3;
 	}
 
 	laid = 0x1070000002000001ULL;
@@ -279,17 +165,16 @@ int set_qa_flag(uint8_t value)
 	if(lv1_write_virtual_uart(10, vuart_lpar_addr, len, &nwritten) != 0)
 	{
 		restore_patches();
-		return 2;
+		return 4;
 	}
 
 	nwritten = len;
 
 	update_mgr_write_eeprom(QA_FLAG_OFFSET, (value) ? 0x00 : 0xFF, LV2_AUTH_ID); 
 
-	//DPRINTF("QA Flag: %s\n", (value) ? "Enabled (Value: 0x00)" : "Disabled (Value: 0xFF)");
+	DPRINTF("QA Flag: %s\n", (value) ? "Enabled (Value: 0x00)" : "Disabled (Value: 0xFF)");
 	
 	restore_patches();
 
 	return SUCCEEDED;
 }
-

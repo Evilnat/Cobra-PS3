@@ -26,8 +26,6 @@
 #include "modulespatch.h"
 #include "fan_control.h"
 
-
-
 //#define ps2emu_entry1_bc 0x165B44
 //#define ps2emu_entry2_bc 0x165CC0
 
@@ -174,7 +172,7 @@ static INLINE void get_next_read(int64_t discoffset, uint64_t bufsize, uint64_t 
 
 		if (discoffset >= base && discoffset < last)
 		{
-			uint64_t maxfileread = last-discoffset;
+			uint64_t maxfileread = last - discoffset;
 
 			if (bufsize > maxfileread)
 				*readsize = maxfileread;
@@ -189,7 +187,7 @@ static INLINE void get_next_read(int64_t discoffset, uint64_t bufsize, uint64_t 
 		base += discfile->sizes[i];
 	}
 
-	DPRINTF("Offset or size out of range  %lx   %lx!!!!!!!!\n", discoffset, bufsize);
+	DPRINTF("Offset or size out of range  %lx %lx!!!!!!!!\n", discoffset, bufsize);
 }
 
 static INLINE int process_read_iso_cmd(ReadIsoCmd *cmd)
@@ -805,6 +803,9 @@ static void get_cd_sector_size(unsigned int trackscount)
 	if(cd_sector_size != 2352 && cd_sector_size != 2048 && cd_sector_size != 2328 && cd_sector_size != 2336 && cd_sector_size != 2340 && cd_sector_size != 2368 && cd_sector_size != 2448) 
 		cd_sector_size = 2352;
 }
+
+int emu_read_bdvd1(void *object, void *buf, uint64_t size, uint64_t offset);
+int emu_storage_read(device_handle_t device_handle, uint64_t unk, uint64_t start_sector, uint32_t sector_count, void *buf, uint32_t *nread, uint64_t unk2);
 
 int read_psx_sector(void *dma, void *buf, uint64_t sector)
 {
@@ -2357,7 +2358,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, post_cellFsUtilMount, (const char *bl
 		copy_ps2emu_stage2(ps2emu_type);
 		cellFsUnlink("/dev_hdd0/tmp/loadoptical");
 		read_cobra_config();
-		load_fan_control();
+		load_fan_control(fan_speed);
 		// do_spoof_patches();
 		load_boot_plugins();
 		load_boot_plugins_kernel();
@@ -2382,12 +2383,11 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, post_cellFsUtilMount, (const char *bl
 		#endif*/
 	}
 
+	// CFW2OFW fix by Evilnat
+	// Fixes black screen while a CFW2OFW game is loaded with a mounted JB folder game
+	//DPRINTF("Detected CFW2OFW game\n");
 	if(CFW2OFW_game && !strcmp(mount_point, "/dev_bdvd/PS3_GAME"))
 	{
-		// CFW2OFW fix by Evilnat
-		// Fixes black screen while a CFW2OFW game is loaded with a mounted JB folder game
-		//DPRINTF("Detected CFW2OFW game\n");
-
 		sys_storage_ext_umount_discfile();
 
 		map_path("/dev_bdvd/PS3_GAME", NULL, 0);
@@ -2741,7 +2741,8 @@ LV2_HOOKED_FUNCTION(int, shutdown_copy_params_patched, (uint8_t *argp_user, uint
 		int fd;
 
 		// Set constant FAN Speed while you are in a PS2 game
-		sm_set_fan_policy(0, (ps2_speed == 1) ? 1 : 2, (ps2_speed == 1) ? 0 : ps2_speed);
+		if(ps2_speed)
+			sm_set_fan_policy(0, (ps2_speed == 1) ? 1 : 2, (ps2_speed == 1) ? 0 : ps2_speed);
 
 		if (cellFsOpen(PS2EMU_CONFIG_FILE, CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, 0666, NULL, 0) == 0)
 		{

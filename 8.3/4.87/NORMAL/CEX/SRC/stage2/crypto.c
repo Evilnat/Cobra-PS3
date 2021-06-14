@@ -46,5 +46,3 @@ void xtea_ctr(uint8_t *key, uint64_t nounce, uint8_t *buf, int size)
 		nounce = nounce + 1;		
 	}	
 }
-
-

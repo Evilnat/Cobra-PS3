@@ -17,6 +17,7 @@
 #define MAX_TABLE_ENTRIES 32
 
 static unsigned char crap_pants[13] = {"///no_exists"};
+static int8_t avoid_recursive_calls = 0;
 uint8_t photo_gui = 1;
 
 typedef struct _MapEntry
@@ -32,7 +33,7 @@ MapEntry map_table[MAX_TABLE_ENTRIES];
 // aldostool's prevention of accidental deletion of important paths
 static int init_map_entry(uint8_t index)
 {
-	if( map_table[index].newpath
+	if(map_table[index].newpath
 		&& (map_table[index].newpath_len > 3)
 		&& (map_table[index].newpath[0] == '/')
 		&& (map_table[index].newpath[1] == '.')
@@ -43,7 +44,6 @@ static int init_map_entry(uint8_t index)
 }
 
 // TODO: map_path and open_path_hook should be mutexed...
-
 int map_path(char *oldpath, char *newpath, uint32_t flags)
 {
 	int i, firstfree = -1;
@@ -75,7 +75,7 @@ int map_path(char *oldpath, char *newpath, uint32_t flags)
 				else
 				{
 					if(init_map_entry(i))
-							continue;
+						continue;
 
 					if (map_table[i].flags & FLAG_COPY)
 						free(map_table[i].oldpath);
@@ -195,7 +195,7 @@ int sys_map_paths(char *paths[], char *new_paths[], unsigned int num)
 			if (map_table[i].flags & FLAG_TABLE)
 			{
 				if(init_map_entry(i))
-						continue;
+					continue;
 
 				if (map_table[i].flags & FLAG_COPY)
 					free(map_table[i].oldpath);
@@ -214,15 +214,21 @@ int sys_map_paths(char *paths[], char *new_paths[], unsigned int num)
 static uint8_t libft2d_access = 0;
 LV2_HOOKED_FUNCTION_POSTCALL_2(void, open_path_hook, (char *path0, int mode))
 {
+	// Avoid recursive calls by aldostools
+	if(avoid_recursive_calls) 
+		return;
+
+	avoid_recursive_calls = 1;
+
 	// Let's now block homebrews if the "allow" flag is false
 	if(!block_homebrew(path0))
 	{
+		avoid_recursive_calls = 0;
 		set_patched_func_param(1, (uint64_t)crap_pants);
 		return;
 	}
 
 	make_rif(path0);
-
 	restore_syscalls(path0);
 
 	if (path0[0] == '/')
@@ -280,6 +286,7 @@ LV2_HOOKED_FUNCTION_POSTCALL_2(void, open_path_hook, (char *path0, int mode))
 						CellFsStat stat;
 						if(cellFsStat(map_table[i].newpath, &stat) != 0)
 						{
+							avoid_recursive_calls = 0;
 							DPRINTF("open_path %s\n", path0);
 							return; // Do not remap / Use the original file when redirected file does not exist
 						}
@@ -294,6 +301,8 @@ LV2_HOOKED_FUNCTION_POSTCALL_2(void, open_path_hook, (char *path0, int mode))
 
 		DPRINTF("open_path %s\n", path);
 	}
+	
+	avoid_recursive_calls = 0;
 }
 
 int sys_aio_copy_root(char *src, char *dst)

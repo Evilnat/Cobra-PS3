@@ -3,7 +3,6 @@
 
 #include <lv2/io.h>
 #include <lv2/synchronization.h>
-#include <lv2/storage.h>
 #include "scsi.h"
 
 enum EMU_TYPE
@@ -71,9 +70,6 @@ int sys_storage_ext_mount_discfile_proxy(sys_event_port_t result_port, sys_event
 
 void unhook_all_storage_ext(void);
 void copy_ps2emu_stage2(int emu_type);
-
-int emu_read_bdvd1(void *object, void *buf, uint64_t size, uint64_t offset);
-int emu_storage_read(device_handle_t device_handle, uint64_t unk, uint64_t start_sector, uint32_t sector_count, void *buf, uint32_t *nread, uint64_t unk2);
 
 #endif /* __STORAGE_EXT_H__ */
 

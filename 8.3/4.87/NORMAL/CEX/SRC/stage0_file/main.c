@@ -11,6 +11,7 @@
 
 void main(void)
 {
+	// Cobra will be loaded in 0x8000000000700000 by Evilnat
 	void *stage2 = (void *)MKA(0x700000);
 	int stage2_loaded = 0;
 	

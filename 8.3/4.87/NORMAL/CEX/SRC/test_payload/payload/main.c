@@ -10,7 +10,8 @@ void main(void)
 {
 	int file;
 	uint64_t size;
-	uint8_t buf[5] = {0x53,0x43,0x45,0x00};
+	uint8_t buf[5] = { 0x53, 0x43, 0x45, 0x00 };
+	
 	if (cellFsOpen("/dev_hdd0/test_payload_in", CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &file, 0666, NULL, 0) == 0)
 	{
 		cellFsWrite(file, buf, 4, &size);

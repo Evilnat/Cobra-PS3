@@ -16,6 +16,12 @@
 
 CobraConfig config;
 
+static uint8_t cfg_template[0x13] = 
+{ 
+	0x00, 0x13, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 
+};
+
 static void check_and_correct(CobraConfig *cfg)
 {
 	uint32_t i;
@@ -72,8 +78,8 @@ static void check_and_correct(CobraConfig *cfg)
 	if(cfg->skip_existing_rif > 1)
 		cfg->skip_existing_rif = 0;
 
-	if(cfg->ps2_speed != 1 && cfg->ps2_speed < 0x60)
-		cfg->ps2_speed = 1;
+	if(cfg->ps2_speed > 1 && cfg->ps2_speed < 0x60)
+		cfg->ps2_speed = 0;
 		
 	if (cfg->size > sizeof(CobraConfig))
 		cfg->size = sizeof(CobraConfig);
@@ -94,8 +100,21 @@ static uint16_t checksum(CobraConfig *cfg)
 int read_cobra_config(void)
 {
 	int fd;
+	uint64_t write;
+	CellFsStat stat;
+
+	// Create "/dev_hdd0/vm/cobra_cfg.bin" file if it does not exist
+	// This fixes issues in some PS3 that can't create/save Cobra config
+	if(cellFsStat(COBRA_CONFIG_FILE, &stat) != SUCCEEDED)
+	{
+		if(cellFsOpen(COBRA_CONFIG_FILE, CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, 0666, NULL, 0) == SUCCEEDED)
+		{
+			cellFsWrite(fd, cfg_template, 0x13, &write);
+			cellFsClose(fd);
+		}		
+	}
 	
-	if (cellFsOpen(COBRA_CONFIG_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) == 0)
+	if(cellFsOpen(COBRA_CONFIG_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) == 0)
 	{
 		uint64_t r;
 		
@@ -180,6 +199,7 @@ int sys_write_cobra_config(CobraConfig *cfg)
 	check_and_correct(cfg);
 	
 	cfg->checksum = checksum(cfg);
+
 	copy_size = cfg->size - sizeof(config.size);	
 	if (copy_size < 0)
 		copy_size = 0;
@@ -195,24 +215,27 @@ int sys_write_cobra_config(CobraConfig *cfg)
 	return write_cobra_config();
 }
 
-int save_config_value(char *member, uint8_t value)
+// For internal purposes
+// Saves current value in cobra config through opcodes
+// Only for fan_speed, ps2_speed, allow_restore_sc and skip_existing_rif
+int save_config_value(uint8_t member, uint8_t value)
 {
 	int fd;
 	uint64_t r;
 	
-	if (cellFsOpen(COBRA_CONFIG_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != SUCCEEDED)
+	if(cellFsOpen(COBRA_CONFIG_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != SUCCEEDED)
 		return 1;
 		
 	cellFsRead(fd, &config, sizeof(config), &r);
 	cellFsClose(fd);
 
-	if(!strcmp(member, "fan_speed"))		
-	config.fan_speed = value;   
-	else if(!strcmp(member, "ps2_speed"))
+	if(member == CFG_FAN_SPEED)		
+		config.fan_speed = value;   
+	else if(member == CFG_PS2_SPEED)		
 		config.ps2_speed = value;  
-	else if(!strcmp(member, "allow_restore_sc"))
+	else if(member == CFG_ALLOW_RESTORE_SC)		
 		config.allow_restore_sc = value;   
-	else if(!strcmp(member, "skip_existing_rif"))
+	else if(member == CFG_SKIP_EXISTING_RIF)		
 		config.skip_existing_rif = value;
 	else
 		return 1;

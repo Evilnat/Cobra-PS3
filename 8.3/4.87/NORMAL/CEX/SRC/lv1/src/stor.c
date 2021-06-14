@@ -18,7 +18,7 @@ int lv1_stor_wrapper_open(u64 dev_id, void *dma_buf, u64 dma_buf_lpar_addr, u64 
 	u64 dma_bus_addr, v2;
 	int result;
 
-	result = map_dma_mem(STOR_BUS_ID, dev_id, (void *)dma_buf_lpar_addr, (1<<dma_size_log), &dma_bus_addr);	
+	result = map_dma_mem(STOR_BUS_ID, dev_id, (void *)dma_buf_lpar_addr, (1 << dma_size_log), &dma_bus_addr);	
 	if (result != 0)
 		return result;	
 	

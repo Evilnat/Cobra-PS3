@@ -40,7 +40,7 @@ int ppu_user_thread_create(process_t process, thread_t *thread, void *entry, uin
 		return EAGAIN;
 	}
 	
-	start_thread(*thread, prio+0x300, 0);
+	start_thread(*thread, prio + 0x300, 0);
 	register_thread(process, *thread, 0);
 	
 	if (!(flags & PPU_THREAD_CREATE_INTERRUPT))	

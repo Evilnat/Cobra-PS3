@@ -111,19 +111,20 @@ PS2EMU_HOOKED_FUNCTION_COND_POSTCALL_4(int, ufs_read_patched, (int fd, uint64_t 
 
 PS2EMU_PATCHED_FUNCTION(int, open_iso, (int unk, char *path))
 {
-/*uint64_t val;
-for(uint64_t i=0;i<0x50;i+=8)
-{
-val = dump_ram(0x3174478ULL+i);
-int dump = ufs_open(0, "/tmp/dump");
-ufs_write(dump, 1, (void *)val, 8);
-}*/
+	/*
+	uint64_t val;
+	for(uint64_t i = 0; i < 0x50; i += 8)
+	{
+		val = dump_ram(0x3174478ULL + i);
+		int dump = ufs_open(0, "/tmp/dump");
+		ufs_write(dump, 1, (void *)val, 8);
+	}
+	*/
+
 	if (!vars->setup_done)
 	{
-//		if (strstr(path, "--COBRA--"))
-	//	{
-
 		int fd = ufs_open(0, CONFIG_FILE);
+
 		if (fd >= 0)
 		{
 			uint8_t b;
@@ -135,8 +136,9 @@ ufs_write(dump, 1, (void *)val, 8);
 			ufs_read(fd, 0x702, vars->mnt, 0xf0);
 			if((strstr(vars->mnt, "mount")) || (strstr(path, "--COBRA--")))
 			{
-				uint8_t disable=0x00;
+				uint8_t disable = 0x00;
 				ufs_write(fd, 0x702, &disable, 1);
+
 				if (vars->is_cd)
 				{
 					// Read number of tracks
@@ -145,13 +147,11 @@ ufs_write(dump, 1, (void *)val, 8);
 					ufs_read(fd, 0x800, &b, 1);						
 					vars->num_tracks = b;
 				}		
-			}
-			
+			}			
 			else			
 				vars->iso_file[0]=0;
 			
-                        ufs_close(fd);
-//		}
+            ufs_close(fd);
 		}
 		
 		vars->setup_done = 1;

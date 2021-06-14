@@ -70,8 +70,6 @@
 
 #define SYSCALL8_OPCODE_DRM_GET_DATA					0x6A11
 
-#define SYSCALL8_OPCODE_SEND_POWEROFF_EVENT				0x6CDD
-
 #define SYSCALL8_OPCODE_RUN_PAYLOAD						0x6CDF
 
 #define SYSCALL8_OPCODE_RUN_PAYLOAD_DYNAMIC				0x6CE1
@@ -81,9 +79,8 @@
 #define SYSCALL8_OPCODE_DISABLE_COBRA_STAGE				0x6A13
 
 #ifdef DEBUG
-// These debug opcode changed to odd numbers in version 7.0 to minmize crashes with lv1 peek apps
+// These debug opcode changed to odd numbers in version 7.0 to minimize crashes with lv1 peek apps
 #define SYSCALL8_OPCODE_DUMP_STACK_TRACE				0x5003
-#define SYSCALL8_OPCODE_GENERIC_DEBUG					0x5005
 #define SYSCALL8_OPCODE_PSP_SONY_BUG					0x5007
 #endif
 

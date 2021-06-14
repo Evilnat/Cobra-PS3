@@ -9,6 +9,7 @@
 #define SYS_SHUTDOWN			0x0100
 #define SYS_SHUTDOWN2 			0x1100
 
+thread_t fan_control_id = 0, control_id = 0;
 uint8_t fan_control_running = 0;
 uint8_t fan_speed;
 uint8_t ps2_speed;
@@ -25,18 +26,32 @@ int sm_get_fan_speed(void)
 	return _fan_speed;
 }
 
+// Optimized by aldostools and Evilnat
+// Keeps if possible that the temperature of the CPU and RSX do not exceed the temperature chosen between 60°C, 65°C, 70°C or 75°C
 static void fan_control(uint64_t arg0)
 {
-	//DPRINTF("CONTROL FAN Payload: Started.\n");
+	DPRINTF("Cobra's Dynamic Control FAN: Started.\n");	
 
-	uint32_t t_cpu, t_rsx, prev = 0; 
+	int speed = 0x80, max_temp = 65, warning = 0;
+	uint32_t t_cpu, t_rsx;
 	fan_control_running = 1;
+
+	if(arg0 == 2)
+		max_temp = 60;
+	else if(arg0 == 3)
+		max_temp = 65;
+	else if(arg0 == 4)
+		max_temp = 70;
+	else if(arg0 == 5)
+		max_temp = 75;
+
+	timer_usleep(SECONDS(2));
 
 	while(fan_control_running)
 	{
-		timer_usleep(SECONDS(10));
+		timer_usleep(SECONDS(3));
 
-		if(fan_control_running) // Avoids loading previous mode [Evilnat]
+		if(fan_control_running) // Avoids loading previous mode (By Evilnat)
 		{
 			t_cpu = t_rsx = 0;
 			
@@ -45,42 +60,68 @@ static void fan_control(uint64_t arg0)
 
 			if(t_rsx > t_cpu) 
 				t_cpu = t_rsx;
-			
-			if(prev == t_cpu) 
-				continue;
 
-			// 60°C=38%, 61°C=40%, 62°C=42%, 63°C=44%, 64°C=46%, 65°C=48%, 66°C=50%, 67°C=52%, 68°C=54%, 69°C=56%
-			// 70°C=57%, 71°C=60%, 72°C=63%, 73°C=66%, 74°C=69%, 75°C=72%, 76°C=75%, 77°C=78%, 78°C=81%,+79°C=84%
-			// >80°C=88%
-			// >82°C=98% (Overheating)	
+			if(t_cpu > max_temp && t_cpu < 80) // Temp under max_temp (60°C/65°C/70°C/75°C) and 80°C
+			{		
+				warning = 0;
+				speed = speed + 5; // +2%
 
-			if(t_cpu >= 82)
-				sm_set_fan_policy(0, 2, 0xF9); // 98% (Overheating)	
-			else if(t_cpu >= 80)
-				sm_set_fan_policy(0, 2, 0xE0); // 88%
-			else if(t_cpu >= 70)
-				sm_set_fan_policy(0, 2, 0x90 + 0x8 * (t_cpu - 70)); // 57% + 3% per degree °C
-			else if(t_cpu >= 60)
-				sm_set_fan_policy(0, 2, 0x60 + 0x5 * (t_cpu - 60)); // 37% + 2% per degree °C
-			else
-				sm_set_fan_policy(0, 1, 0); // SYSCON < 60°C
+				// Maximum fan speed
+				if(speed > 0xFF)
+					speed = 0xFF;
+			}
+			else if(t_cpu <= max_temp) // Temp lower or equal to max_temp (60°C/65°C/70°C/75°C)
+			{
+				if(t_cpu >= (max_temp - 2)) 
+					continue;
 
-			prev = t_cpu;
-		}
+				warning = 0;
+				speed = speed - 4; // -1.5%
+
+				// Minimium fan speed, probably a lower speed can create problems
+				if(speed < 0x55)
+                    speed = 0x55; // 33%
+			}
+			else if(t_cpu >= 80) // Temp higher or equal to 80°C (Overheating!!)
+			{
+				// Overheating
+				// Let's warn the user with triple beep and we set fan speed to 0xF8	
+				if(!warning)
+					sm_ring_buzzer(TRIPLE_BEEP);
+
+				warning = 1;
+				speed = 0xF8; // 97%
+			}
+
+			sm_set_fan_policy(0, 2, speed);
+		}		
 	}
+
+	DPRINTF("Cobra's Dynamic Control FAN: Finished.\n");
 
 	ppu_thread_exit(0);
 }
 
-void do_fan_control(void)
+static void start_control(uint64_t arg0)
 {
-	thread_t fan_control_id;
+	// Waiting until the old thread is finished
+	timer_usleep(SECONDS(5));
 
 	if(!fan_control_running)	
-		ppu_thread_create(&fan_control_id, fan_control, 0, -0x1D8, 0x4000, 0, "fan_control");	
+		ppu_thread_create(&fan_control_id, fan_control, (uint64_t)arg0, -0x1D8, 0x4000, 1, "start_control");	
+
+	ppu_thread_exit(0);
 }
 
-void load_fan_control(void)
+void do_fan_control(int mode)
+{	
+	fan_control_running = 0;
+
+	if(!fan_control_running)	
+		ppu_thread_create(&control_id, start_control, (uint64_t)mode, -0x1D8, 0x4000, 1, "fan_control");	
+}
+
+void load_fan_control(int mode)
 {
 	if(fan_speed == 0) // Disabled
 		return;
@@ -89,20 +130,19 @@ void load_fan_control(void)
 	else if(fan_speed == 1)  // SYSCON mode
 		sm_set_fan_policy(0, 1, 0);
 	else
-		do_fan_control();  // Dynamic fan control
+		do_fan_control(mode); // Dynamic fan control
 }
 
 LV2_HOOKED_FUNCTION_COND_POSTCALL_3(int, sm_set_fan_policy_sc, (uint8_t unk, uint8_t _fan_mode, uint8_t _fan_speed))
 {
-	fan_control_running = 0; // disable internal fan control if fan speed is set manually via syscall 389
-
+	fan_control_running = 0; // Disable internal fan control if fan speed is set manually via syscall 389
 	return DO_POSTCALL;
 }
 
 LV2_HOOKED_FUNCTION_COND_POSTCALL_3(int, sys_shutdown, (uint16_t op, const void *buf, uint64_t size))
 {
 	// Avoids max FAN speed after a shutdown by Evilnat
-	// This doesn't work if the PS3 has lv2 panic
+	// This may doesn't work if the PS3 has lv2 panic
 	if(op == SYS_SHUTDOWN || op == SYS_SHUTDOWN2)
 	{		
 		//DPRINTF("Shutdown executed, resetting FAN policy\n");

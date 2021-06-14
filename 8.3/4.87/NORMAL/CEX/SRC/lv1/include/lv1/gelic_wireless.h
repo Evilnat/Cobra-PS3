@@ -60,15 +60,15 @@ enum gelic_eurus_bss_type
 
 enum gelic_eurus_auth_method 
 {
-	GELIC_EURUS_AUTH_OPEN = 0, /* FIXME: WLAN_AUTH_OPEN */
+	GELIC_EURUS_AUTH_OPEN 	= 0, /* FIXME: WLAN_AUTH_OPEN */
 	GELIC_EURUS_AUTH_SHARED = 1, /* not supported */
 };
 
 enum gelic_eurus_opmode 
 {
 	GELIC_EURUS_OPMODE_11BG = 0, /* 802.11b/g */
-	GELIC_EURUS_OPMODE_11B = 1, /* 802.11b only */
-	GELIC_EURUS_OPMODE_11G = 2, /* 802.11g only */
+	GELIC_EURUS_OPMODE_11B 	= 1, /* 802.11b only */
+	GELIC_EURUS_OPMODE_11G 	= 2, /* 802.11g only */
 };
 
 struct gelic_eurus_common_cfg 

@@ -71,7 +71,7 @@ static INLINE void *get_call_address2(uint64_t *stack, unsigned int idx)
 	if (!stack)
 		return SUCCEEDED;
 	
-	return (void *)(stack[2]-4);
+	return (void *)(stack[2] - 4);
 }
 
 static INLINE void dump_stack_trace3(uint64_t *stack, unsigned int n)
@@ -100,7 +100,7 @@ static INLINE void dump_stack_trace4(uint64_t *stack, unsigned int n)
 	
 	DPRINTF("--------STACK TRACE--------\n");
 	
-	DPRINTF("%p\n", (void *)(stack[2]-4));
+	DPRINTF("%p\n", (void *)(stack[2] - 4));
 	n--;
 	
 	for (int i = 0; i < n; i++)
@@ -128,4 +128,3 @@ static INLINE void dump_stack_trace4(uint64_t *stack, unsigned int n)
 #endif
 
 #endif /* __COMMON_H__ */
-

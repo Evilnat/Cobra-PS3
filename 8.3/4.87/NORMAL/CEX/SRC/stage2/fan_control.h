@@ -6,8 +6,8 @@ extern uint8_t fan_speed;
 extern uint8_t ps2_speed;
 
 int sm_get_fan_speed(void);
-void do_fan_control();
-void load_fan_control(void);
+void do_fan_control(int mode);
+void load_fan_control(int mode);
 
 void fan_patches(void);
 void unhook_all_fan_patches(void);

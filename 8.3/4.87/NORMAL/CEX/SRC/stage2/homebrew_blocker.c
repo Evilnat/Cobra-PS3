@@ -15,10 +15,9 @@
 #define BLACKLIST_FILENAME	"/dev_hdd0/tmp/blacklist.cfg"
 #define WHITELIST_FILENAME	"/dev_hdd0/tmp/whitelist.cfg"
 
-#define MAX_LIST_ENTRIES	30 // Maximum elements for noth the custom blacklist and whitelist.
+#define MAX_LIST_ENTRIES	32 // Maximum elements for noth the custom blacklist and whitelist.
 
 int CFW2OFW_game = 0;
-
 uint8_t allow_restore_sc = 1;
 
 static int __initialized_lists = 0; // Are the lists initialized ?
@@ -42,6 +41,7 @@ static int init_list(char *list, char *path, int maxentries)
 	{
 		char line[128];
 		int eof;
+		
 		if (read_text_line(f, line, sizeof(line), &eof) > 0)
 		if (strlen(line) >= 9) // avoid copying empty lines
 		{

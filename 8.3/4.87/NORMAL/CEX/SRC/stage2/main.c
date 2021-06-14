@@ -30,9 +30,10 @@
 #include "config.h"
 #include "ps3mapi_core.h"
 #include "fan_control.h"
+#include "savegames.h"
+#include "make_rif.h"
 #include "homebrew_blocker.h"
 #include "qa.h"
-#include "make_rif.h"
 
 // Format of version:
 // byte 0, 7 MS bits -> reserved
@@ -133,11 +134,11 @@ int inst_and_run_kernel(uint8_t *payload, int size)
 	if(!payload)
 		return -2;
 	
-	memcpy((void *)0x80000000007f0000, get_secure_user_ptr(payload), size);
+	memcpy((void *)0x80000000007F0000, get_secure_user_ptr(payload), size);
 
 	f_desc_t f;
 	int (* func)(void);
-	f.addr = (void *)0x80000000007f0000;
+	f.addr = (void *)0x80000000007F0000;
 	f.toc = (void *)MKA(TOC);
 	func = (void *)&f;
 	func();
@@ -196,7 +197,7 @@ LV2_SYSCALL2(uint64_t, sys_cfw_peek, (uint64_t *addr))
 
 		if ((uint64_t)addr >= (uint64_t)&_start && (uint64_t)addr < (uint64_t)&__self_end)
 		{
-			//DPRINTF("peek to addr %p blocked for compatibility.\n", addr);
+			DPRINTF("peek to addr %p blocked for compatibility.\n", addr);
 			return SUCCEEDED;
 		}
 	}
@@ -210,7 +211,7 @@ void _sys_cfw_poke(uint64_t *addr, uint64_t value);
 
 LV2_HOOKED_FUNCTION(void, sys_cfw_new_poke, (uint64_t *addr, uint64_t value))
 {
-	//DPRINTF("New poke called\n");
+	DPRINTF("New poke called\n");
 
 	_sys_cfw_poke(addr, value);
 	asm volatile("icbi 0,%0; isync" :: "r"(addr));
@@ -398,18 +399,6 @@ LV2_SYSCALL2(uint64_t, sys_cfw_lv1_peek, (uint64_t lv1_addr))
     return ret;
 }
 
-/*
-LV2_HOOKED_FUNCTION(uint64_t, sys_cfw_storage_send_device_command, (uint32_t device_handle, unsigned int command, void indata, uint64_t inlen, void outdata, uint64_t outlen))
-{
-	//DPRINTF("sys_storage_send_device_command\n");
-
-	sys_storage_send_device_command(device_handle, command, indata, inlen, outdata, outlen);
-	int64_t debug_print(const char* buffer, size_t size);
-	void debug_print_hex(void *buf, uint64_t size);
-	void debug_print_hex_c(void *buf, uint64_t size);
-}
-*/
-
 void create_syscalls(void)
 {
 	create_syscall2(8, syscall8);
@@ -468,42 +457,7 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 			return lv1_peekd(function);		
 	}
 	else 
-		tmp_lv1peek=0;
-
-/*
-	static uint32_t pid_blocked = 0;
-	uint32_t pid;
-
-	// Some processsing to avoid crashes with lv1 dumpers
-	pid = get_current_process_critical()->pid;
-
-	if (pid == pid_blocked)
-	{
-		if (function <= 0x1000 || function >= 0x9800 || (function & 3)) // * Keep all cobra opcodes below 0x9800 * /
-		{
-			DPRINTF("App was unblocked from using syscall8\n");
-			pid_blocked = 0;
-		}
-		else
-		{
-			DPRINTF("App was blocked from using syscall8\n");
-			return ENOSYS;
-		}
-	}
-
-	if (function == (SYSCALL8_OPCODE_GET_VERSION-8))
-	{
-		// 0x6FF8. On 0x7000 it *could* crash
-		pid_blocked = pid;
-		return ENOSYS;
-	}
-	else if (function == (SYSCALL8_OPCODE_PSP_POST_SAVEDATA_INITSTART-8))
-	{
-		// 0x3000, On 0x3008 it *could* crash
-		pid_blocked = pid;
-		return ENOSYS;
-	}
-*/
+		tmp_lv1peek = 0;
 
 	if ((function == SYSCALL8_OPCODE_PS3MAPI) && ((int)param1 == PS3MAPI_OPCODE_REQUEST_ACCESS) && (param2 == ps3mapi_key) && (ps3mapi_access_tries < 3)) 
 	{
@@ -532,7 +486,8 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 			}
 			else if ((int)param1 == PS3MAPI_OPCODE_PCHECK_SYSCALL8)			
 				return ps3mapi_partial_disable_syscall8;			
-			else return ENOSYS;
+			else 
+				return ENOSYS;
 		}
 		else 
 			return ENOSYS;
@@ -717,7 +672,12 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 
 				case PS3MAPI_OPCODE_ALLOW_RESTORE_SYSCALLS:
 					allow_restore_sc = (uint8_t)param2; // 1 = allow, 0 = do not allow
+					save_config_value(CFG_ALLOW_RESTORE_SC, allow_restore_sc);
 					return SUCCEEDED;
+				break;
+
+				case PS3MAPI_OPCODE_GET_RESTORE_SYSCALLS:
+					return allow_restore_sc;
 				break;
 
 				//----------
@@ -756,18 +716,22 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				break;
 
 				case PS3MAPI_OPCODE_SET_FAN_SPEED:
-					if(param2 == 2)
-						do_fan_control();
+					if(param2 == 2 || param2 == 3 || param2 == 4 || param2 == 5)
+						do_fan_control((uint8_t)param2);
 					else
 						fan_control_running = 0;
 
-					save_config_value("fan_speed", param2);
+					save_config_value(CFG_FAN_SPEED, (uint8_t)param2);
 
-					return sm_set_fan_policy(0, (uint8_t)(param2 >= 0x33 ? 2 : 1), (uint8_t)(param2 >= 0x33 ? param2 : 0));
+					if(param2 == 2 || param2 == 3 || param2 == 4 || param2 == 5)
+						return sm_set_fan_policy(0, 2, 0x68); // 40%, to avoid a lower initial speed
+					else
+						return sm_set_fan_policy(0, (uint8_t)(param2 >= 0x33 ? 2 : 1), (uint8_t)(param2 >= 0x33 ? param2 : 0));
 				break;
 
 				case PS3MAPI_OPCODE_SET_PS2_FAN_SPEED:
-					save_config_value("ps2_speed", (uint8_t)param2);
+					save_config_value(CFG_PS2_SPEED, (uint8_t)param2);
+					return SUCCEEDED;
 				break;
 
 				case PS3MAPI_OPCODE_GET_FAN_SPEED:
@@ -780,7 +744,32 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 
 				case PS3MAPI_OPCODE_SKIP_EXISTING_RIF:
 					skip_existing_rif = (uint8_t)param2;
+					save_config_value(CFG_SKIP_EXISTING_RIF, (uint8_t)param2);
+					return SUCCEEDED;
+				break;
+
+				case PS3MAPI_OPCODE_GET_SKIP_EXISTING_RIF:
 					return skip_existing_rif;
+				break;
+
+				case PS3MAPI_OPCODE_CONVERT_SAVEDATA:
+					return patch_savedata((char *)param2);
+				break;
+
+				case PS3MAPI_OPCODE_CREATE_RIF:
+					make_rif((char *)param2);
+					return SUCCEEDED;
+				break;
+
+				case PS3MAPI_OPCODE_SET_FAKE_ACCOUNTID:
+					return set_fakeID(param2, param3);
+				break;
+
+				case PS3MAPI_OPCODE_ACTIVATE_ACOUNT:
+					if(xreg_data((char *)param2, ACCOUNTID, READ, 0, 1))
+						return create_act_dat((char *)param3);
+					else
+						return 1;					
 				break;
 
 				//----------
@@ -920,10 +909,6 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 		//--------------------------
 		// MISC
 		//--------------------------
-		/*case SYSCALL8_OPCODE_SEND_POWEROFF_EVENT:
-			return sys_sm_ext_send_poweroff_event((int)param1);
-		break;*/
-
 		case SYSCALL8_OPCODE_GET_ACCESS:
 		case SYSCALL8_OPCODE_REMOVE_ACCESS:
 		case SYSCALL8_OPCODE_COBRA_USB_COMMAND:
@@ -1063,10 +1048,6 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 		case SYSCALL8_OPCODE_PSP_SONY_BUG:
 			return sys_psp_sony_bug((uint32_t *)param1, (void *)param2, param3);
 		break;
-
-		/*case SYSCALL8_OPCODE_GENERIC_DEBUG:
-			return sys_generic_debug(param1, (uint32_t *)param2, (void *)param3);
-		break;*/
 #endif
 
 		default:
@@ -1084,14 +1065,13 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				else if (function == 0xD)
 				{
 					//DPRINTF("Hermes poke inst: %lx %lx\n", param1, param2);
-
 					_sys_cfw_new_poke((void *)param1, param2);
 					return param1;
 				}
 
 				int64_t (* syscall8_hb)() = (void *)&extended_syscall8;
 
-				//DPRINTF("Handling control to HB syscall 8 (opcode=0x%lx)\n", function);
+				//DPRINTF("Handling control to HB syscall 8 (opcode = 0x%lx)\n", function);
 				return syscall8_hb(function, param1, param2, param3, param4, param5, param6, param7);
 			}
 			else // if (function >= 0x9800) // AV: allow peek all other addresses

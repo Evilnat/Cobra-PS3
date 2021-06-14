@@ -27,11 +27,11 @@
 #define PAYLOAD_ADDR		    	0x3940   // Thanks @habib and @haxxxen for his awesome research!! now we have a lot more space in netemu
 #define SH_ADDR						0x292158 /* look in self, not in elf *///
 
-#define MAKE_JUMP(addr, to) *(uint32_t *)(addr) = (0x12 << 26) | ((((to-(uint64_t)(addr))>>2)&0xFFFFFF) << 2)
-#define MAKE_CALL(addr, to) *(uint32_t *)(addr) = (0x12 << 26) | ((((to-(uint64_t)(addr))>>2)&0xffffff) << 2) | 1
+#define MAKE_JUMP(addr, to) *(uint32_t *)(addr) = (0x12 << 26) | ((((to-(uint64_t)(addr)) >> 2) & 0xFFFFFF) << 2)
+#define MAKE_CALL(addr, to) *(uint32_t *)(addr) = (0x12 << 26) | ((((to-(uint64_t)(addr)) >> 2) & 0xffffff) << 2) | 1
 
-#define MAKE_JUMP_VALUE(addr, to) ((0x12 << 26) | ((((to-(uint64_t)(addr))>>2)&0xFFFFFF) << 2))
-#define MAKE_CALL_VALUE(addr, to) ((0x12 << 26) | ((((to-(uint64_t)(addr))>>2)&0xFFFFFF) << 2)) | 1
+#define MAKE_JUMP_VALUE(addr, to) ((0x12 << 26) | ((((to-(uint64_t)(addr)) >> 2) & 0xFFFFFF) << 2))
+#define MAKE_CALL_VALUE(addr, to) ((0x12 << 26) | ((((to-(uint64_t)(addr)) >> 2) & 0xFFFFFF) << 2)) | 1
 
 #define BLR		0x4E800020
 #define BLRL	0x4E800021
@@ -164,7 +164,7 @@ static void make_long_call_with_inst(void *addr, uint64_t to, uint32_t *inst)
 		}
 		else if (swap32(inst[i]) == MFLR(11))
 		{			
-			ins[j] = LIS(11, (((uint64_t)(ins_ps3+(9 * 4)) >> 16) & 0xFFFF));
+			ins[j] = LIS(11, (((uint64_t)(ins_ps3 + (9 * 4)) >> 16) & 0xFFFF));
 			j++;
 			ins[j] = ORI(11, 11, ((uint64_t)(ins_ps3 + (9 * 4)) & 0xFFFF));
 		}
@@ -192,7 +192,7 @@ static void patch_call(uint64_t call_addr, void *newfunc)
 static void change_function(uint64_t func_addr, void *newfunc)
 {
 	f_desc_t *f = (f_desc_t *)newfunc;
-	make_long_jump(ps2_netemu+func_addr, swap64(f->addr));	
+	make_long_jump(ps2_netemu + func_addr, swap64(f->addr));	
 }
 
 // func_addr -> ps3, newfunc -> native
@@ -357,7 +357,7 @@ static int patch_emu(char *payload_map_file)
 				}
 				
 				printf("cdvd_read_patched found at %lx\n", (unsigned long)addr);
-				hook_function_with_cond_postcall(cdvd_read_symbol, ps2_netemu+addr, 4);
+				hook_function_with_cond_postcall(cdvd_read_symbol, ps2_netemu + addr, 4);
 			}
 			else if (strcmp(name, "read_iso_size") == 0)
 			{
@@ -454,7 +454,7 @@ static int patch_emu(char *payload_map_file)
 	
 	if (ret == 0)
 	{
-//		*(uint32_t *)&ps2_netemu[savedata_patch] = swap32(LI(0, 0x26f4));
+		// *(uint32_t *)&ps2_netemu[savedata_patch] = swap32(LI(0, 0x26f4));
 	}
 	
 	fclose(map);
@@ -499,7 +499,7 @@ static void patch_self(char *src, char *dst, uint32_t sh_offset, uint32_t code_a
 	fread(buf, 1, size, f);
 	fclose(f);
 	
-	Elf64_Phdr *phdr = (Elf64_Phdr *)(buf+0xD0);
+	Elf64_Phdr *phdr = (Elf64_Phdr *)(buf + 0xD0);
 	
 	phdr->p_memsz = swap64(swap64(phdr->p_memsz)); //+ ADDITIONAL_CODE_SIZE);
 	phdr->p_filesz = swap64(swap64(phdr->p_filesz)); // + ADDITIONAL_CODE_SIZE);
@@ -509,7 +509,7 @@ static void patch_self(char *src, char *dst, uint32_t sh_offset, uint32_t code_a
 	
 	phdr->p_memsz = swap64(swap64(phdr->p_memsz) + ADDITIONAL_DATA_SIZE);
 	
-	Elf64_Shdr *shdr = (Elf64_Shdr *)(buf+sh_offset);
+	Elf64_Shdr *shdr = (Elf64_Shdr *)(buf + sh_offset);
 	
 	while (patches < 2)
 	{

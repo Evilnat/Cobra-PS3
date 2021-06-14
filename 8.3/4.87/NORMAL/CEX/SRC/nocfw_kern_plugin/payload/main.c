@@ -295,7 +295,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, post_cellFsUtilMount, (const char *bl
 			load_boot_plugins_kernel();
 			load_boot_plugins();
 		}
-		else if(safe_mode) //our safe mode works only when it detects emer_init loading
+		else if(safe_mode) // our safe mode works only when it detects emer_init loading
 		{
 			cellFsUnlink(BOOT_PLUGINS_KERNEL_FILE);
 			cellFsUnlink(BOOT_PLUGINS_FILE);

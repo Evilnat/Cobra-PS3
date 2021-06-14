@@ -2,11 +2,13 @@
 #include <lv2/io.h>
 #include <lv2/error.h>
 #include <lv2/security.h>
+#include <lv2/ctrl.h>
 #include "common.h"
 #include "mappath.h"
 #include "modulespatch.h"
 #include "ps3mapi_core.h"
 #include "make_rif.h"
+#include "savegames.h"
 
 uint8_t skip_existing_rif = 0;
 
@@ -78,7 +80,7 @@ static void read_act_dat_and_make_rif(uint8_t *rap, uint8_t *act_dat, const char
 
 		uint8_t *rif = ALLOC_RIF_BUFFER;
 		uint8_t *key_index = rif + 0x40;
-		uint8_t *rif_key   = rif + 0x50;
+		uint8_t *rif_key = rif + 0x50;
 		memset(rif, 0, 0x70);
 
 		get_rif_key(rap, rif_key); //convert rap to rifkey (klicensee)
@@ -119,19 +121,58 @@ static void read_act_dat_and_make_rif(uint8_t *rap, uint8_t *act_dat, const char
 	}
 }
 
-void make_rif(const char *path)
+int create_act_dat(const char *userid)
 {
-	int path_len = strlen(path);
-	if(!strncmp(path, "/dev_hdd0/home/", 15) && !strcmp(path + path_len - 4, ".rif"))
-	{
-		// Skip the creation of rif if already exists - By aldostool's
-		CellFsStat stat;
-		if(skip_existing_rif && (cellFsStat(path, &stat) == SUCCEEDED)) 
-		{
-			//DPRINTF("rif already exists, skipping...\n");
-			return; // rif already exists
-		}
+	int fd;
+	uint64_t size;
+	char full_path[120], exdata_dir[120];
+	CellFsStat stat;
 
+	DPRINTF("Creating act.dat for userID %s...\n", userid);
+
+	uint8_t timedata[0x10] = 
+	{ 
+		0x00, 0x00, 0x01, 0x2F, 0x3F, 0xFF, 0x00, 0x00, 
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	};
+
+	const uint64_t header = 0x0000000100000002;
+
+	uint64_t accountID = (uint64_t)strtoull((const char*)account_id, NULL, 16);
+	accountID = SWAP64(accountID);
+	
+	uint8_t *actdat = malloc(0x1038);	
+	memset(actdat, 0x11, 0x1038);
+	memcpy(actdat, &header, 8);
+	memcpy(actdat + 8, &accountID, 8);
+	memcpy(actdat + 0x870, timedata, 0x10);
+
+	sprintf(exdata_dir, "/dev_hdd0/home/%s/exdata", userid);
+
+	if(cellFsStat(exdata_dir, &stat) != SUCCEEDED)				
+		cellFsMkdir(exdata_dir, 0777);		
+
+	sprintf(full_path, "%s/act.dat", exdata_dir);
+
+	cellFsOpen(full_path, CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, 0666, NULL, 0);
+	cellFsWrite(fd, actdat, 0x1038, &size);
+	cellFsClose(fd);
+
+	free(actdat);
+
+	return SUCCEEDED;
+}
+
+void make_rif(const char *path)
+{		
+	char buffer[120];	
+	int path_len = strlen(path);	
+	
+	if(!strncmp(path, "/dev_hdd0/home/", 15) && !strcmp(path + path_len - 4, ".rif"))
+	{		
+		int act_dat_found = 0;
+		CellFsStat stat;		
+		
 		DPRINTF("open_path_hook: %s (looking for rap)\n", path);
 
 		char *content_id = ALLOC_CONTENT_ID;
@@ -146,19 +187,30 @@ void make_rif(const char *path)
 		if(!is_ps2_classic && !is_psp_launcher)
 		{
 			CellFsStat stat;
-			sprintf(rap_path, "/dev_usb000/exdata/%.36s.rap", content_id);
+			const char *ext = "rap";
 
-			if(cellFsStat(rap_path, &stat) != SUCCEEDED) 
-				rap_path[10] = '1'; //usb001
-			if(cellFsStat(rap_path, &stat) != SUCCEEDED) 
-				sprintf(rap_path, "/dev_hdd0/exdata/%.36s.rap", content_id);
+			// Support for rap and RAP extension (By aldostools)
+			for(uint8_t i = 0; i < 2; i++)
+			{
+				sprintf(rap_path, "/dev_usb000/exdata/%36s.%s", content_id, ext);
+
+				if(cellFsStat(rap_path, &stat) != SUCCEEDED) 
+					rap_path[10] = '1'; //dev_usb001
+				if(cellFsStat(rap_path, &stat) != SUCCEEDED) 
+					sprintf(rap_path, "/dev_hdd0/exdata/%36s.%s", content_id, ext);
+
+				if(cellFsStat(rap_path, &stat) != SUCCEEDED) 
+					ext = "RAP"; 
+				else 
+					break;
+			}
 		}
 
 		int fd;
 		if(is_ps2_classic || is_psp_launcher || cellFsOpen(rap_path, CELL_FS_O_RDONLY, &fd, 0666, NULL, 0) == SUCCEEDED)
 		{
 			uint64_t nread = 0;
-			uint8_t rap[0x10] = {0xF5, 0xDE, 0xCA, 0xBB, 0x09, 0x88, 0x4F, 0xF4, 0x02, 0xD4, 0x12, 0x3C, 0x25, 0x01, 0x71, 0xD9};
+			uint8_t rap[0x10] = { 0xF5, 0xDE, 0xCA, 0xBB, 0x09, 0x88, 0x4F, 0xF4, 0x02, 0xD4, 0x12, 0x3C, 0x25, 0x01, 0x71, 0xD9 };
 
 			if(!is_ps2_classic && !is_psp_launcher)
 			{
@@ -166,14 +218,42 @@ void make_rif(const char *path)
 				cellFsClose(fd);
 			}
 
-			DPRINTF("rap_path:%s output:%s\n", rap_path, path);
+			DPRINTF("rap_path: %s output: %s\n", rap_path, path);
 
+			// Search act.dat in home dirs
+			for(int i = 1; i < 100; i++)
+			{
+				sprintf(buffer, ACTDAT_PATH, i);
+				
+				if(cellFsStat(buffer, &stat) == SUCCEEDED) 
+				{
+					DPRINTF("Found act.dat in %08d\n", i);
+					act_dat_found = 1;
+					break;
+				}	
+			}			
+
+			char userid[8];
+			strncpy(userid, path + 15, 8);
+			userid[8] = '\0';
+
+			sprintf(buffer, ACCOUNTID_VALUE, userid);
+			
+			if(!act_dat_found && xreg_data(buffer, ACCOUNTID, READ, 0, 1))
+				create_act_dat(userid);	
+
+			act_dat_found = 0;
+
+			// Skip the creation of rif license if it already exists - By aldostool
+			if(skip_existing_rif && cellFsStat(path, &stat) == SUCCEEDED)			
+				return;			
+			
 			char *act_path = ALLOC_PATH_BUFFER;
 			memset(act_path, 0, 0x50);
 			strncpy(act_path, path, strrchr(path, '/') - path);
 			strcpy(act_path + strlen(act_path), "/act.dat\0");
 
-			DPRINTF("act_path:%s content_id:%s\n", act_path, content_id);
+			DPRINTF("act_path: %s content_id: %s\n", act_path, content_id);
 
 			if(cellFsOpen(act_path, CELL_FS_O_RDONLY, &fd, 0666, NULL, 0) == SUCCEEDED)
 			{
@@ -186,13 +266,7 @@ void make_rif(const char *path)
 					char *rif_path = ALLOC_PATH_BUFFER;
 					sprintf(rif_path, "/%s", path);
 					read_act_dat_and_make_rif(rap, act_dat, content_id, rif_path);
-
-					DPRINTF("rif_path:%s\n", rif_path);
 				}
-			}
-			else
-			{			
-				//DPRINTF("act.dat not found: %s\n", act_path);
 			}			
 		}
 	}

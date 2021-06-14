@@ -98,7 +98,6 @@ static uint8_t condition_true = 1;
 static uint8_t condition_false = 0;
 uint8_t condition_ps2softemu = 0;
 uint8_t condition_apphome = 0;
-uint8_t condition_disable_gameupdate = 0; // Disabled
 uint8_t condition_psp_iso = 0;
 uint8_t condition_psp_dec = 0;
 uint8_t condition_psp_keys = 0;
@@ -106,10 +105,10 @@ uint8_t condition_psp_change_emu = 0;
 uint8_t condition_psp_prometheus = 0;
 uint8_t condition_pemucorelib = 1;
 uint64_t vsh_check;
-//uint8_t condition_game_ext_psx = 0;
 int bc_to_net_status = 0;
+//uint8_t condition_disable_gameupdate = 0; // Disabled
+//uint8_t condition_game_ext_psx = 0;
 
-//uint8_t block_peek = 0;
 
 // Plugins
 sys_prx_id_t vsh_plugins[MAX_VSH_PLUGINS];
@@ -589,7 +588,7 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 				{
 					if (*patch->condition)
 					{
-						buf[patch->offset/4] = patch->data;
+						buf[patch->offset / 4] = patch->data;
 
 						DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)patch->offset, (uint32_t)patch->data);
 						//DPRINTF("Offset: %lx\n", &buf[patch->offset/4]);
@@ -611,23 +610,12 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 #if defined (FIRMWARE_CEX)
 LV2_HOOKED_FUNCTION_COND_POSTCALL_2(int, pre_modules_verification, (uint32_t *ret, uint32_t error))
 {
-/*
-	// Patch original from psjailbreak. Needs some tweaks to fix some games
-	DPRINTF("err = %x\n", error);
-
-	if (error == 0x13)
-	{
-		//dump_stack_trace2(10);
-		return DO_POSTCALL; // Fixes Mortal Kombat <- DON'T DO IT
-	}
-*/
 	*ret = 0;
 	return SUCCEEDED;
 }
 #endif
 
 void pre_map_process_memory(void *object, uint64_t process_addr, uint64_t size, uint64_t flags, void *unk, void *elf, uint64_t *out);
-
 
 uint8_t cleared_stage0 = 0;
 
@@ -665,7 +653,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, load_process_hooked, (process_t proce
 		{
 			DPRINTF("COBRA: Safe mode detected\n");
 
-			// Disable stage2.bin [haxxxen]
+			// Disable stage2.bin by haxxxen
 			// Disabling it prevents issues while we are in Recovery Menu
 			cellFsUtilMount_h("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0, 0, 0, 0, 0);
 			cellFsRename("/dev_blind/sys/stage2.bin", "/dev_blind/sys/stage2.bin.bak");
@@ -684,11 +672,6 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, load_process_hooked, (process_t proce
 		restore_BD();
 		CFW2OFW_game =  0;
 	}
-	
-	/*#ifndef DEBUG
-		if (vsh_process) 
-			unhook_function_on_precall_success(load_process_symbol, load_process_hooked, 9); // Hook no more needed
-	#endif*/
 	
 	return SUCCEEDED;
 }
@@ -775,7 +758,8 @@ int prx_load_vsh_plugin(unsigned int slot, char *path, void *arg, uint32_t arg_s
 		return EKRESOURCE;	
 
 	CellFsStat stat;
-	if (cellFsStat(path, &stat) != 0 || stat.st_size < 0x230) return EINVAL; // prevent a semi-brick (black screen on start up) if the sprx is 0 bytes (due a bad ftp transfer).
+	if (cellFsStat(path, &stat) != 0 || stat.st_size < 0x230) 
+		return EINVAL; // prevent a semi-brick (black screen on start up) if the sprx is 0 bytes (due a bad ftp transfer).
 
 	loading_vsh_plugin = 1;
 	prx = prx_load_module(vsh_process, 0, 0, path);
@@ -810,7 +794,7 @@ int prx_load_vsh_plugin(unsigned int slot, char *path, void *arg, uint32_t arg_s
 	}
 	
 	#ifndef DEBUG
-		DPRINTF("Vsh plugin load: %x\n", ret);
+		DPRINTF("VSH plugin load: %x\n", ret);
 	#endif
 
 	return ret;
@@ -1071,6 +1055,7 @@ void load_boot_plugins(void)
 	{
 		CellFsStat stat;
 		char path_prx[128];		
+		int i;
 
 		// Default plugin's paths in some CFW
 		char webman_paths[4][60] = 
@@ -1079,13 +1064,10 @@ void load_boot_plugins(void)
         	"/dev_flash/ps3ita/webftp_server.sprx",
         	"/dev_flash/webman/webftp_server.sprx",
         	"/dev_flash/dragon/web.sprx",
-    	};		
-
-    	// Copy "/dev_flash/vsh/module/webftp_server.sprx" as default path
-    	strcpy(path_prx, webman_paths[0]);
+    	};				
 
     	// Let's find the plugin
-		for(int i = 0; i < 4; i++)
+		for(i = 0; i < 4; i++)
 	    { 
 	        if(cellFsStat(webman_paths[i], &stat) == 0)
 	        {            
@@ -1094,7 +1076,7 @@ void load_boot_plugins(void)
 	        }
 	    }
 
-		if (prx_load_vsh_plugin(current_slot, path_prx, NULL, 0) >= 0)	
+		if (prx_load_vsh_plugin(current_slot, (char*)webman_paths[i], NULL, 0) >= 0)	
 			DPRINTF("Loading integrated webMAN plugin into slot %x\n", current_slot);		
 	}
 	// EVILNAT END
