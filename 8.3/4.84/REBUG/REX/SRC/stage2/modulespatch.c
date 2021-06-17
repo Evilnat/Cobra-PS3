@@ -691,11 +691,11 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, load_process_hooked, (process_t proce
 			cellFsUtilMount_h("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0, 0, 0, 0, 0);
 
 			#if defined (FIRMWARE_CEX)
-				cellFsRename("/dev_blind/rebug/cobra/stage2.cex","/dev_blind/rebug/cobra/stage2.cex.bak");
+				cellFsRename("/dev_blind/rebug/cobra/stage2.cex", "/dev_blind/rebug/cobra/stage2.cex.bak");
 			#elif defined (FIRMWARE_DEX)
 				cellFsRename("/dev_blind/rebug/cobra/stage2.dex", "/dev_blind/rebug/cobra/stage2.dex.bak");
 			#endif
-				
+
 			cellFsUtilUmount("/dev_blind", 0, 1);
 			
 			safe_mode = 1;
