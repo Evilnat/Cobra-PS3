@@ -23,8 +23,9 @@
 #define PS3MAPI_CORE_VERSION			 			0x0123
 #define PS3MAPI_CORE_MINVERSION			 			0x0111
 
+#define PS3MAPI_FW_VERSION			 				FIRMWARE_VERSION
+
 #if defined(FIRMWARE_CEX)
-	#define PS3MAPI_FW_VERSION			 			0x0484
 	#if defined(IS_MAMBA)
 		#define PS3MAPI_FW_TYPE			 			"CEX MAMBA"
 	#else
@@ -35,7 +36,6 @@
 	#define PS3MAPI_PSID							0x8000000000474B0CULL
 #endif
 #if defined(FIRMWARE_DEX)
-	#define PS3MAPI_FW_VERSION			 			0x0484
 	#if defined(IS_MAMBA)
 		#define PS3MAPI_FW_TYPE			 			"DEX MAMBA"
 	#else
