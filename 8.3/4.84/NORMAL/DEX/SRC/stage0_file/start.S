@@ -34,7 +34,7 @@ stdu      %r1, -0x100(%r1)
 mflr      %r0
 std       %r0, 0x110(%r1)
 stdu %r1, -0xf0(%r1)
-CALL(0x26C8E0)
+CALL(0x273958)
 std       %r26, 0x68(%r1)
 mr %r26, %r3
 cmplwi cr7, %r3, 1

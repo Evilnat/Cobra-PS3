@@ -9,7 +9,7 @@ LV2_KERNEL		= ../lv2gen/lv2_kernel.self
 KERNEL_TARGET	= lv2_kernel.self
 PAYLOAD 		= ../nocfw_kern_plugin/payload/payload.bin
 STAGE0 			= stage0.bin
-STAGE0_ADDR_CEX	= 0x26C8DC
+STAGE0_ADDR_CEX	= 0x273954
 INCLUDE			=  ../lv2/include ../lv1/include ../debug/include
 
 INCLUDE			+= $(PS3DEV)/ppu/ppu/include
