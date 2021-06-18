@@ -34,7 +34,7 @@ all: $(TARGET).bin
 	$(LV2GEN) $(LV2_KERNEL) $(STAGE0) $(STAGE0_ADDR_DEX) $(PAYLOAD)
 	@rm -f *.o *.elf ../lv2/src/*.o ../lv1/src/*.o *.bin
 	@mv lv2_kernel.self.cobra.self $(KERNEL_TARGET)
-	@cp $(KERNEL_TARGET) ../../BIN	
+	@cp $(KERNEL_TARGET) ../../BIN
 
 $(TARGET).elf: $(OBJS) stage0.ld
 	$(CC) $(LDFLAGS) -o $@ $(OBJS)
