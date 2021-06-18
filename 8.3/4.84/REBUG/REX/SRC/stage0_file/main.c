@@ -8,10 +8,10 @@
 
 #if defined (FIRMWARE_CEX)
 	#define STAGE2_FILE	"/dev_flash/rebug/cobra/stage2.cex"
-	#define STAGE2_FAIL	"/dev_flash/rebug/cobra/stage2.cex"
+	#define STAGE2_FAIL	"/dev_blind/rebug/cobra/stage2.cex"
 #elif defined (FIRMWARE_DEX)
 	#define STAGE2_FILE	"/dev_flash/rebug/cobra/stage2.dex"
-	#define STAGE2_FAIL	"/dev_flash/rebug/cobra/stage2.dex"
+	#define STAGE2_FAIL	"/dev_blind/rebug/cobra/stage2.dex"
 #endif
 
 void main(void)
