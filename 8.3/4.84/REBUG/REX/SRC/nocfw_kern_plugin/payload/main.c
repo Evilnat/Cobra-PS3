@@ -18,8 +18,15 @@
 #include <lv1/patch.h>
 
 #define MAX_VSH_PLUGINS 			7
-#define BOOT_PLUGINS_FILE			"/dev_hdd0/boot_plugins_nocobra.txt"
-#define BOOT_PLUGINS_KERNEL_FILE	"/dev_hdd0/boot_plugins_kernel_nocobra.txt"
+
+#if defined (FIRMWARE_CEX)
+	#define BOOT_PLUGINS_FILE			"/dev_hdd0/boot_plugins_nocobra.txt"
+	#define BOOT_PLUGINS_KERNEL_FILE	"/dev_hdd0/boot_plugins_kernel_nocobra.txt"
+#elif defined (FIRMWARE_DEX)
+	#define BOOT_PLUGINS_FILE			"/dev_hdd0/boot_plugins_nocobra_dex.txt"
+	#define BOOT_PLUGINS_KERNEL_FILE	"/dev_hdd0/boot_plugins_kernel_nocobra_dex.txt"
+#endif
+
 #define BOOT_PLUGINS_FIRST_SLOT 	1
 #define MAX_BOOT_PLUGINS			(MAX_VSH_PLUGINS-BOOT_PLUGINS_FIRST_SLOT)
 #define MAX_BOOT_PLUGINS_KERNEL		5

@@ -11,7 +11,8 @@ cd lv2gen
 make -f Makefile clean
 
 cd ../nocfw_kern_plugin/payload
-make -f Makefile clean
+make -f Makefile_484C clean
+make -f Makefile_484D clean
 
 cd ../../ps2emu_gen
 make -f Makefile clean
@@ -32,7 +33,8 @@ cd ../ps2netemu_gen
 make -f Makefile clean
 
 cd ../../stage0_file
-make -f Makefile clean
+make -f Makefile_484C clean
+make -f Makefile_484D clean
 
 cd ../stage2
 make -f Makefile clean
