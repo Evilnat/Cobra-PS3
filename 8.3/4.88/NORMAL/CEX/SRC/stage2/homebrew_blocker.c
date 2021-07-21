@@ -189,6 +189,8 @@ void check_signin(const char *path)
 			CellFsStat stat;
 			if(cellFsStat(NPSIGNIN_LOCK, &stat) == SUCCEEDED)
 				map_path(NPSIGNIN_UNLOCK, NPSIGNIN_LOCK, 0);
+			else
+				map_path(NPSIGNIN_UNLOCK, NULL, 0);
 		}
 	}
 }
