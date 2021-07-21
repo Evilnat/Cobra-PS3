@@ -128,7 +128,7 @@ int create_act_dat(const char *userid)
 	char full_path[120], exdata_dir[120];
 	CellFsStat stat;
 
-	DPRINTF("Creating act.dat for userID %s...\n", userid);
+	//DPRINTF("Creating act.dat for userID %s...\n", userid);
 
 	uint8_t timedata[0x10] = 
 	{ 
@@ -227,7 +227,7 @@ void make_rif(const char *path)
 				
 				if(cellFsStat(buffer, &stat) == SUCCEEDED) 
 				{
-					DPRINTF("Found act.dat in %08d\n", i);
+					//DPRINTF("Found act.dat in %08d\n", i);
 					act_dat_found = 1;
 					break;
 				}	
