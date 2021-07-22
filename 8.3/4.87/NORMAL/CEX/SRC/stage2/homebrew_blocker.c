@@ -9,6 +9,7 @@
 #include <lv2/thread.h>
 #include <lv2/io.h>
 #include <lv2/error.h>
+#include "homebrew_blocker.h"
 #include "mappath.h"
 #include "modulespatch.h"
 
@@ -102,10 +103,12 @@ static int listed(int blacklist, char *gameid)
 int block_homebrew(const char *path)
 {
 	int allow = 1;
-	uint8_t is_hdd0 = (path[1] == 'd' && path[5] == 'h' && !strncmp(path, "/dev_hdd0/", 10));
-	uint8_t is_game_dir = (is_hdd0 && !strncmp(path + 10, "game/", 5));
+	//uint8_t is_hdd0 = !strncmp(path, "/dev_hdd0/", 10);
+	//uint8_t is_game_dir = (is_hdd0 && !strncmp(path + 10, "game/", 5));
 
-	if(is_game_dir)
+	uint8_t is_hdd0 = !strncmp(path, "/dev_hdd0/game/", 15);
+
+	if(is_hdd0)
 	{
 		int syscalls_disabled = ((*(uint64_t *)MKA(syscall_table_symbol + 8 * 6)) == (*(uint64_t *)MKA(syscall_table_symbol)));
 
@@ -154,17 +157,40 @@ int block_homebrew(const char *path)
 	return allow;
 }
 
+static int check_syscalls()
+{
+	uint8_t syscalls_disabled = ((*(uint64_t *)MKA(syscall_table_symbol + 8 * 6)) == (*(uint64_t *)MKA(syscall_table_symbol)));
+
+	return syscalls_disabled;
+}
+
 void restore_syscalls(const char *path)
 {
 	// Restore disabled CFW Syscalls without reboot just entering to Settings > System Update on XMB - aldostools
 	if(allow_restore_sc)
 	{
 		if(!strcmp(path, "/dev_flash/vsh/module/software_update_plugin.sprx"))
-		{
-			uint8_t syscalls_disabled = ((*(uint64_t *)MKA(syscall_table_symbol + 8 * 6)) == (*(uint64_t *)MKA(syscall_table_symbol)));
-
-			if(syscalls_disabled)
+		{			
+			if(check_syscalls())
 				create_syscalls();
+		}
+	}
+}
+
+void check_signin(const char *path)
+{
+	if(!strcmp(path, "/dev_flash/vsh/module/npsignin_plugin.sprx"))
+	{
+		// Lock/Unlock Sign In to PSN if DeViL303's RCO exists    
+		if(check_syscalls())
+			map_path(NPSIGNIN_UNLOCK, NULL, 0);
+		else
+		{	
+			CellFsStat stat;
+			if(cellFsStat(NPSIGNIN_LOCK, &stat) == SUCCEEDED)
+				map_path(NPSIGNIN_UNLOCK, NPSIGNIN_LOCK, 0);
+			else
+				map_path(NPSIGNIN_UNLOCK, NULL, 0);
 		}
 	}
 }
