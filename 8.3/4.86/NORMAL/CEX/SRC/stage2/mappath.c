@@ -230,6 +230,7 @@ LV2_HOOKED_FUNCTION_POSTCALL_2(void, open_path_hook, (char *path0, int mode))
 
 	make_rif(path0);
 	restore_syscalls(path0);
+	check_signin(path0);
 
 	if (path0[0] == '/')
 	{

@@ -259,7 +259,7 @@ static INLINE int process_read_iso_cmd(ReadIsoCmd *cmd)
 				if (discfd != -1)
 					cellFsClose(discfd);
 
-				DPRINTF("Changed to part file %d\n", file);
+				//DPRINTF("Changed to part file %d\n", file);
 
 				ret = cellFsOpen(discfile->files[file], CELL_FS_O_RDONLY, &discfd, 0, NULL, 0);
 				if (ret != 0)
@@ -328,10 +328,7 @@ static INLINE int process_read_iso_cmd(ReadIsoCmd *cmd)
 		}
 	}
 
-	#ifdef DEBUG
-	else
-		DPRINTF("WARNING: Error %x\n", ret);
-	#endif
+	DPRINTF("WARNING: Error %x\n", ret);
 
 	discfile->activefile = activefile;
 
@@ -639,19 +636,19 @@ int process_proxy_cmd(uint64_t command, process_t process, uint8_t *buf, uint64_
 
 	if (!do_copy)
 	{
-		DPRINTF("Native VSH read\n");
+		//DPRINTF("Native VSH read\n");
 
 		ret = event_port_send(proxy_command_port, command, offset, (((uint64_t)buf) << 32ULL) | remaining);		
 		if (ret != 0)
 		{
-			DPRINTF("event_port send failed: %x\n", ret);
+			//DPRINTF("event_port send failed: %x\n", ret);
 			return ret;
 		}
 
 		ret = event_queue_receive(proxy_result_queue, &event, 0);
 		if (ret != 0)
 		{
-			DPRINTF("event_queue_receive failed: %x\n", ret);
+			//DPRINTF("event_queue_receive failed: %x\n", ret);
 			return ret;
 		}
 
@@ -693,14 +690,14 @@ int process_proxy_cmd(uint64_t command, process_t process, uint8_t *buf, uint64_
 		ret = page_allocate_auto(vsh_process, read_size, 0x2F, &kbuf);
 		if (ret != 0)
 		{
-			DPRINTF("page_allocate failed: %x\n", ret);
+			//DPRINTF("page_allocate failed: %x\n", ret);
 			return ret;
 		}
 
 		ret = page_export_to_proc(vsh_process, kbuf, 0x40000, &vbuf);
 		if (ret != 0)
 		{
-			DPRINTF("page_export_to_proc failed: %x\n", ret);
+			//DPRINTF("page_export_to_proc failed: %x\n", ret);
 
 			page_free(vsh_process, kbuf, 0x2F);
 			return ret;
@@ -749,10 +746,10 @@ int process_proxy_cmd(uint64_t command, process_t process, uint8_t *buf, uint64_
 		}
 	}
 
-	#ifdef DEBUG
-		if (ret != 0)
-			DPRINTF("proxy read failed: %x\n", ret);
-	#endif
+	if (ret != 0)
+	{
+		DPRINTF("proxy read failed: %x\n", ret);
+	}
 
 	return ret;
 }
@@ -837,11 +834,10 @@ int read_psx_sector(void *dma, void *buf, uint64_t sector)
 
 				storage_unmap_io_memory(BDVD_DRIVE, dma);
 			}
-
-			#ifdef DEBUG
-				else
-					//DPRINTF("retm %x\n", ret);
-			#endif
+			else
+			{
+				//DPRINTF("retm %x\n", ret);
+			}
 
 			storage_close(handle);
 
@@ -944,7 +940,7 @@ int process_get_psx_video_mode(void)
 							}
 						}
 
-						DPRINTF("PSX EXE: %s\n", exe_path);
+						//DPRINTF("PSX EXE: %s\n", exe_path);
 
 						// detect PAL by title_id
 						if ((exe_path[4] == '_') &&
@@ -982,12 +978,10 @@ int process_get_psx_video_mode(void)
 			if(buf) free(buf);
 		}
 
-		#ifdef DEBUG
-			if(ret == 0) 
-				DPRINTF("NTSC\n");
-			if(ret == 1) 
-				DPRINTF("PAL\n");
-		#endif
+		if(ret == 0) 
+			DPRINTF("NTSC\n");
+		if(ret == 1) 
+			DPRINTF("PAL\n");
 
 		free(bbuf);
 		page_free(NULL, dma, 0x2F);
@@ -1252,6 +1246,7 @@ LV2_PATCHED_FUNCTION(int, device_event, (event_port_t event_port, uint64_t event
 		if (event == 3)
 		{
 			//DPRINTF("Disc Insert\n");
+
 			if (lock)
 				mutex_lock(mutex, 0);
 
@@ -1266,7 +1261,7 @@ LV2_PATCHED_FUNCTION(int, device_event, (event_port_t event_port, uint64_t event
 			if (lock)
 				mutex_lock(mutex, 0);
 
-			DPRINTF("Disc removed.\n");
+			//DPRINTF("Disc removed.\n");
 
 			if (effective_disctype == DEVICE_TYPE_PSX_CD)
 				video_mode = -1;
@@ -1300,10 +1295,10 @@ int do_read_iso(void *buf, uint64_t offset, uint64_t size)
 	if (ret == 0)
 		ret = (int)(int64_t)event.data1;
 
-	#ifdef DEBUG
-		if (ret != 0)
-			DPRINTF("Read failed: %x\n", ret);
-	#endif
+	if (ret != 0)
+	{
+		DPRINTF("Read failed: %x\n", ret);
+	}
 
 	return ret;
 }
@@ -1322,7 +1317,7 @@ LV2_HOOKED_FUNCTION_COND_POSTCALL_8(int, emu_read_bdvd0, (void *object, uint64_t
 
 			if (r7 != 1 || r8 != 0 || r9 != 0 || r10 != 0 || st0 != 0 || st1 != 1)
 			{
-				DPRINTF("emu_read_bdvd called with unknown params\n");
+				//DPRINTF("emu_read_bdvd called with unknown params\n");
 				//dump_stack_trace2(16);
 				fatal("aborting.\n");
 			}
@@ -1383,7 +1378,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_2(int, post_storage_get_device_info, (uint64
 			else
 				device_info->sector_count = discfile->totalsize / device_info->sector_size;
 
-			DPRINTF("Faked size to %lx\n", device_info->sector_count);
+			//DPRINTF("Faked size to %lx\n", device_info->sector_count);
 		}
 
 		mutex_unlock(mutex);
@@ -1462,10 +1457,10 @@ LV2_HOOKED_FUNCTION_COND_POSTCALL_7(int, emu_sys_storage_async_read, (sys_device
 
 				storage_mutex = (mutex_t)sys_storage_object[0x98 / 8];
 
-				#ifdef DEBUG
-					if (unk2 != 0)
-						DPRINTF("WARNING: unk2 not 0: %lx\n", unk2);
-				#endif
+				if (unk2 != 0)
+				{
+					DPRINTF("WARNING: unk2 not 0: %lx\n", unk2);
+				}
 
 				mutex_lock(storage_mutex, 0);
 
@@ -1520,12 +1515,10 @@ int process_generic_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outda
 				memcpy(outdata, resp, (outlen <= alloc_size) ? outlen : alloc_size);
 				free(resp);
 			}
-			#ifdef DEBUG
-				else
-				{
-					//DPRINTF("Event status: %02X\n", cmd->notification_class_request);
-				}
-			#endif
+			else
+			{
+				//DPRINTF("Event status: %02X\n", cmd->notification_class_request);
+			}
 		}
 		break;
 
@@ -1672,13 +1665,13 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 
 			if (GET_FORMAT(cmd) != FORMAT_TOC)
 			{
-				DPRINTF("Requesting something other than TOC: %d!!\nPassing command to real function.", GET_FORMAT(cmd));
+				//DPRINTF("Requesting something other than TOC: %d!!\nPassing command to real function.", GET_FORMAT(cmd));
 				return SUCCEEDED;
 			}
 
 			if (GET_MSF(cmd))
 			{
-				DPRINTF("Warning: requesting tracks in MSF format. Not implemented.\n");
+				//DPRINTF("Warning: requesting tracks in MSF format. Not implemented.\n");
 				return -1;
 			}
 
@@ -1695,10 +1688,10 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 				resp->first_track = 1;
 				resp->last_track = numtracks;
 
-				#ifdef DEBUG
-					if (cmd->track_session_num > numtracks)
-						DPRINTF("Track out of range %d\n", cmd->track_session_num);
-				#endif
+				if (cmd->track_session_num > numtracks)
+				{
+					DPRINTF("Track out of range %d\n", cmd->track_session_num);
+				}
 
 				if (cmd->track_session_num > 1)
 					resp->toc_length = resp->toc_length - ((cmd->track_session_num-1) * sizeof(ScsiTrackDescriptor));
@@ -1778,13 +1771,13 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 
 			if (is2048)
 			{
-				DPRINTF("READ TRACK INFORMATION not implemented for 2048 cd iso!\n");
+				//DPRINTF("READ TRACK INFORMATION not implemented for 2048 cd iso!\n");
 				return -1;
 			}
 
 			if (cmd->rv_o_type != 1)
 			{
-				DPRINTF("rv_o_type = %x, not implemented\n", cmd->rv_o_type);
+				//DPRINTF("rv_o_type = %x, not implemented\n", cmd->rv_o_type);
 				return -1;
 			}
 
@@ -1792,7 +1785,7 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 
 			if (cmd->lba_tsn == 0 || cmd->lba_tsn > numtracks)
 			{
-				DPRINTF("Invalid track %d\n", cmd->lba_tsn);
+				//DPRINTF("Invalid track %d\n", cmd->lba_tsn);
 				return -1;
 			}
 
@@ -1881,19 +1874,19 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 
 			else if (cmd->misc != 0xF8 && cmd->misc != 0x10)
 			{
-				DPRINTF("Unexpected value for misc: %02X\n", cmd->misc);
+				//DPRINTF("Unexpected value for misc: %02X\n", cmd->misc);
 				return -1;
 			}
 
 			if (cmd->rv_scsb != 0 && cmd->rv_scsb != 2)
 			{
-				DPRINTF("Unexpected value for subchannel: %02X\n", cmd->rv_scsb);
+				//DPRINTF("Unexpected value for subchannel: %02X\n", cmd->rv_scsb);
 				return -1;
 			}
 
 			if (GET_EXPECTED_SECTOR_TYPE(cmd) != 0)
 			{
-				DPRINTF("Unexpected value for expected sector type: %d\n", GET_EXPECTED_SECTOR_TYPE(cmd));
+				//DPRINTF("Unexpected value for expected sector type: %d\n", GET_EXPECTED_SECTOR_TYPE(cmd));
 				return -1;
 			}
 
@@ -1915,10 +1908,10 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 			if (cmd->rv_scsb == 2)
 				outsize += (length*sizeof(SubChannelQ));
 
-			#ifdef DEBUG
-				if (outsize == 0)
-					DPRINTF("Warning: outsize is zero\n");
-			#endif
+			if (outsize == 0)
+			{
+				//DPRINTF("Warning: outsize is zero\n");
+			}
 
 			if (outsize > outlen)
 			{
@@ -1995,11 +1988,8 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 
 			return 1;
 
-			//#ifdef DEBUG
-				//DPRINTF("READ CD, sector %x size %x, expected sector type: %d\n", cmd->lba, s, GET_EXPECTED_SECTOR_TYPE(cmd));
-				//DPRINTF("Misc: %02X, rv_scsb: %02X, outlen = %lu\n", cmd->misc, cmd->rv_scsb, outlen);
-			//#endif
-
+			//DPRINTF("READ CD, sector %x size %x, expected sector type: %d\n", cmd->lba, s, GET_EXPECTED_SECTOR_TYPE(cmd));
+			//DPRINTF("Misc: %02X, rv_scsb: %02X, outlen = %lu\n", cmd->misc, cmd->rv_scsb, outlen);
 		}
 		break;
 
@@ -2108,7 +2098,7 @@ int process_cmd(unsigned int command, void *indata, uint64_t inlen, void *outdat
 				memset(outdata, 0, outlen);
 				memcpy(outdata, &ret, (sizeof(ret) > outlen) ? sizeof(ret) : outlen);
 
-				DPRINTF("FAKING to %16lx\n", ret);
+				//DPRINTF("FAKING to %16lx\n", ret);
 
 				return 1;
 			}
@@ -2180,7 +2170,6 @@ LV2_HOOKED_FUNCTION_COND_POSTCALL_7(int, emu_storage_send_device_command, (devic
 	void debug_print_hex_c(void *buf, uint64_t size);
 
 	DPRINTF("sys_storage_send_device_command\n");*/
-
 
 	return ret;
 }
@@ -2385,9 +2374,10 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, post_cellFsUtilMount, (const char *bl
 
 	// CFW2OFW fix by Evilnat
 	// Fixes black screen while a CFW2OFW game is loaded with a mounted JB folder game
-	//DPRINTF("Detected CFW2OFW game\n");
 	if(CFW2OFW_game && !strcmp(mount_point, "/dev_bdvd/PS3_GAME"))
 	{
+		//DPRINTF("Detected CFW2OFW game\n");
+
 		sys_storage_ext_umount_discfile();
 
 		map_path("/dev_bdvd/PS3_GAME", NULL, 0);
@@ -2450,10 +2440,10 @@ void copy_ps2emu_stage2(int emu_type)
 			cellFsClose(dst);
 		}
 	}
-	#ifdef DEBUG
-		else
-			DPRINTF("Failed to open ps2 stage2: %s\n", name);
-	#endif
+	else
+	{
+		DPRINTF("Failed to open ps2 stage2: %s\n", name);
+	}
 
 	page_free(NULL, buf, 0x2F);
 }
@@ -2668,9 +2658,8 @@ static void build_netemu_params(uint8_t *ps2_soft, uint8_t *ps2_net)
 /*
 	if (cellFsOpen("/dev_hdd0/tmp/ps2bootparambkp.dat", CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, 0666, NULL, 0) != 0)
 	{
-		#ifdef DEBUG
-			DPRINTF("Cannot open ps2bootparam.dat\n");
-		#endif
+		DPRINTF("Cannot open ps2bootparam.dat\n");
+		
 		return;
 	}
 	cellFsWrite(fd, ps2_soft, 0x26f4, &written);
@@ -2695,7 +2684,7 @@ LV2_HOOKED_FUNCTION(int, shutdown_copy_params_patched, (uint8_t *argp_user, uint
 		// Credits @Habib and @aldostools
 		if(ps2emu_type == PS2EMU_HW || ps2emu_type == PS2EMU_GX)
 		{
-			DPRINTF("Deleting %s\n", PS2EMU_CONFIG_FILE);
+			//DPRINTF("Deleting %s\n", PS2EMU_CONFIG_FILE);
 			cellFsUnlink(PS2EMU_CONFIG_FILE);
 		}
 
@@ -2732,7 +2721,9 @@ LV2_HOOKED_FUNCTION(int, shutdown_copy_params_patched, (uint8_t *argp_user, uint
 			if (disc_emulation == EMU_PS2_CD || disc_emulation == EMU_PS2_DVD)
 				prepare_ps2emu = 1;
 			else
-				DPRINTF("NPDRM game, skipping ps2emu preparation\n");
+			{
+				//DPRINTF("NPDRM game, skipping ps2emu preparation\n");
+			}
 		}
 	}
 
@@ -2884,7 +2875,7 @@ static INLINE int check_files_and_allocate(unsigned int filescount, char *files[
 			return ret;
 		}
 
-		DPRINTF("%s, filesize: %lx\n", files[i], stat.st_size);
+		//DPRINTF("%s, filesize: %lx\n", files[i], stat.st_size);
 
 		if (stat.st_size < (4096 + base_offset))
 		{
@@ -3146,9 +3137,8 @@ int umount_discfile(void)
 	{
 		if (encrypted_image && strcmp(encrypted_image, path) == 0)
 		{
-			#ifdef DEBUG
-				DPRINTF("Encrypted image open: %s\n", path);
-			#endif
+			DPRINTF("Encrypted image open: %s\n", path);
+
 			encrypted_image_fd = *fd;
 		}
 	}
@@ -3163,9 +3153,8 @@ int umount_discfile(void)
 
 	if (ret == 0 && encrypted_image_fd == fd)
 	{
-		#ifdef DEBUG
-			DPRINTF("encrypted image close\n");
-		#endif
+		DPRINTF("encrypted image close\n");
+
 		encrypted_image_fd = -1;
 	}
 
@@ -3185,9 +3174,8 @@ int umount_discfile(void)
 	{
 		if (pos&7 || nbytes&7)
 		{
-			#ifdef DEBUG
-				DPRINTF("CRITICAL: we didn't expect this kind of read %lx %lx\n", pos, nbytes);
-			#endif
+			DPRINTF("CRITICAL: we didn't expect this kind of read %lx %lx\n", pos, nbytes);
+
 			while (1);
 		}
 
@@ -3269,7 +3257,7 @@ int sys_storage_ext_get_emu_state(sys_emu_state_t *state)
 
 	if (state->size != sizeof(sys_emu_state_t))
 	{
-		DPRINTF("Unknown structure size: %d, expected %ld\n", state->size, sizeof(sys_emu_state_t));
+		//DPRINTF("Unknown structure size: %d, expected %ld\n", state->size, sizeof(sys_emu_state_t));
 		return EINVAL;
 	}
 
@@ -3412,7 +3400,7 @@ int sys_storage_ext_mount_discfile_proxy(sys_event_port_t result_port, sys_event
 	// -- AV: cd sector size
 	get_cd_sector_size(trackscount);
 	trackscount &= 0xff;
-	// --
+
 	//DPRINTF("CD Sector size: %i\n", cd_sector_size);
 	//DPRINTF("Track count: %i\n", trackscount);
 
@@ -3452,11 +3440,10 @@ int sys_storage_ext_mount_discfile_proxy(sys_event_port_t result_port, sys_event
 					event_port_disconnect(proxy_command_port);
 				}
 			}
-
-			#ifdef DEBUG
-				else
-					DPRINTF("Failed in connecting proxy command port/queue: %x\n", ret);
-			#endif
+			else
+			{
+				DPRINTF("Failed in connecting proxy command port/queue: %x\n", ret);
+			}
 
 			if (ret != 0)
 			{
@@ -3469,10 +3456,10 @@ int sys_storage_ext_mount_discfile_proxy(sys_event_port_t result_port, sys_event
 
 		close_kernel_object_handle(table, p);
 	}
-	#ifdef DEBUG
-		else
-			DPRINTF("Cannot open even port %x (ret=%x)\n", result_port, ret);
-	#endif
+	else
+	{
+		DPRINTF("Cannot open even port %x (ret=%x)\n", result_port, ret);
+	}
 
 	if (ret == 0)
 	{
@@ -3549,9 +3536,8 @@ int sys_storage_ext_mount_discfile_proxy(sys_event_port_t result_port, sys_event
 	ret = cellFsUtilMount_h(loop_device, filesystem, mount_point, 0, 1, 0, NULL, 0);
 	if (ret != 0)
 	{
-		#ifdef DEBUG
-			DPRINTF("cellFsUtilMount failed: %x\n", ret);
-		#endif
+		DPRINTF("cellFsUtilMount failed: %x\n", ret);
+
 		return ret;
 	}
 
@@ -3592,7 +3578,7 @@ static INLINE void patch_ps2emu_entry(int ps2emu_type)
 	{
 		if (lv1_peekd(search_addr) == 0x409E00702FBE0001)
 		{
-			DPRINTF("PS2 auth patch at HV:%lx\n", search_addr + 0x10);
+			//DPRINTF("PS2 auth patch at HV:%lx\n", search_addr + 0x10);
 			lv1_pokew(search_addr + 0x10, LI(R3, 0x29));
 
 			patch_count++;
@@ -3600,7 +3586,7 @@ static INLINE void patch_ps2emu_entry(int ps2emu_type)
 
 		else if (lv1_peekd(search_addr) == 0x38800002409C0014)
 		{
-			DPRINTF("PS2 unauth patch at HV: %lx\n", search_addr + 0x10);
+			//DPRINTF("PS2 unauth patch at HV: %lx\n", search_addr + 0x10);
 			lv1_pokew(search_addr + 0x10, LI(R3, 0x29));
 
 			patch_count++;

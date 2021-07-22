@@ -33,7 +33,6 @@ int save_cobra_config(void);
 // Syscalls
 int sys_read_cobra_config(CobraConfig *cfg);
 int sys_write_cobra_config(CobraConfig *cfg);
-int save_config_value(uint8_t member, uint8_t value);
 
 #endif /* __CONFIG_H__ */
 

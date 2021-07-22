@@ -183,7 +183,7 @@ int xreg_data(char *value, int type, int mode, int overwrite, int checkEmpty)
             // Search value from value table
             for(int i = 0x10000; i < 0x15000; i++)
             {
-                data = (uint8_t *) malloc(0x17);
+            	data = (uint8_t *) malloc(0x17);
 
                 cellFsLseek(fd, i, SEEK_SET, &seek);
                 cellFsRead(fd, data, 0x17, &read);
