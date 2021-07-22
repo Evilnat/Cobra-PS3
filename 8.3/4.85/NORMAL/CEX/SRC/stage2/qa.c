@@ -16,8 +16,6 @@
 #include "savegames.h"
 #include "qa.h"
 
-uint32_t UM_ori_patch, DM_ori_patch1, DM_ori_patch2, DM_ori_patch3, DM_ori_patch4;
-
 static u8 erk[0x20] = 
 {
 	0x34, 0x18, 0x12, 0x37, 0x62, 0x91, 0x37, 0x1c,
@@ -51,12 +49,6 @@ static void lv1_poked2(u64 addr, u64 value)
 
 static void lv1_patches()
 {
-	UM_ori_patch = lv1_peekw(UM_PATCH_OFFSET);
-	DM_ori_patch1 = lv1_peekw(DM_PATCH1_OFFSET);
-	DM_ori_patch2 = lv1_peekw(DM_PATCH2_OFFSET);
-	DM_ori_patch3 = lv1_peekw(DM_PATCH3_OFFSET);
-	DM_ori_patch4 = lv1_peekw(DM_PATCH4_OFFSET);
-
 	lv1_pokew(UM_PATCH_OFFSET, LI(R0, 0)); 
     lv1_pokew(DM_PATCH1_OFFSET, NOP); 
     lv1_pokew(DM_PATCH2_OFFSET, LI(R3, 1)); 
@@ -66,11 +58,11 @@ static void lv1_patches()
 
 static void restore_patches()
 {
-	lv1_pokew(UM_PATCH_OFFSET, UM_ori_patch); 
-    lv1_pokew(DM_PATCH1_OFFSET, DM_ori_patch1); 
-    lv1_pokew(DM_PATCH2_OFFSET, DM_ori_patch2); 
-    lv1_pokew(DM_PATCH3_OFFSET, DM_ori_patch3);
-    lv1_pokew(DM_PATCH4_OFFSET, DM_ori_patch4); 
+	lv1_pokew(UM_PATCH_OFFSET, UM_PATCH_ORI); 
+    lv1_pokew(DM_PATCH1_OFFSET, DM_PATCH1_ORI); 
+    lv1_pokew(DM_PATCH2_OFFSET, DM_PATCH2_ORI); 
+    lv1_pokew(DM_PATCH3_OFFSET, DM_PATCH3_ORI);
+    lv1_pokew(DM_PATCH4_OFFSET, DM_PATCH4_ORI); 
 }
 
 uint8_t read_qa_flag()
@@ -168,11 +160,9 @@ int set_qa_flag(uint8_t value)
 		return 4;
 	}
 
-	nwritten = len;
-
 	update_mgr_write_eeprom(QA_FLAG_OFFSET, (value) ? 0x00 : 0xFF, LV2_AUTH_ID); 
 
-	DPRINTF("QA Flag: %s\n", (value) ? "Enabled (Value: 0x00)" : "Disabled (Value: 0xFF)");
+	//DPRINTF("QA Flag: %s\n", (value) ? "Enabled (Value: 0x00)" : "Disabled (Value: 0xFF)");
 	
 	restore_patches();
 

@@ -30,7 +30,7 @@ int sm_get_fan_speed(void)
 // Keeps if possible that the temperature of the CPU and RSX do not exceed the temperature chosen between 60°C, 65°C, 70°C or 75°C
 static void fan_control(uint64_t arg0)
 {
-	DPRINTF("Cobra's Dynamic Control FAN: Started.\n");	
+	//DPRINTF("Cobra's Dynamic Control FAN: Started.\n");	
 
 	int speed = 0x80, max_temp = 65, warning = 0;
 	uint32_t t_cpu, t_rsx;
@@ -97,7 +97,7 @@ static void fan_control(uint64_t arg0)
 		}		
 	}
 
-	DPRINTF("Cobra's Dynamic Control FAN: Finished.\n");
+	//DPRINTF("Cobra's Dynamic Control FAN: Finished.\n");
 
 	ppu_thread_exit(0);
 }
