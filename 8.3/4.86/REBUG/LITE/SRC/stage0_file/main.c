@@ -6,8 +6,8 @@
 #include <lv2/patch.h>
 #include <lv1/lv1.h>
 
-#define STAGE2_FILE	"/dev_flash/sys/stage2.bin"
-#define STAGE2_FAIL	"/dev_blind/sys/stage2.bin"
+#define STAGE2_FILE	"/dev_flash/rebug/cobra/stage2.cex"
+#define STAGE2_FAIL	"/dev_blind/rebug/cobra/stage2.cex"
 
 void main(void)
 {
