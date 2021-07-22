@@ -344,7 +344,7 @@ PatchTableEntry patch_table[] =
 
 #ifdef DEBUG
 
-static char *hash_to_name(uint64_t hash)
+/*static char *hash_to_name(uint64_t hash)
 {
     switch(hash)
 	{
@@ -404,7 +404,7 @@ static char *hash_to_name(uint64_t hash)
 			return "UNKNOWN";
 		break;		
 	}
-}
+}*/
 
 #endif
 
@@ -480,16 +480,20 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 
 		if (magic == SPRX_EXT_MAGIC)
 		{	
-			if (keyIndex >= N_SPRX_KEYS_1)			
-				DPRINTF("This key is not implemented yet: %lx:%x\n", magic, keyIndex);			
+			if (keyIndex >= N_SPRX_KEYS_1)		
+			{	
+				//DPRINTF("This key is not implemented yet: %lx:%x\n", magic, keyIndex);			
+			}
 			else			
 				keySet = &sprx_keys_set1[keyIndex];			
 			
 		}
 		else if (magic == SPRX_EXT_MAGIC2)
 		{
-			if (keyIndex >= N_SPRX_KEYS_2)			
-				DPRINTF("This key is not implemented yet: %lx:%x\n", magic, keyIndex);			
+			if (keyIndex >= N_SPRX_KEYS_2)	
+			{		
+				//DPRINTF("This key is not implemented yet: %lx:%x\n", magic, keyIndex);			
+			}
 			else			
 				keySet = &sprx_keys_set2[keyIndex];			
 		}
@@ -531,12 +535,10 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 		if (total == 0)		
 			buf = (uint32_t *)saved_buf;		
 		
-		#ifdef	DEBUG
-			if (last_chunk)
-			{
-				//DPRINTF("Total section size: %x\n", total+ptr32[4/4]);
-			}
-		#endif
+		if (last_chunk)
+		{
+			//DPRINTF("Total section size: %x\n", total+ptr32[4/4]);
+		}
 
 		saved_buf += ptr32[4 / 4];
 	}
@@ -597,7 +599,7 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 		{
 			if (patch_table[i].hash == hash)
 			{		
-				DPRINTF("Now patching  %s %lx\n", hash_to_name(hash), hash);
+				//DPRINTF("Now patching  %s %lx\n", hash_to_name(hash), hash);
 
 				int j = 0;
 				SprxPatch *patch = &patch_table[i].patch_table[j];
@@ -651,7 +653,7 @@ LV2_HOOKED_FUNCTION_POSTCALL_7(void, pre_map_process_memory, (void *object, uint
 	{	
 		if ((process_addr == 0x10000) && (size == dex_vsh_text_size) && (flags == 0x2008004) && (cleared_stage0 == 0))
 		{
-			DPRINTF("Making Debug VSH text writable, Size: 0x%lx\n", size);   
+			//DPRINTF("Making Debug VSH text writable, Size: 0x%lx\n", size);   
 
 			// Change flags, RX -> RWX, make vsh text writable
 			set_patched_func_param(4, 0x2004004);
@@ -661,7 +663,7 @@ LV2_HOOKED_FUNCTION_POSTCALL_7(void, pre_map_process_memory, (void *object, uint
 		}
 		else if ((process_addr == 0x10000) && (size == cex_vsh_text_size) && (flags == 0x2008004) && (cleared_stage0 == 0))
 		{
-			DPRINTF("Making Retail VSH text writable, Size: 0x%lx\n", size);   
+			//DPRINTF("Making Retail VSH text writable, Size: 0x%lx\n", size);   
 
 			// Change flags, RX -> RWX, make vsh text writable
 			set_patched_func_param(4, 0x2004004);
@@ -684,7 +686,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, load_process_hooked, (process_t proce
 			vsh_process = process;		
 		else if (strcmp(path, "emer_init.self") == 0)
 		{
-			DPRINTF("COBRA: Safe mode detected\n");
+			//DPRINTF("COBRA: Safe mode detected\n");
 
 			// Disable stage2.bin by haxxxen
 			// Disabling it prevents issues while we are in Recovery Menu
@@ -706,7 +708,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, load_process_hooked, (process_t proce
 	// Restores disc in BD drive, this fixes leftovers of previous game mounted
 	if (CFW2OFW_game && !strcmp(path, "/dev_flash/vsh/module/mcore.self"))
 	{
-		DPRINTF("Resetting BD Drive after CFW2OFW game...\n");
+		//DPRINTF("Resetting BD Drive after CFW2OFW game...\n");
 		
 		restore_BD();
 		CFW2OFW_game =  0;
@@ -760,7 +762,7 @@ int bc_to_net(int param)
 		}	
 		
 		bc_to_net_status = 0;
-		return 0;
+		return SUCCEEDED;
 	}
 
 	if(param == 2)	
@@ -854,9 +856,7 @@ int prx_load_vsh_plugin(unsigned int slot, char *path, void *arg, uint32_t arg_s
 		prx_unload_module(prx, vsh_process);
 	}
 	
-	#ifndef DEBUG
-		DPRINTF("VSH plugin load: %x\n", ret);
-	#endif
+	//DPRINTF("VSH plugin load: %x\n", ret);
 
 	return ret;
 }
@@ -873,18 +873,14 @@ int prx_unload_vsh_plugin(unsigned int slot)
 	int ret;
 	sys_prx_id_t prx;
 	
-	#ifndef DEBUG
-		DPRINTF("Trying to unload vsh plugin %x\n", slot);
-	#endif
+	//DPRINTF("Trying to unload vsh plugin %x\n", slot);
 
 	if (slot >= MAX_VSH_PLUGINS)
 		return EINVAL;
 
 	prx = vsh_plugins[slot];
 		
-	#ifndef DEBUG
-		DPRINTF("Current plugin: %08X\n", prx);
-	#endif
+	//DPRINTF("Current plugin: %08X\n", prx);
 
 	if (prx == 0)
 		return ENOENT;
@@ -892,23 +888,21 @@ int prx_unload_vsh_plugin(unsigned int slot)
 	ret = prx_stop_module_with_thread(prx, vsh_process, 0, 0);
 	if (ret == 0)	
 		ret = prx_unload_module(prx, vsh_process);	
-	#ifndef DEBUG
-		else	
-			DPRINTF("Stop failed: %x!\n", ret);	
-	#endif
+	else
+	{	
+		//DPRINTF("Stop failed: %x!\n", ret);	
+	}
 
 	if (ret == 0)
 	{
 		vsh_plugins[slot] = 0;
-		#ifndef DEBUG
-			DPRINTF("Vsh plugin unloaded succesfully!\n");
-		#endif
-	}
 
-	#ifndef DEBUG
-		else	
-			DPRINTF("Unload failed : %x!\n", ret);	
-	#endif
+		//DPRINTF("Vsh plugin unloaded succesfully!\n");
+	}
+	else
+	{	
+		//DPRINTF("Unload failed : %x!\n", ret);	
+	}
 
 	return ret;
 }
@@ -1047,7 +1041,7 @@ void load_boot_plugins_kernel(void)
 					
 				if (ret >= 0)
 				{
-					DPRINTF("Load boot plugin %s -> %x\n", path, current_slot_kernel);
+					//DPRINTF("Load boot plugin %s -> %x\n", path, current_slot_kernel);
 					current_slot_kernel++;
 					num_loaded_kernel++;
 				}			
@@ -1074,73 +1068,50 @@ void load_boot_plugins(void)
 		cellFsUnlink(BOOT_PLUGINS_FILE);
 		return;
 	}
-	
-	if (!vsh_process)
-		return;	
 
-	// EVILNAT START
-	// KW / Special thanks to KW for providing an awesome source
-	// Improving initial KW's code	
-	// Firstly will load plugin from '/dev_hdd0' instead '/dev_flash'
-	// If it does not exist in '/dev_hdd0' will load it from '/dev_flash' 
-	if (cellFsOpen(BOOT_PLUGINS_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) == 0)
+	if (!vsh_process)
+		return;
+
+	// KW BEGIN / Special thanks to KW for providing an awesome source
+	//Loading webman from flash - must first detect if the toogle is activated
+	if(prx_load_vsh_plugin(current_slot, PRX_PATH, NULL, 0) >= 0)
 	{
-		while (num_loaded < MAX_BOOT_PLUGINS)
+		//DPRINTF("Loading integrated webMAN plugin into slot %x\n", current_slot);
+        current_slot++;
+		num_loaded++;
+		webman_loaded=1;
+	}
+	// KW END
+
+	if (cellFsOpen(BOOT_PLUGINS_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != 0)
+		return;
+
+	while(num_loaded < MAX_BOOT_PLUGINS)
+	{
+		char path[128];
+		int eof;
+
+		if (read_text_line(fd, path, sizeof(path), &eof) > 0)
 		{
-			char path[128];
-			int eof;			
-			
-			if (read_text_line(fd, path, sizeof(path), &eof) > 0)
+			//KW BEGIN
+			if ((!webman_loaded) || (!strstr(path, "webftp_server"))) //load only if webman was not loaded from flash OR webftp_server is in the name
 			{
-				int ret = prx_load_vsh_plugin(current_slot, path, NULL, 0);
-					
+				int ret = prx_load_vsh_plugin(current_slot, path, NULL, 0);	
 				if (ret >= 0)
 				{
-					if(strstr(path, "web"))
-						webman_loaded = 1;
-
-					DPRINTF("Load boot plugin %s -> %x\n", path, current_slot);
+					//DPRINTF("Load boot plugin %s -> %x\n", path, current_slot);
 					current_slot++;
 					num_loaded++;
-				}			
+				}
 			}
-			
-			if (eof)
-				break;
+			//KW END
 		}
 
-		cellFsClose(fd);
+		if (eof)
+			break;
 	}
-
-	if(!webman_loaded)
-	{
-		CellFsStat stat;
-		char path_prx[128];		
-		int i;
-
-		// Default plugin's paths in some CFW
-		char webman_paths[4][60] = 
-		{
-        	"/dev_flash/vsh/module/webftp_server.sprx",
-        	"/dev_flash/ps3ita/webftp_server.sprx",
-        	"/dev_flash/webman/webftp_server.sprx",
-        	"/dev_flash/dragon/web.sprx",
-    	};				
-
-    	// Let's find the plugin
-		for(i = 0; i < 4; i++)
-	    { 
-	        if(cellFsStat(webman_paths[i], &stat) == 0)
-	        {            
-	            strcpy(path_prx, webman_paths[i]);
-	            break;
-	        }
-	    }
-
-		if (prx_load_vsh_plugin(current_slot, (char*)webman_paths[i], NULL, 0) >= 0)	
-			DPRINTF("Loading integrated webMAN plugin into slot %x\n", current_slot);		
-	}
-	// EVILNAT END
+	
+	cellFsClose(fd);
 }
 
 #ifdef DEBUG
@@ -1149,8 +1120,8 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, create_process_common_hooked, (proces
 									 void **sp_88, uint64_t *sp_90, process_t *process, uint64_t *sp_A0,
 									  uint64_t *sp_A8))
 {
-	char *parent_name = get_process_name(parent);
-	DPRINTF("PROCESS %s (%s) (%08X) created from parent process: %s\n", path, get_process_name(*process), *pid, ((int64_t)parent_name < 0) ? parent_name : "KERNEL");
+	//char *parent_name = get_process_name(parent);
+	//DPRINTF("PROCESS %s (%s) (%08X) created from parent process: %s\n", path, get_process_name(*process), *pid, ((int64_t)parent_name < 0) ? parent_name : "KERNEL");
 
 	return SUCCEEDED;
 }
@@ -1161,7 +1132,7 @@ LV2_HOOKED_FUNCTION_POSTCALL_8(void, create_process_common_hooked_pre, (process_
 									  uint64_t *sp_A8))
 {
 
-	DPRINTF("Pre-process\n");
+	//DPRINTF("Pre-process\n");
 }
 
 #endif

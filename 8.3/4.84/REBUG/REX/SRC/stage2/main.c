@@ -57,9 +57,9 @@
 // F = 7.0
 
 #if defined (FIRMWARE_CEX)
-	#define CB_LOCATION 	"/dev_blind/rebug/cobra/stage2.cex"
+	#define CB_LOCATION 		"/dev_blind/rebug/cobra/stage2.cex"
 #elif defined (FIRMWARE_DEX)
-	#define CB_LOCATION 	"/dev_blind/rebug/cobra/stage2.dex"
+	#define CB_LOCATION 		"/dev_blind/rebug/cobra/stage2.dex"
 #endif
 
 #define COBRA_VERSION			0x0F
@@ -117,7 +117,7 @@ static Patch kernel_patches[] =
 	{ sm_set_fan_policy_patch, LI(R3, 1) },
 };
 
-int disable_cobra_stage()
+static int disable_cobra_stage()
 {
 	cellFsUtilMount_h("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0, 0, 0, 0, 0);
 	cellFsRename(CB_LOCATION, CB_LOCATION ".bak");
@@ -130,7 +130,7 @@ int disable_cobra_stage()
 	return SUCCEEDED;
 }
 
-int inst_and_run_kernel(uint8_t *payload, int size)
+static int inst_and_run_kernel(uint8_t *payload, int size)
 {
 	if((!size) || (size>0x10000))
 		return -1;
@@ -150,7 +150,7 @@ int inst_and_run_kernel(uint8_t *payload, int size)
 	return SUCCEEDED;
 }
 
-int inst_and_run_kernel_dynamic(uint8_t *payload, int size, uint64_t *residence)
+static int inst_and_run_kernel_dynamic(uint8_t *payload, int size, uint64_t *residence)
 {
 	if(!size)
 		return -1;
@@ -179,7 +179,7 @@ int inst_and_run_kernel_dynamic(uint8_t *payload, int size, uint64_t *residence)
 	return SUCCEEDED;
 }
 
-int unload_plugin_kernel(uint64_t residence)
+static int unload_plugin_kernel(uint64_t residence)
 {
 	free((void *)residence);
 	return SUCCEEDED;
@@ -201,7 +201,7 @@ LV2_SYSCALL2(uint64_t, sys_cfw_peek, (uint64_t *addr))
 
 		if ((uint64_t)addr >= (uint64_t)&_start && (uint64_t)addr < (uint64_t)&__self_end)
 		{
-			DPRINTF("peek to addr %p blocked for compatibility.\n", addr);
+			//DPRINTF("peek to addr %p blocked for compatibility.\n", addr);
 			return SUCCEEDED;
 		}
 	}
@@ -215,7 +215,7 @@ void _sys_cfw_poke(uint64_t *addr, uint64_t value);
 
 LV2_HOOKED_FUNCTION(void, sys_cfw_new_poke, (uint64_t *addr, uint64_t value))
 {
-	DPRINTF("New poke called\n");
+	//DPRINTF("New poke called\n");
 
 	_sys_cfw_poke(addr, value);
 	asm volatile("icbi 0,%0; isync" :: "r"(addr));
@@ -223,7 +223,7 @@ LV2_HOOKED_FUNCTION(void, sys_cfw_new_poke, (uint64_t *addr, uint64_t value))
 
 LV2_HOOKED_FUNCTION(void *, sys_cfw_memcpy, (void *dst, void *src, uint64_t len))
 {
-	DPRINTF("sys_cfw_memcpy: %p %p 0x%lx\n", dst, src, len);
+	//DPRINTF("sys_cfw_memcpy: %p %p 0x%lx\n", dst, src, len);
 
 	if (len == 8)
 	{
@@ -269,7 +269,9 @@ LV2_SYSCALL2(void, sys_cfw_poke, (uint64_t *ptr, uint64_t value))
 				return;
 			}
 			else if (((value == sc_null) ||(value == syscall_not_impl)) && (syscall_num != 8)) //Allow removing protected syscall 6 7 9 10 35 NOT 8			
-				DPRINTF("HB remove syscall %ld\n", syscall_num);			
+			{
+				//DPRINTF("HB remove syscall %ld\n", syscall_num);			
+			}
 			else //Prevent syscall 6 7 9 10 and 35 from being re-written
 			{
 				//DPRINTF("HB has been blocked from rewritting syscall %ld\n", syscall_num);
@@ -303,7 +305,7 @@ LV2_SYSCALL2(void, sys_cfw_poke, (uint64_t *ptr, uint64_t value))
 				f_desc_t f;
 
 				// Assume app is trying to write the so called "new poke"
-				DPRINTF("Making sys_cfw_new_poke\n");
+				//DPRINTF("Making sys_cfw_new_poke\n");
 
 				if (current_813)				
 					unhook_function(sc813, current_813);				
@@ -317,7 +319,7 @@ LV2_SYSCALL2(void, sys_cfw_poke, (uint64_t *ptr, uint64_t value))
 				f_desc_t f;
 
 				// Assume app is trying to write a memcpy
-				DPRINTF("Making sys_cfw_memcpy\n");
+				//DPRINTF("Making sys_cfw_memcpy\n");
 
 				if (current_813)				
 					unhook_function(sc813, current_813);				
@@ -340,7 +342,7 @@ LV2_SYSCALL2(void, sys_cfw_poke, (uint64_t *ptr, uint64_t value))
 			}
 			else
 			{
-				DPRINTF("Warning: syscall 813 being overwritten with unknown value (%016lx). *blocking it*\n", value);
+				//DPRINTF("Warning: syscall 813 being overwritten with unknown value (%016lx). *blocking it*\n", value);
 				return;
 			}
 		}
@@ -412,6 +414,7 @@ void create_syscalls(void)
 	create_syscall2(10, sys_cfw_lv1_call);
 	create_syscall2(11, sys_cfw_lv1_peek);
 	create_syscall2(15, sys_cfw_lv2_func);
+	create_syscall2(SYS_MAP_PATH, sys_map_path);
 }
 
 static inline void ps3mapi_unhook_all(void)
@@ -434,8 +437,11 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 	extend_kstack(0);
 
 	//DPRINTF("Syscall 8 -> %lx\n", function);
+	
 	if(function >= 0x8000000000000000ULL)	
+	{
 		DPRINTF("LV1 peek %lx %llux\n", function, (long long unsigned int)(lv1_peekd(function)));
+	}
 	
 	// -- AV: temporary disable cobra syscall (allow dumpers peek 0x1000 to 0x9800)
 	static uint8_t tmp_lv1peek = 0;
@@ -676,7 +682,6 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 
 				case PS3MAPI_OPCODE_ALLOW_RESTORE_SYSCALLS:
 					allow_restore_sc = (uint8_t)param2; // 1 = allow, 0 = do not allow
-					save_config_value(CFG_ALLOW_RESTORE_SC, allow_restore_sc);
 					return SUCCEEDED;
 				break;
 
@@ -725,16 +730,14 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 					else
 						fan_control_running = 0;
 
-					save_config_value(CFG_FAN_SPEED, (uint8_t)param2);
-
 					if(param2 == 2 || param2 == 3 || param2 == 4 || param2 == 5)
 						return sm_set_fan_policy(0, 2, 0x68); // 40%, to avoid a lower initial speed
 					else
 						return sm_set_fan_policy(0, (uint8_t)(param2 >= 0x33 ? 2 : 1), (uint8_t)(param2 >= 0x33 ? param2 : 0));
 				break;
 
+				// Now the value is setted externally with xai_plugin
 				case PS3MAPI_OPCODE_SET_PS2_FAN_SPEED:
-					save_config_value(CFG_PS2_SPEED, (uint8_t)param2);
 					return SUCCEEDED;
 				break;
 
@@ -748,7 +751,6 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 
 				case PS3MAPI_OPCODE_SKIP_EXISTING_RIF:
 					skip_existing_rif = (uint8_t)param2;
-					save_config_value(CFG_SKIP_EXISTING_RIF, (uint8_t)param2);
 					return SUCCEEDED;
 				break;
 
@@ -769,7 +771,7 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 					return set_fakeID(param2, param3);
 				break;
 
-				case PS3MAPI_OPCODE_ACTIVATE_ACOUNT:
+				case PS3MAPI_OPCODE_ACTIVATE_ACCOUNT:
 					if(xreg_data((char *)param2, ACCOUNTID, READ, 0, 1))
 						return create_act_dat((char *)param3);
 					else
@@ -797,14 +799,14 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 			}
 		break;
 
-		case SYSCALL8_OPCODE_STEALTH_TEST:  //KW PSNPatch stealth extension compatibility
+		case SYSCALL8_OPCODE_STEALTH_TEST:  // KW PSNPatch stealth extension compatibility
 			return SYSCALL8_STEALTH_OK;
 		break;
 
-		case SYSCALL8_OPCODE_STEALTH_ACTIVATE: //KW PSNPatch stealth extension compatibility
+		case SYSCALL8_OPCODE_STEALTH_ACTIVATE: // KW PSNPatch stealth extension compatibility
 		{
 			uint64_t syscall_not_impl = *(uint64_t *)MKA(syscall_table_symbol);
-			//*(uint64_t *)MKA(syscall_table_symbol+ 8* 8) = syscall_not_impl;
+			//*(uint64_t *)MKA(syscall_table_symbol + 8 * 8) = syscall_not_impl;
 			ps3mapi_partial_disable_syscall8 = 2; //NzV Edit: Keep PS3M_API Features only.
 			*(uint64_t *)MKA(syscall_table_symbol + 8 * 9) = syscall_not_impl;
 			*(uint64_t *)MKA(syscall_table_symbol + 8 * 10) = syscall_not_impl;
@@ -1055,7 +1057,8 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 #endif
 
 		default:
-			if (1 <= ps3mapi_partial_disable_syscall8)	return ENOSYS;
+			if (1 <= ps3mapi_partial_disable_syscall8)	
+				return ENOSYS;
 
 			if (extended_syscall8.addr)
 			{
@@ -1093,7 +1096,7 @@ static INLINE void apply_kernel_patches(void)
 {
 	for (int i = 0; i < N_KERNEL_PATCHES; i++)
 	{
-		uint32_t *addr= (uint32_t *)MKA(kernel_patches[i].address);
+		uint32_t *addr = (uint32_t *)MKA(kernel_patches[i].address);
 		*addr = kernel_patches[i].data;
 		clear_icache(addr, 4);
 	}
@@ -1108,7 +1111,7 @@ int main(void)
 	debug_install();
 	extern uint64_t _start;
 	extern uint64_t __self_end;
-	DPRINTF("Stage 2 says hello (load base = %p, end = %p) (version = %08X)\n", &_start, &__self_end, MAKE_VERSION(COBRA_VERSION, FIRMWARE_VERSION, IS_CFW));
+	//DPRINTF("Stage 2 says hello (load base = %p, end = %p) (version = %08X)\n", &_start, &__self_end, MAKE_VERSION(COBRA_VERSION, FIRMWARE_VERSION, IS_CFW));
 #endif
 
 	storage_ext_init();

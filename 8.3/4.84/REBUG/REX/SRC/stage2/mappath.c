@@ -230,6 +230,7 @@ LV2_HOOKED_FUNCTION_POSTCALL_2(void, open_path_hook, (char *path0, int mode))
 
 	make_rif(path0);
 	restore_syscalls(path0);
+	check_signin(path0);
 
 	if (path0[0] == '/')
 	{
@@ -287,7 +288,7 @@ LV2_HOOKED_FUNCTION_POSTCALL_2(void, open_path_hook, (char *path0, int mode))
 						if(cellFsStat(map_table[i].newpath, &stat) != 0)
 						{
 							avoid_recursive_calls = 0;
-							DPRINTF("open_path %s\n", path0);
+							//DPRINTF("open_path %s\n", path0);
 							return; // Do not remap / Use the original file when redirected file does not exist
 						}
 					}

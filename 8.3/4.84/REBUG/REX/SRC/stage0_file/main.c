@@ -16,9 +16,7 @@
 
 void main(void)
 {
-	// Cobra will be loaded in 0x8000000000700000 by Evilnat
-	void *stage2 = (void *)MKA(0x700000);
-	int stage2_loaded = 0;
+	void *stage2 = NULL;
 	
 	f_desc_t f;
 	int (* func)(void);	
@@ -37,18 +35,30 @@ void main(void)
 	
 	if (cellFsStat(STAGE2_FILE, &stat) == 0)
 	{
-		if (cellFsOpen(STAGE2_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) == 0)
-		{		
-			if (cellFsRead(fd, stage2, stat.st_size, &rs) == 0)			
-				stage2_loaded = 1;				
+		// Avoid loading an empty stage2 or with a size greater than 0x1FE00
+		if(stat.st_size != 0 && stat.st_size < 0x1FE00)
+		{
+			if (cellFsOpen(STAGE2_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) == 0)
+			{
+				stage2 = alloc(stat.st_size, 0x27);
+
+				if(stage2)
+				{		
+					if (cellFsRead(fd, stage2, stat.st_size, &rs) != 0)
+					{
+						dealloc(stage2, 0x27);
+						stage2 = NULL;
+					}						
+				}				
 				
-			cellFsClose(fd);
-		}					
-	}	
+				cellFsClose(fd);
+			}
+		}
+	}
 
 	f.toc = (void *)MKA(TOC);
 	
-	if(stage2_loaded)		
+	if(stage2)		
 	{
 		// stage2 fail save by bguerville / AV
 		cellFsUtilMount_h("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0, 0, 0, 0, 0);

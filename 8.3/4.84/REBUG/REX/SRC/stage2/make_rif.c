@@ -128,7 +128,7 @@ int create_act_dat(const char *userid)
 	char full_path[120], exdata_dir[120];
 	CellFsStat stat;
 
-	DPRINTF("Creating act.dat for userID %s...\n", userid);
+	//DPRINTF("Creating act.dat for userID %s...\n", userid);
 
 	uint8_t timedata[0x10] = 
 	{ 
@@ -218,7 +218,7 @@ void make_rif(const char *path)
 				cellFsClose(fd);
 			}
 
-			DPRINTF("rap_path: %s output: %s\n", rap_path, path);
+			//DPRINTF("rap_path: %s output: %s\n", rap_path, path);
 
 			// Search act.dat in home dirs
 			for(int i = 1; i < 100; i++)
@@ -227,7 +227,7 @@ void make_rif(const char *path)
 				
 				if(cellFsStat(buffer, &stat) == SUCCEEDED) 
 				{
-					DPRINTF("Found act.dat in %08d\n", i);
+					//DPRINTF("Found act.dat in %08d\n", i);
 					act_dat_found = 1;
 					break;
 				}	
@@ -253,7 +253,7 @@ void make_rif(const char *path)
 			strncpy(act_path, path, strrchr(path, '/') - path);
 			strcpy(act_path + strlen(act_path), "/act.dat\0");
 
-			DPRINTF("act_path: %s content_id: %s\n", act_path, content_id);
+			//DPRINTF("act_path: %s content_id: %s\n", act_path, content_id);
 
 			if(cellFsOpen(act_path, CELL_FS_O_RDONLY, &fd, 0666, NULL, 0) == SUCCEEDED)
 			{

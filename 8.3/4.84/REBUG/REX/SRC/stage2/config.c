@@ -56,7 +56,8 @@ static void check_and_correct(CobraConfig *cfg)
 	if (cfg->ps2softemu > 1)
 		cfg->ps2softemu = 0;
 	
-	if (cfg->spoof_version > MAX_SPOOF_VERSION)	
+	// Disabled
+	/*if (cfg->spoof_version > MAX_SPOOF_VERSION)	
 		cfg->spoof_version = 0;	
 	else 
 	{
@@ -67,10 +68,15 @@ static void check_and_correct(CobraConfig *cfg)
 		
 		if (h > 9 || l > 9)		
 			cfg->spoof_version = 0;		
-	}
-	
-	if (cfg->spoof_revision > MAX_SPOOF_REVISION)
-		cfg->spoof_revision = 0;
+	}*/
+
+	// Disabled
+	/*if (cfg->spoof_revision > MAX_SPOOF_REVISION)
+		cfg->spoof_revision = 0;*/
+
+	cfg->spoof_version = 0;
+
+	cfg->spoof_revision = 0;	
 
 	if(cfg->allow_restore_sc > 1)
 		cfg->allow_restore_sc = 0;
@@ -142,8 +148,8 @@ int read_cobra_config(void)
 	// Removed. Now condition_ps2softemu has another meaning and it is set automatically in storage_ext if no BC console
 	//condition_ps2softemu = config.ps2softemu;
 
-	DPRINTF("Configuration read.\n+ bd_video_region = %d, + dvd_video_region = %d\n+ spoof_version = %04X, + spoof_revision = %d\n+ fan_speed = %02X, + ps2_speed = %02X\n+ allow_restore_sc = %X, + skip_existing_rif = %02X\n",
-		bd_video_region, dvd_video_region, config.spoof_version, config.spoof_revision, fan_speed, ps2_speed, allow_restore_sc, skip_existing_rif);
+	/*DPRINTF("Configuration read.\n+ bd_video_region = %d, + dvd_video_region = %d\n+ spoof_version = %04X, + spoof_revision = %d\n+ fan_speed = %02X, + ps2_speed = %02X\n+ allow_restore_sc = %X, + skip_existing_rif = %02X\n",
+		bd_video_region, dvd_video_region, config.spoof_version, config.spoof_revision, fan_speed, ps2_speed, allow_restore_sc, skip_existing_rif);*/
 	
 	return SUCCEEDED;
 }
@@ -213,34 +219,4 @@ int sys_write_cobra_config(CobraConfig *cfg)
 	skip_existing_rif = config.skip_existing_rif;
 	
 	return write_cobra_config();
-}
-
-// For internal purposes
-// Saves current value in cobra config through opcodes
-// Only for fan_speed, ps2_speed, allow_restore_sc and skip_existing_rif
-int save_config_value(uint8_t member, uint8_t value)
-{
-	int fd;
-	uint64_t r;
-	
-	if(cellFsOpen(COBRA_CONFIG_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != SUCCEEDED)
-		return 1;
-		
-	cellFsRead(fd, &config, sizeof(config), &r);
-	cellFsClose(fd);
-
-	if(member == CFG_FAN_SPEED)		
-		config.fan_speed = value;   
-	else if(member == CFG_PS2_SPEED)		
-		config.ps2_speed = value;  
-	else if(member == CFG_ALLOW_RESTORE_SC)		
-		config.allow_restore_sc = value;   
-	else if(member == CFG_SKIP_EXISTING_RIF)		
-		config.skip_existing_rif = value;
-	else
-		return 1;
-
-	sys_write_cobra_config((CobraConfig *)&config);
-
-	return SUCCEEDED;
 }

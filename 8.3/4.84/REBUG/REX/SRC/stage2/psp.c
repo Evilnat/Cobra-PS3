@@ -113,7 +113,7 @@ int sys_psp_read_header(int fd, char *buf, uint64_t nbytes, uint64_t *nread)
 	uint32_t *unk;
 	process_t process;
 
-	DPRINTF("umd read header: %p %lx\n", buf, nbytes);
+	//DPRINTF("umd read header: %p %lx\n", buf, nbytes);
 
 	buf = get_secure_user_ptr(buf);
 	nread = get_secure_user_ptr(nread);
@@ -146,12 +146,12 @@ int sys_psp_read_header(int fd, char *buf, uint64_t nbytes, uint64_t *nread)
 				if (strstr(filename, "/emulator_api.sprx"))
 				{
 					emulator_api_base = segments[0].base;
-					DPRINTF("emulator_api base = %08lx\n", emulator_api_base);
+					//DPRINTF("emulator_api base = %08lx\n", emulator_api_base);
 				}
 				else if (strstr(filename, "/PEmuCoreLib.sprx"))
 				{
 					pemucorelib_base = segments[0].base;
-					DPRINTF("PEmuCoreLib base = %08lx\n", pemucorelib_base);
+					//DPRINTF("PEmuCoreLib base = %08lx\n", pemucorelib_base);
 				}
 			}
 		}
@@ -183,7 +183,7 @@ int sys_psp_read_header(int fd, char *buf, uint64_t nbytes, uint64_t *nread)
 	*(uint32_t *)(buf + 0x64) = (umd_size / 0x800) - 1; // Last sector of umd
 	strncpy(buf + 0x70, psp_id, 10);
 
-	DPRINTF("ID: %s\n", psp_id);
+	//DPRINTF("ID: %s\n", psp_id);
 
 	if (mutex && user_mutex)
 	{
@@ -200,7 +200,7 @@ int sys_psp_read_umd(int unk, void *buf, uint64_t sector, uint64_t ofs, uint64_t
 	uint64_t offset, dummy;
 	int ret;
 
-	DPRINTF("umd read %lx %lx %lx\n", sector, ofs, size);
+	//DPRINTF("umd read %lx %lx %lx\n", sector, ofs, size);
 
 	if (!mutex)
 	{
@@ -211,13 +211,13 @@ int sys_psp_read_umd(int unk, void *buf, uint64_t sector, uint64_t ofs, uint64_t
 
 		if (ret)
 		{
-			DPRINTF("Cannot open user mutex, using an own one\n");
+			//DPRINTF("Cannot open user mutex, using an own one\n");
 			mutex_create(&mutex, SYNC_PRIORITY, SYNC_NOT_RECURSIVE);
 			user_mutex = 0;
 		}
 		else
 		{
-			DPRINTF("user mutex opened succesfully\n");
+			//DPRINTF("user mutex opened succesfully\n");
 			user_mutex = 1;
 			close_kernel_object_handle(object_table, obj_handle);
 		}
@@ -306,14 +306,16 @@ int sys_psp_set_umdfile(char *file, char *id, int prometheus)
 	condition_psp_prometheus = prometheus;
 
 	if (prometheus)
-		DPRINTF("Using prometheus patch.\n");
+	{
+		//DPRINTF("Using prometheus patch.\n");
+	}
 
 	if (!patches_backup)
 	{
 		switch(vsh_check)
 		{
 			case VSH_CEX_HASH:
-				DPRINTF("Now patching PSP DRM In Retail VSH..\n");
+				//DPRINTF("Now patching PSP DRM In Retail VSH..\n");
 
 				patches_backup = malloc(sizeof(psp_drm_patches));
 
@@ -321,7 +323,7 @@ int sys_psp_set_umdfile(char *file, char *id, int prometheus)
 
 				for (int i = 0; psp_drm_patches[i].offset != 0; i++)
 				{
-					DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)psp_drm_patches[i].offset, (uint32_t)psp_drm_patches[i].data);
+					//DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)psp_drm_patches[i].offset, (uint32_t)psp_drm_patches[i].data);
 
 					copy_from_process(vsh_process, (void *)(uint64_t)(0x10000 + patches_backup[i].offset), &patches_backup[i].data, 4);
 
@@ -331,7 +333,7 @@ int sys_psp_set_umdfile(char *file, char *id, int prometheus)
 			break;
 
 			case VSH_DEX_HASH:
-				DPRINTF("Now patching PSP DRM In DEBUG VSH..\n");
+				//DPRINTF("Now patching PSP DRM In DEBUG VSH..\n");
 
 				patches_backup = alloc(sizeof(psp_drm_dex_patches), 0x27);
 			
@@ -339,7 +341,7 @@ int sys_psp_set_umdfile(char *file, char *id, int prometheus)
 					
 				for (int i = 0; psp_drm_dex_patches[i].offset != 0; i++)
 				{
-					DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)psp_drm_dex_patches[i].offset, (uint32_t)psp_drm_dex_patches[i].data);
+					//DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)psp_drm_dex_patches[i].offset, (uint32_t)psp_drm_dex_patches[i].data);
 			
 					copy_from_process(vsh_process, (void *)(uint64_t)(0x10000+patches_backup[i].offset), &patches_backup[i].data, 4);
 				
@@ -349,7 +351,7 @@ int sys_psp_set_umdfile(char *file, char *id, int prometheus)
 			break;
 
 			default:
-				DPRINTF("Unknown VSH HASH, PSP DRM was not patched!\n");
+				//DPRINTF("Unknown VSH HASH, PSP DRM was not patched!\n");
 				break;
 		}
 	}
@@ -397,7 +399,7 @@ int sys_psp_prx_patch(uint32_t *unk, uint8_t *elf_buf, void *link_register)
 			ehdr = (Elf32_Ehdr *)elf_buf;
 			phdr = (Elf32_Phdr *)(elf_buf + swap32(ehdr->e_phoff));
 			modinfo = (PspModuleInfo *)(elf_buf + swap32(phdr[0].p_paddr));
-			DPRINTF("Module %s (elf_buf=%p)\n", modinfo->modname, elf_buf);
+			//DPRINTF("Module %s (elf_buf=%p)\n", modinfo->modname, elf_buf);
 		}
 	}
 #endif
@@ -414,9 +416,7 @@ int sys_psp_prx_patch(uint32_t *unk, uint8_t *elf_buf, void *link_register)
 		return SUCCEEDED;
 	}
 
-	#ifdef DEBUG
-		//DPRINTF("sys_psp_set_emu_path has been deleted\n");
-	#endif
+	//DPRINTF("sys_psp_set_emu_path has been deleted\n");
 
 	//DPRINTF("pspemu path set to %s\n", path);
 
@@ -431,7 +431,7 @@ int sys_psp_prx_patch(uint32_t *unk, uint8_t *elf_buf, void *link_register)
 
 int sys_psp_post_savedata_initstart(int result, void *param)
 {
-	DPRINTF("Savedata init start\n");
+	//DPRINTF("Savedata init start\n");
 
 	if (result == 0)
 		savedata_param = get_secure_user_ptr(param);
@@ -441,11 +441,11 @@ int sys_psp_post_savedata_initstart(int result, void *param)
 
 int sys_psp_post_savedata_shutdownstart(void)
 {
-	DPRINTF("Savedata shutdown start\n");
+	//DPRINTF("Savedata shutdown start\n");
 
 	if (savedata_param)
 	{
-		DPRINTF("Original bind: %08X\n", savedata_param[0x34/4]);
+		//DPRINTF("Original bind: %08X\n", savedata_param[0x34/4]);
 			
 		savedata_param[0x34/4] = swap32(1); // SCE_UTILITY_SAVEDATA_BIND_OK
 		savedata_param = NULL;
@@ -470,7 +470,7 @@ int sys_psp_sony_bug(uint32_t *mips_registers, void *unk, uint32_t mips_PC)
 {
 	DPRINTF("sys_psp_sony_bug, game is gonna crash\n");
 
-	DPRINTF("PSP registers info:\n");
+	/*DPRINTF("PSP registers info:\n");
 	DPRINTF("PC: %08X\n", mips_PC);
 	DPRINTF("zr: %08X   at: %08X\n", mips_registers[0], mips_registers[1]);
 	DPRINTF("v0: %08X   v1: %08X\n", mips_registers[2], mips_registers[3]);
@@ -487,7 +487,7 @@ int sys_psp_sony_bug(uint32_t *mips_registers, void *unk, uint32_t mips_PC)
 	DPRINTF("t8: %08X   t9: %08X\n", mips_registers[24], mips_registers[25]);
 	DPRINTF("k0: %08X   k1: %08X\n", mips_registers[26], mips_registers[27]);
 	DPRINTF("gp: %08X   sp: %08X\n", mips_registers[28], mips_registers[29]);
-	DPRINTF("s8: %08X   ra: %08X\n", mips_registers[30], mips_registers[31]);
+	DPRINTF("s8: %08X   ra: %08X\n", mips_registers[30], mips_registers[31]);*/
 
 	/*for (int i = 32; i < 1024; i += 2)
 	{
