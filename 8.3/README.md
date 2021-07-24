@@ -40,7 +40,9 @@ Ported from Cobra 8.3 from @aldostools.
     All done
 
 ### Data that need to be ported to every CFW version
+
 The following files have data that must be ported to each firmware version:
+
     • lv2\include\lv2\symbols.h
     • ps2emu\include\ps2emu\symbols.h
     • ps2emu_stage1_file\Makefile.gxemu
