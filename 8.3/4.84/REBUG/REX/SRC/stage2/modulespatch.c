@@ -688,7 +688,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, load_process_hooked, (process_t proce
 		{
 			//DPRINTF("COBRA: Safe mode detected\n");
 
-			// Disable stage2.bin by haxxxen
+			// Disable stage2.cex/stage2.dex by haxxxen
 			// Disabling it prevents issues while we are in Recovery Menu
 			cellFsUtilMount_h("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0, 0, 0, 0, 0);
 
@@ -704,7 +704,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, load_process_hooked, (process_t proce
 		}		
 	}
 
-	// CFW2OFW fix by Evilnat
+	// CFW2OFW Fix by Evilnat
 	// Restores disc in BD drive, this fixes leftovers of previous game mounted
 	if (CFW2OFW_game && !strcmp(path, "/dev_flash/vsh/module/mcore.self"))
 	{
