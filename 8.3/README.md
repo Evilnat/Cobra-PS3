@@ -26,12 +26,11 @@ Ported from Cobra 8.3 from @aldostools.
     • Fixed Control FAN payload, avoids loading previous mode (by Evilnat)
     • Disable stage2.bin while Recovery Menu is loaded (by haxxxen)
     • Fixed max FAN speed after shutdown (by Evilnat)
-    • Improved Habib's QA flags code imported by aldostools (by Evilnat)
+    • Improve Habib's QA flags code imported by aldostools (by Evilnat)
     • Fixed black screen in CFW2OFW converted games (by Evilnat)
     • Added sm_ring_buzzer with single_beep, double_beep and triple_beep (by Evilnat)
     • Skip license creation (rif) if it already exists (by aldo)
     • Added cellFsMkdir symbol (by Evilnat)
-    • Fixed freezes on NAND with payload new address (by Evilnat)
     • Added constant FAN Speed while a PS2 ISO is launched (by Evilnat)
     • Check/Disable/Enable QA Flags (by Evilnat)
     • Creation of act.dat while launching a PSN game (by Evilnat)
@@ -39,4 +38,19 @@ Ported from Cobra 8.3 from @aldostools.
     
 ###### To do:
     All done
-    
+
+### Data that need to be ported to every CFW version
+The following files have data that must be ported to each firmware version:
+    • lv2\include\lv2\symbols.h
+    • ps2emu\include\ps2emu\symbols.h
+    • ps2emu_stage1_file\Makefile.gxemu
+    • ps2emu_stage1_file\Makefile.hwemu
+    • ps2emu_stage2\gxemu\main.c
+    • ps2emu_stage2\hwemu\main.c
+    • ps2emu_stage2\netemu\main.c
+    • stage0_file\Makefile
+    • stage0_file\start.S
+    • stage2\main.c
+    • stage2\modulespatch.h
+    • stage2\ps3mapi_core.h
+    • stage2\qa.h
