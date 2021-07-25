@@ -35,6 +35,7 @@ Ported from Cobra 8.3 from @aldostools.
     • Check/Disable/Enable QA Flags (by Evilnat)
     • Creation of act.dat while launching a PSN game (by Evilnat)
     • Convert someones's else savedata to your own savedata (by Evilnat)
+    • Block Log In on PSN/SEN when CFW syscalls are enabled (by DeViL303)
     
 ###### To do:
     All done
