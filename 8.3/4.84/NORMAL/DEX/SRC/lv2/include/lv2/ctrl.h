@@ -8,7 +8,7 @@
 #include <lv2/lv2.h>
 #include <lv2/symbols.h>
 
-#define SYSM_OBJ_OFFSET 		0x8000000000347E40ULL
+#define SYSM_OBJ_OFFSET 		0x800000000036DC50ULL
 
 #define SINGLE_BEEP 			0x6
 #define DOUBLE_BEEP 			0x36
