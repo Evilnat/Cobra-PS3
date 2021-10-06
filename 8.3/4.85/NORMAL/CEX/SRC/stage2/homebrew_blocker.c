@@ -142,7 +142,9 @@ int block_homebrew(const char *path)
 				!strncmp(gameid, "BLES13408", 9) || // FCEU NES Emulator
 				!strncmp(gameid, "BLES01337", 9) || // Awesome File Manager
 				!strncmp(gameid, "BLND00001", 9) || // dev_blind
-				!strncmp(gameid, "NPEA90124", 9) //|| // SEN Enabler
+				!strncmp(gameid, "NPEA90124", 9) || // SEN Enabler
+				!strncmp(gameid, "NP0APOLLO", 9) || // Apollo Save Tool
+				!strncmp(gameid, "NP00PKGI3", 9) // // pkgi-ps3
 				//!strcmp (path, "/dev_bdvd/PS3_UPDATE/PS3UPDAT.PUP") //bluray disk updates
 				) allow = 0;
 
