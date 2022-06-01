@@ -146,6 +146,7 @@ int ps2emu_type;
 
 static int video_mode = -2;
 static uint32_t base_offset = 0;
+uint32_t forced_video_mode = 0; // 0 = Detect, 1 = NTSC, 2 = PAL
 
 //static char *encrypted_image;
 //static int encrypted_image_fd = -1;
@@ -987,6 +988,7 @@ int process_get_psx_video_mode(void)
 		page_free(NULL, dma, 0x2F);
 	}
 
+	forced_video_mode = (ret + 1);
 	return ret;
 }
 
@@ -2025,7 +2027,7 @@ static INLINE void do_video_mode_patch(void)
 		{
 			if (video_mode != 2)
 			{
-				int ret = get_psx_video_mode();
+				int ret = forced_video_mode ? (forced_video_mode - 1) : get_psx_video_mode();
 				if (ret >= 0) //{
 					video_mode = ret;/*condition_game_ext_psx=0;}
 				 if(ret == -1 || ps2emu_type!=PS2EMU_SW) {condition_game_ext_psx=1;}*/
@@ -2826,6 +2828,7 @@ static INLINE void do_umount_discfile(void)
 		}
 	}
 
+	forced_video_mode = 0;
 	disc_emulation = EMU_OFF;
 	total_emulation = 0;
 	emu_ps3_rec = 0;
@@ -2985,6 +2988,12 @@ int mount_ps_cd(char *file, unsigned int trackscount, ScsiTrackDescriptor *track
 
 			if(cd_sector_size == 2352)
 			{
+				// force video by title id in file name
+				if(strstr(file, "NTSC"))
+					forced_video_mode = 1;
+				if(strstr(file, "PAL"))
+					forced_video_mode = 2;
+				
 				// detect sector size
 				ret = cellFsOpen(file, CELL_FS_O_RDONLY, &discfd, 0, NULL, 0);
 				if(ret == SUCCEEDED)
