@@ -128,6 +128,11 @@ static event_queue_t command_queue, result_queue;
 static event_port_t proxy_command_port;
 static event_queue_t proxy_result_queue;
 
+static MSF lsd[32];
+static uint32_t lsd_start;
+static uint32_t lsd_end;
+
+static int subqfd = UNDEFINED;
 static int discfd = -1;
 static int disc_emulation;
 static int total_emulation;
@@ -1964,17 +1969,40 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 					SubChannelQ *subq = (SubChannelQ *)p;
 					memset(subq, 0, sizeof(SubChannelQ));
 
-					ScsiTrackDescriptor *track = find_track_by_lba(lba);
-					subq->control_adr = ((track->adr_control << 4) & 0xF0) | (track->adr_control >> 4);
-					subq->track_number = track->track_number;
-					subq->index_number = 1;
+					// custom subchannel
+					ret = -1;
+					uint32_t lba2 = lba + 150;
+					lba_to_msf_bcd(lba2, &subq->amin, &subq->asec, &subq->aframe);
+					if((subqfd != -1) && (lba2 >= lsd_start) && (lba2 <= lsd_end))
+					{
+						size_t r;
+						for(uint8_t n = 0; n < 32; n++)
+						{
+							if(lsd[n].amin > subq->amin) break;
+							if((subq->amin == lsd[n].amin) && (subq->asec == lsd[n].asec) && (subq->aframe == lsd[n].aframe))
+							{
+								cellFsLseek(subqfd, (n * 15) + sizeof(MSF), SEEK_SET, &r);
+								ret = cellFsRead(subqfd, (void *)subq, sizeof(SubChannelQ), &r);
+								if(subq->control_adr <= 0 || r != sizeof(SubChannelQ)) ret = UNDEFINED;
+									break;
+							}
+						}
+					}
 
-					if (user_data)
-						lba_to_msf_bcd(lba, &subq->min, &subq->sec, &subq->frame);
+					if(ret)
+					{
+						ScsiTrackDescriptor *track = find_track_by_lba(lba);
+						subqsubq->control_adr = ((track->adr_control << 4) & 0xF0) | (track->adr_control >> 4);
+						subq->track_number = track->track_number;
+						subq->index_number = 1;
 
-					lba_to_msf_bcd(lba + 150, &subq->amin, &subq->asec, &subq->aframe);
-					subq->crc = calculate_subq_crc((uint8_t *)subq);
+						if (user_data)
+							lba_to_msf_bcd(lba, &subq->min, &subq->sec, &subq->frame);
 
+						//lba_to_msf_bcd(lba + 150, &subq->amin, &subq->asec, &subq->aframe);
+						subq->crc = calculate_subq_crc((u8 *)subq);
+					}
+					
 					p += sizeof(SubChannelQ);
 					lba++;
 				}
@@ -2791,6 +2819,12 @@ static INLINE void do_umount_discfile(void)
 		discfd = -1;
 	}
 
+	if (subqfd != -1)
+	{
+		cellFsClose(subqfd);
+		subqfd = -1;
+	}
+
 	if (discfile)
 	{
 		if (discfile->cached_sector)
@@ -2985,6 +3019,39 @@ int mount_ps_cd(char *file, unsigned int trackscount, ScsiTrackDescriptor *track
 
 			if(cd_sector_size == 2352)
 			{
+				///////// Open LSD subchannel file ///////
+				char file_ext[5];
+				strcpy(file_ext, ext);
+
+				strcpy(ext, ".lsd");
+				ret = cellFsStat(file, &stat);
+				if(ret)
+				{
+					strcpy(ext, ".LSD");
+					ret = cellFsStat(file, &stat);
+				}
+				if((ret == CELL_FS_SUCCEEDED) && (stat.st_size == (32 * 15)))
+				{
+					ret = cellFsOpen(file, CELL_FS_O_RDONLY, &subqfd, 0, NULL, 0);
+					// Read list of LibCrypt sectors in MSF
+					for(uint8_t n = 0; n < 32; n++)
+					{
+						size_t r;
+						cellFsLseek(subqfd, n * 15, SEEK_SET, &r);
+						ret = cellFsRead(subqfd, &lsd[n], sizeof(MSF), &r);
+						if(ret) break;
+					}
+					// Set LibCrypt range
+					lsd_start = msf_to_lba(lsd[00]);
+					lsd_end   = msf_to_lba(lsd[31]);
+				}
+				if(ret)
+				{
+					subqfd = -1;
+				}
+				strcpy(ext, file_ext);
+				////////////////////////////////////
+				
 				// detect sector size
 				ret = cellFsOpen(file, CELL_FS_O_RDONLY, &discfd, 0, NULL, 0);
 				if(ret == SUCCEEDED)
