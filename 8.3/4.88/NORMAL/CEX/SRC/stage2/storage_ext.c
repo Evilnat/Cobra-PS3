@@ -128,7 +128,10 @@ static event_queue_t command_queue, result_queue;
 static event_port_t proxy_command_port;
 static event_queue_t proxy_result_queue;
 
-static MSF lsd[32];
+#define LC_SECTORS	32
+#define LSD_STRUCT	15
+
+static MSF lsd[LC_SECTORS];
 static uint32_t lsd_start;
 static uint32_t lsd_end;
 
@@ -1944,7 +1947,7 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 			}
 			else
 			{
-				uint8_t *p = buf;
+				uint8_t *p = buf; extend_kstack(0);
 
 				for (int i = 0; i < length; i++)
 				{
@@ -1976,15 +1979,15 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 					if((subqfd != -1) && (lba2 >= lsd_start) && (lba2 <= lsd_end))
 					{
 						size_t r;
-						for(uint8_t n = 0; n < 32; n++)
+						for(uint8_t n = 0; n < LC_SECTORS; n++)
 						{
 							if(lsd[n].amin > subq->amin) break;
 							if((subq->amin == lsd[n].amin) && (subq->asec == lsd[n].asec) && (subq->aframe == lsd[n].aframe))
 							{
-								cellFsLseek(subqfd, (n * 15) + sizeof(MSF), SEEK_SET, &r);
-								ret = cellFsRead(subqfd, (void *)subq, sizeof(SubChannelQ), &r);
-								if(subq->control_adr <= 0 || r != sizeof(SubChannelQ)) ret = UNDEFINED;
-									break;
+								cellFsLseek(subqfd, (n * LSD_STRUCT) + sizeof(MSF), SEEK_SET, &r);
+								ret = cellFsRead(subqfd, (void *)subq, LSD_STRUCT - sizeof(MSF), &r);
+								if(subq->control_adr <= 0 || r != LSD_STRUCT - sizeof(MSF)) ret = UNDEFINED;
+								break;
 							}
 						}
 					}
@@ -3019,7 +3022,7 @@ int mount_ps_cd(char *file, unsigned int trackscount, ScsiTrackDescriptor *track
 
 			if(cd_sector_size == 2352)
 			{
-				///////// Open LSD subchannel file ///////
+				///////// Open LSD (LibCrypt Subchannel Data) for protected PAL games /////// AV:2022-06-02
 				char file_ext[5];
 				strcpy(file_ext, ext);
 
@@ -3030,24 +3033,35 @@ int mount_ps_cd(char *file, unsigned int trackscount, ScsiTrackDescriptor *track
 					strcpy(ext, ".LSD");
 					ret = cellFsStat(file, &stat);
 				}
-				if((ret == CELL_FS_SUCCEEDED) && (stat.st_size == (32 * 15)))
+				if((ret == CELL_FS_SUCCEEDED) && (stat.st_size == (LC_SECTORS * LSD_STRUCT)))
 				{
 					ret = cellFsOpen(file, CELL_FS_O_RDONLY, &subqfd, 0, NULL, 0);
 					// Read list of LibCrypt sectors in MSF
-					for(uint8_t n = 0; n < 32; n++)
+					if(ret == CELL_FS_SUCCEEDED)
 					{
 						size_t r;
-						cellFsLseek(subqfd, n * 15, SEEK_SET, &r);
-						ret = cellFsRead(subqfd, &lsd[n], sizeof(MSF), &r);
-						if(ret) break;
+						for(u8 n = 0; n < LC_SECTORS; n++)
+						{
+							cellFsLseek(subqfd, n * LSD_STRUCT, SEEK_SET, &r);
+							ret = cellFsRead(subqfd, &lsd[n], sizeof(MSF), &r);
+							if(ret) break;
+						}
 					}
-					// Set LibCrypt range
-					lsd_start = msf_to_lba(lsd[00]);
-					lsd_end   = msf_to_lba(lsd[31]);
 				}
-				if(ret)
+				if (subqfd != -1)
 				{
-					subqfd = -1;
+					if(ret == CELL_FS_SUCCEEDED)
+					{
+						// Set LibCrypt range
+						lsd_start = msf_to_lba(lsd[0]);
+						lsd_end   = msf_to_lba(lsd[LC_SECTORS - 1]);
+					}
+					else
+					{
+						// Close LSD file
+						cellFsClose(subqfd);
+						subqfd = -1;
+					}
 				}
 				strcpy(ext, file_ext);
 				////////////////////////////////////
