@@ -796,6 +796,38 @@ int process_fake_storage_event_cmd(FakeStorageEventCmd *cmd)
 	return ret;
 }
 
+////////////// READ LSD SECTORS ////////////////////
+static void read_libcrypt_sectors(const char *file)
+{
+	int ret = cellFsOpen(file, CELL_FS_O_RDONLY, &subqfd, 0, NULL, 0);
+	// Read list of LibCrypt sectors in MSF
+	if(ret == CELL_FS_SUCCEEDED)
+	{
+		size_t r;
+		for(u8 n = 0; n < LC_SECTORS; n++)
+		{
+			cellFsLseek(subqfd, n * LSD_STRUCT, SEEK_SET, &r);
+			ret = cellFsRead(subqfd, &lsd[n], sizeof(MSF), &r);
+			if(ret) break;
+		}
+	}
+	if (subqfd != -1)
+	{
+		if(ret == CELL_FS_SUCCEEDED)
+		{
+			// Set LibCrypt range
+			lsd_start = msf_to_lba(lsd[0]);
+			lsd_end   = msf_to_lba(lsd[LC_SECTORS - 1]);
+		}
+		else
+		{
+			// Close LSD file
+			cellFsClose(subqfd);
+			subqfd = -1;
+		}
+	}
+}
+
 ////////////// PROCESS PSX VIDEO MODE //////////////
 static void get_cd_sector_size(unsigned int trackscount)
 {
@@ -958,6 +990,12 @@ int process_get_psx_video_mode(void)
 							 exe_path[1] == 'I'))							// SIPS
 								ret = (exe_path[2] == 'E');					// SLES, SCES, SCED, SLED
 
+						if(subqfd == -1)
+						{
+							sprintf(buf, "/dev_hdd0/tmp/lsd/%s.lsd", exe_path);
+							read_libcrypt_sectors(buf);
+						}
+						
 						// detect PAL by PSX EXE
 						if(ret == -1)
 						{
@@ -3035,33 +3073,7 @@ int mount_ps_cd(char *file, unsigned int trackscount, ScsiTrackDescriptor *track
 				}
 				if((ret == CELL_FS_SUCCEEDED) && (stat.st_size == (LC_SECTORS * LSD_STRUCT)))
 				{
-					ret = cellFsOpen(file, CELL_FS_O_RDONLY, &subqfd, 0, NULL, 0);
-					// Read list of LibCrypt sectors in MSF
-					if(ret == CELL_FS_SUCCEEDED)
-					{
-						size_t r;
-						for(u8 n = 0; n < LC_SECTORS; n++)
-						{
-							cellFsLseek(subqfd, n * LSD_STRUCT, SEEK_SET, &r);
-							ret = cellFsRead(subqfd, &lsd[n], sizeof(MSF), &r);
-							if(ret) break;
-						}
-					}
-				}
-				if (subqfd != -1)
-				{
-					if(ret == CELL_FS_SUCCEEDED)
-					{
-						// Set LibCrypt range
-						lsd_start = msf_to_lba(lsd[0]);
-						lsd_end   = msf_to_lba(lsd[LC_SECTORS - 1]);
-					}
-					else
-					{
-						// Close LSD file
-						cellFsClose(subqfd);
-						subqfd = -1;
-					}
+					read_libcrypt_sectors(file);
 				}
 				strcpy(ext, file_ext);
 				////////////////////////////////////
