@@ -52,6 +52,7 @@
 #define SCSI_CMD_READ_2064						0xD1 /* Not reall name. Not standard cmd? */
 
 #define itob(i)               					((i)/10*16 + (i)%10)
+#define btoi(b)               					(10*(b>>4) + (b&15))
 
 enum DvdBookType
 {
@@ -331,10 +332,10 @@ static inline uint64_t msf_to_lba(uint8_t m, uint8_t s, uint8_t f)
 	return lba;
 }
 */
-static inline uint32_t msf_to_lba(MSF msf)
+static inline u16 msf_to_lba(MSF msf)
 {
-	uint32_t lba = (msf.amin * 60) + msf.asec;
-	return (lba * 75) + msf.aframe;
+	u32 lba = (60 * btoi(msf.amin)) + btoi(msf.asec);
+	return (u16)((lba * 75) + btoi(msf.aframe));
 }
 
 #ifdef DEBUG
