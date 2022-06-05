@@ -332,10 +332,10 @@ static inline uint64_t msf_to_lba(uint8_t m, uint8_t s, uint8_t f)
 	return lba;
 }
 */
-static inline u16 msf_to_lba(MSF msf)
+static inline uint16_t msf_to_lba(MSF msf)
 {
-	u32 lba = (60 * btoi(msf.amin)) + btoi(msf.asec);
-	return (u16)((lba * 75) + btoi(msf.aframe));
+	uint32_t lba = (60 * btoi(msf.amin)) + btoi(msf.asec);
+	return (uint16_t)((lba * 75) + btoi(msf.aframe));
 }
 
 #ifdef DEBUG
