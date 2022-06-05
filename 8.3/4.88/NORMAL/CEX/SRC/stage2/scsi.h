@@ -209,9 +209,9 @@ typedef struct _ScsiCmdReadCd
 
 typedef struct _MSF
 {
-	u8 amin;
-	u8 asec;
-	u8 aframe;
+	uint8_t amin;
+	uint8_t asec;
+	uint8_t aframe;
 } __attribute__((packed)) MSF;
 
 typedef struct _SubChannelQ
