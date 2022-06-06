@@ -1648,7 +1648,7 @@ static INLINE ScsiTrackDescriptor *find_track_by_lba(uint32_t lba)
 
 	return NULL;
 }
-
+/*
 static uint16_t q_crc_lut[256] =
 {
 	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5, 0x60C6, 0x70E7, 0x8108,
@@ -1692,7 +1692,7 @@ static INLINE uint16_t calculate_subq_crc(uint8_t *data)
 
 	return ~crc;
 }
-
+*/
 int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, uint64_t outlen, int is2048)
 {
 	if (inlen < 1)
