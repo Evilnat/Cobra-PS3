@@ -332,7 +332,7 @@ static inline uint64_t msf_to_lba(uint8_t m, uint8_t s, uint8_t f)
 	return lba;
 }
 */
-static inline uint16_t msf_to_lba(MSF msf)
+static inline uint16_t msf_bcd_to_lba(MSF msf)
 {
 	uint32_t lba = (60 * btoi(msf.amin)) + btoi(msf.asec);
 	return (uint16_t)((lba * 75) + btoi(msf.aframe));
