@@ -132,6 +132,7 @@ static event_queue_t proxy_result_queue;
 #define UNDEFINED   -1
 
 static u8  lsd_header; // 0(lsd) / 4(sbi)
+static u8  lsd_len;    // 12(lsd)/10(sbi)
 static u8  lsd_struct; // 15(lsd)/14(sbi)
 static u16 lsd[LC_SECTORS];
 
@@ -803,9 +804,9 @@ static void read_libcrypt_sectors(const char *file)
 	if(ret) return;
 
 	if(strstr(file, ".sbi"))
-		lsd_struct = 14, lsd_header = 4;
+		{lsd_struct = 14, lsd_header = 4, lsd_len = 10;]
 	else
-		lsd_struct = 15, lsd_header = 0;
+		{lsd_struct = 15, lsd_header = 0, lsd_len = 12;}
 
 	// Read list of LibCrypt sectors in MSF
 	size_t r; MSF msf;
@@ -1648,7 +1649,7 @@ static INLINE ScsiTrackDescriptor *find_track_by_lba(uint32_t lba)
 
 	return NULL;
 }
-/*
+
 static uint16_t q_crc_lut[256] =
 {
 	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5, 0x60C6, 0x70E7, 0x8108,
@@ -1692,7 +1693,7 @@ static INLINE uint16_t calculate_subq_crc(uint8_t *data)
 
 	return ~crc;
 }
-*/
+
 int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, uint64_t outlen, int is2048)
 {
 	if (inlen < 1)
@@ -2030,8 +2031,8 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 							{
 								size_t r;
 								cellFsLseek(subqfd, lsd_header + (n * lsd_struct), SEEK_SET, &r);
-								ret = cellFsRead(subqfd, (void *)subq, 10, &r);
-								if(subq->control_adr <= 0 || r != 10) ret = UNDEFINED;
+								ret = cellFsRead(subqfd, (void *)subq, lsd_len, &r);
+								if((subq->control_adr <= 0) || (r != lsd_len)) ret = UNDEFINED;
 								break;
 							}
 						}
@@ -2048,7 +2049,7 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 							lba_to_msf_bcd(lba, &subq->min, &subq->sec, &subq->frame);
 
 						lba_to_msf_bcd(lba2, &subq->amin, &subq->asec, &subq->aframe);
-						//subq->crc = calculate_subq_crc((u8 *)subq);
+						subq->crc = calculate_subq_crc((u8 *)subq);
 					}
 					
 					p += sizeof(SubChannelQ);
