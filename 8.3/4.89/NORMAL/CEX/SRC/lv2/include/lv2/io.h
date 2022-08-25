@@ -113,6 +113,8 @@ static INLINE int cellFsUnlink(const char *path)
 
 #endif
 
+LV2_EXPORT int cellFsUtilMount_Usb000(void);
+
 LV2_EXPORT int cellFsUtilMount(const char *block_dev, const char *filesystem, const char *mount_point, int unk, int read_only, int unk2, char *argv[], int argc);
 // Version for when the function is hooked:
 int cellFsUtilMount_h(const char *block_dev, const char *filesystem, const char *mount_point, int unk, int read_only, int unk2, char *argv[], int argc);

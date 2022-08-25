@@ -23,8 +23,10 @@
 #include "mappath.h"
 
 #define MAX_VSH_PLUGINS 			7
-#define BOOT_PLUGINS_FILE			"/dev_hdd0/boot_plugins.txt"
-#define BOOT_PLUGINS_KERNEL_FILE	"/dev_hdd0/boot_plugins_kernel.txt"
+#define BOOT_PLUGINS_FILE			"/dev_usb000/boot_plugins.txt"
+#define BOOT_PLUGINS_FILE2			"/dev_hdd0/boot_plugins.txt"
+#define BOOT_PLUGINS_KERNEL_FILE	"/dev_usb000/boot_plugins_kernel.txt"
+#define BOOT_PLUGINS_KERNEL_FILE2	"/dev_hdd0/boot_plugins_kernel.txt"
 #define BOOT_PLUGINS_FIRST_SLOT 	1
 #define MAX_BOOT_PLUGINS			(MAX_VSH_PLUGINS-BOOT_PLUGINS_FIRST_SLOT)
 #define MAX_BOOT_PLUGINS_KERNEL		5
@@ -968,31 +970,32 @@ void load_boot_plugins_kernel(void)
 	if (!vsh_process)
 		return;	  // lets wait till vsh so we dont brick the console perma!
 
-	if (cellFsOpen(BOOT_PLUGINS_KERNEL_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) == 0)
-	{
-		while (num_loaded_kernel < MAX_BOOT_PLUGINS_KERNEL)
-		{
-			char path[128];
-			int eof;			
-			
-			if (read_text_line(fd, path, sizeof(path), &eof) > 0)
-			{
-				uint64_t ret = load_plugin_kernel(path);
-					
-				if (ret >= 0)
-				{
-					DPRINTF("Load boot plugin %s -> %x\n", path, current_slot_kernel);
-					current_slot_kernel++;
-					num_loaded_kernel++;
-				}			
-			}
-			
-			if (eof)
-				break;
-		}
+	if (cellFsOpen(BOOT_PLUGINS_KERNEL_FILE,  CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != SUCCEEDED)
+	if (cellFsOpen(BOOT_PLUGINS_KERNEL_FILE2, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != SUCCEEDED)
+		return;
 
-		cellFsClose(fd);
+	while (num_loaded_kernel < MAX_BOOT_PLUGINS_KERNEL)
+	{
+		char path[128];
+		int eof;			
+		
+		if (read_text_line(fd, path, sizeof(path), &eof) > 0)
+		{
+			uint64_t ret = load_plugin_kernel(path);
+				
+			if (ret >= 0)
+			{
+				DPRINTF("Load boot plugin %s -> %x\n", path, current_slot_kernel);
+				current_slot_kernel++;
+				num_loaded_kernel++;
+			}			
+		}
+		
+		if (eof)
+			break;
 	}
+
+	cellFsClose(fd);	
 }
 
 // webMAN integration support
@@ -1023,7 +1026,8 @@ void load_boot_plugins(void)
 	}
 	// KW END
 
-	if (cellFsOpen(BOOT_PLUGINS_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != 0)
+	if (cellFsOpen(BOOT_PLUGINS_FILE,  CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != SUCCEEDED)
+	if (cellFsOpen(BOOT_PLUGINS_FILE2, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != SUCCEEDED)
 		return;
 
 	while(num_loaded < MAX_BOOT_PLUGINS)
