@@ -7,6 +7,8 @@ Thanks to Cobra team, Joonie, Habib, Haxxxen, Alexander, Dean, KW, Nzv, Bguervil
 Ported from Cobra 8.3 from @aldostools.
 
 ###### New features in 8.3:
+    • Added cellUsb000 symbol and data (by haxxxen and aldostools)
+    • Load external stage2/plugins from USB device (by haxxxen and aldostools)
     • Failsafe Cobra stage2 (by bguerville/aldo)
     • Restore CFW Syscalls without reboot just entering to 'Settings > System Update' on XMB (by aldo)
     • Integrated Dynamic Control FAN (to control fan when webMAN is unloaded) (by aldo/Evilnat)
