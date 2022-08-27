@@ -36,34 +36,33 @@ void main(void)
 
 	if (ret == 0)
 	{
-		if (cellFsStat(FLAG_NOCOBRA, &stat) == 0)
-			stage2_file = (char *)FLAG_NOCOBRA;
-		else if (cellFsStat(STAGE2_USB0, &stat) == 0)
+		if (cellFsStat(STAGE2_USB0, &stat) == 0)
 			stage2_file = (char *)STAGE2_USB0;
-		else
-			ret = -1; // use fail safe
 	}
-	
-	// load stage2
-	if (cellFsStat(STAGE2_FILE, &stat) == 0)
-	{
-		// Avoid loading an empty stage2 or with a size higher than 0x1FE00
-		if(stat.st_size != 0 && stat.st_size < 0x1FE00)
-		{
-			if (cellFsOpen(STAGE2_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) == 0)
-			{
-				stage2 = alloc(stat.st_size, 0x27);
 
-				if(stage2)
-				{		
-					if (cellFsRead(fd, stage2, stat.st_size, &rs) != 0)
-					{
-						dealloc(stage2, 0x27);
-						stage2 = NULL;
-					}						
-				}				
-				
-				cellFsClose(fd);
+	if (cellFsStat(FLAG_NOCOBRA, &stat) != 0)
+	{	
+		// load stage2
+		if (cellFsStat(stage2_file, &stat) == 0)
+		{
+			// Avoid loading an empty stage2 or with a size higher than 0x1FE00
+			if(stat.st_size != 0 && stat.st_size < 0x1FE00)
+			{
+				if (cellFsOpen(stage2_file, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) == 0)
+				{
+					stage2 = alloc(stat.st_size, 0x27);
+
+					if(stage2)
+					{		
+						if (cellFsRead(fd, stage2, stat.st_size, &rs) != 0)
+						{
+							dealloc(stage2, 0x27);
+							stage2 = NULL;
+						}						
+					}				
+					
+					cellFsClose(fd);
+				}
 			}
 		}
 	}
@@ -71,15 +70,7 @@ void main(void)
 	f.toc = (void *)MKA(TOC);
 	
 	if(stage2)		
-	{
-		// stage2 fail save by bguerville / AV
-		cellFsUtilMount_h("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0, 0, 0, 0, 0);
-
-		if (ret)
-			cellFsRename(STAGE2_FAIL, STAGE2_FAIL ".bak");
-
-		f.addr = stage2;	
-	}
+		f.addr = stage2;		
 	else	
 		f.addr = (void *)MKA(0x17e0);	
 		
