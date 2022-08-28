@@ -23,9 +23,9 @@
 #include "mappath.h"
 
 #define MAX_VSH_PLUGINS 			7
-#define BOOT_PLUGINS_FILE			"/dev_hdd0/boot_plugins.txt"
-#define BOOT_PLUGINS_FILE2			"/dev_usb000/boot_plugins.txt"
-#define BOOT_PLUGINS_KERNEL_FILE	"/dev_hdd0/boot_plugins_kernel.txt"
+#define BOOT_PLUGINS_FILE			"/dev_usb000/boot_plugins.txt"
+#define BOOT_PLUGINS_FILE2			"/dev_hdd0/boot_plugins.txt"
+#define BOOT_PLUGINS_KERNEL_FILE	"/dev_usb000/boot_plugins_kernel.txt"
 #define BOOT_PLUGINS_KERNEL_FILE2	"/dev_usb000/boot_plugins_kernel.txt"
 #define BOOT_PLUGINS_FIRST_SLOT 	1
 #define MAX_BOOT_PLUGINS			(MAX_VSH_PLUGINS-BOOT_PLUGINS_FIRST_SLOT)
