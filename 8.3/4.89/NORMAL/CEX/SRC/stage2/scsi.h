@@ -51,7 +51,8 @@
 #define SCSI_CMD_SEND_DISC_STRUCTURE			0xBF
 #define SCSI_CMD_READ_2064						0xD1 /* Not reall name. Not standard cmd? */
 
-#define itob(i)               					((i)/10*16 + (i)%10)
+#define itob(i)               					((i) / 10 * 16 + (i) % 10)
+#define btoi(b) 								(10 * (b >> 4) + (b & 15))
 
 enum DvdBookType
 {
@@ -206,6 +207,13 @@ typedef struct _ScsiCmdReadCd
 	uint8_t control;
 } __attribute__((packed)) ScsiCmdReadCd;
 
+typedef struct _MSF
+{
+	uint8_t amin;
+	uint8_t asec;
+	uint8_t aframe;
+} __attribute__((packed)) MSF;
+
 typedef struct _SubChannelQ
 {
 	uint8_t control_adr;
@@ -316,12 +324,18 @@ static INLINE void lba_to_msf_bcd(uint64_t lba, uint8_t *m, uint8_t *s, uint8_t 
 	*f = itob(*f);
 }
 
-static inline uint64_t msf_to_lba(uint8_t m, uint8_t s, uint8_t f)
+/*static inline uint64_t msf_to_lba(uint8_t m, uint8_t s, uint8_t f)
 {
 	uint64_t lba = m;		
 	lba = (lba*60)+s;
 	lba = (lba*75)+f;
 	return lba;
+}*/
+
+static inline uint16_t msf_bcd_to_lba(MSF msf)
+{
+	uint32_t lba = (60 * btoi(msf.amin)) + btoi(msf.asec);
+	return (uint16_t)((lba * 75) + btoi(msf.aframe));
 }
 
 #ifdef DEBUG
