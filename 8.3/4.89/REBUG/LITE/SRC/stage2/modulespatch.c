@@ -592,7 +592,17 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 				{
 					if (*patch->condition)
 					{
-						buf[patch->offset / 4] = patch->data;
+						uint32_t data = patch->data;
+
+						if(forced_video_mode == 2) // Patch region of PSX bios for PAL games to 0x85, for NTSC use the default 0x82
+						{
+							if(patch->offset == ps1_emu_get_region_offset)
+								data = LI(R29, 0x85);
+							if(patch->offset == ps1_netemu_get_region_offset)
+								data = LI(R3, 0x85);
+						}
+						
+						buf[patch->offset/4] = data;
 
 						DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)patch->offset, (uint32_t)patch->data);
 						//DPRINTF("Offset: %lx\n", &buf[patch->offset/4]);
