@@ -146,7 +146,7 @@ int ps2emu_type;
 
 static int video_mode = -2;
 static uint32_t base_offset = 0;
-uint32_t forced_video_mode = 0; // 0 = Detect, 1 = NTSC, 2 = PAL
+uint8_t forced_video_mode = 0; // 0 = Detect, 1 = NTSC, 2 = PAL
 
 //static char *encrypted_image;
 //static int encrypted_image_fd = -1;
@@ -2994,7 +2994,7 @@ int mount_ps_cd(char *file, unsigned int trackscount, ScsiTrackDescriptor *track
 					forced_video_mode = 1;
 				if(strstr(file, "PAL"))
 					forced_video_mode = 2;
-				
+
 				// detect sector size
 				ret = cellFsOpen(file, CELL_FS_O_RDONLY, &discfd, 0, NULL, 0);
 				if(ret == SUCCEEDED)

@@ -34,7 +34,6 @@ enum STORAGE_COMMAND
 };
 
 extern int ps2emu_type;
-extern uint32_t forced_video_mode;
 
 void restore_BD(void);
 

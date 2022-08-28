@@ -593,7 +593,7 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 					if (*patch->condition)
 					{
 						uint32_t data = patch->data;
-						
+
 						if(forced_video_mode == 2) // Patch region of PSX bios for PAL games to 0x85, for NTSC use the default 0x82
 						{
 							if(patch->offset == ps1_emu_get_region_offset)

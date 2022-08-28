@@ -601,7 +601,7 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 							if(patch->offset == ps1_netemu_get_region_offset)
 								data = LI(R3, 0x85);
 						}
-						
+
 						buf[patch->offset/4] = data;
 
 						DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)patch->offset, (uint32_t)patch->data);
