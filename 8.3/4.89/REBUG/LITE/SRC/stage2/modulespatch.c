@@ -23,10 +23,10 @@
 #include "mappath.h"
 
 #define MAX_VSH_PLUGINS 			7
-#define BOOT_PLUGINS_FILE			"/dev_usb000/boot_plugins.txt"
-#define BOOT_PLUGINS_FILE2			"/dev_hdd0/boot_plugins.txt"
-#define BOOT_PLUGINS_KERNEL_FILE	"/dev_usb000/boot_plugins_kernel.txt"
-#define BOOT_PLUGINS_KERNEL_FILE2	"/dev_hdd0/boot_plugins_kernel.txt"
+#define BOOT_PLUGINS_FILE			"/dev_hdd0/boot_plugins.txt"
+#define BOOT_PLUGINS_FILE2			"/dev_usb000/boot_plugins.txt"
+#define BOOT_PLUGINS_KERNEL_FILE	"/dev_hdd0/boot_plugins_kernel.txt"
+#define BOOT_PLUGINS_KERNEL_FILE2	"/dev_usb000/boot_plugins_kernel.txt"
 #define BOOT_PLUGINS_FIRST_SLOT 	1
 #define MAX_BOOT_PLUGINS			(MAX_VSH_PLUGINS-BOOT_PLUGINS_FIRST_SLOT)
 #define MAX_BOOT_PLUGINS_KERNEL		5
@@ -1026,13 +1026,13 @@ void load_boot_plugins(void)
 		return;
 
 	// KW BEGIN / Special thanks to KW for providing an awesome source
-	//Loading webman from flash - must first detect if the toogle is activated
+	// Loading webman from flash - must first detect if the toogle is activated
 	if(prx_load_vsh_plugin(current_slot, PRX_PATH, NULL, 0) >= 0)
 	{
 		DPRINTF("Loading integrated webMAN plugin into slot %x\n", current_slot);
         current_slot++;
 		num_loaded++;
-		webman_loaded=1;
+		webman_loaded = 1;
 	}
 	// KW END
 
