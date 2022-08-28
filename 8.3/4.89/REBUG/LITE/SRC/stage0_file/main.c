@@ -7,7 +7,6 @@
 #include <lv1/lv1.h>
 
 #define STAGE2_FILE		"/dev_flash/rebug/cobra/stage2.cex"
-#define STAGE2_FAIL		"/dev_blind/rebug/cobra/stage2.cex"
 #define FLAG_NOCOBRA	"/dev_usb000/no_cobra"
 #define STAGE2_USB0		"/dev_usb000/stage2.cex"
 
@@ -31,39 +30,37 @@ void main(void)
 		lv1_write_htab_entry(0, i << 3, pte0, (pte1 & 0xff0000) | 0x190);
 	}
 
-	// use external stage2.bin if the file exists
-	int ret = cellFsUtilMount_Usb000(); // mount dev_usb000
-
-	if (ret == 0)
+	// Use external stage2.bin if the file exists
+	if (cellFsUtilMount_Usb000() == 0) // Mount dev_usb000
 	{
-		if (cellFsStat(FLAG_NOCOBRA, &stat) == 0)
-			stage2_file = (char *)FLAG_NOCOBRA;
-		else if (cellFsStat(STAGE2_USB0, &stat) == 0)
+		if (cellFsStat(STAGE2_USB0, &stat) == 0)
 			stage2_file = (char *)STAGE2_USB0;
-		else
-			ret = -1; // use fail safe
 	}
-	
-	// load stage2
-	if (cellFsStat(STAGE2_FILE, &stat) == 0)
-	{
-		// Avoid loading an empty stage2 or with a size greater than 0x1FE00
-		if(stat.st_size != 0 && stat.st_size < 0x1FE00)
-		{
-			if (cellFsOpen(STAGE2_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) == 0)
-			{
-				stage2 = alloc(stat.st_size, 0x27);
 
-				if(stage2)
-				{		
-					if (cellFsRead(fd, stage2, stat.st_size, &rs) != 0)
-					{
-						dealloc(stage2, 0x27);
-						stage2 = NULL;
-					}						
-				}				
-				
-				cellFsClose(fd);
+	// Check if exists no_cobra flag in external device
+	if (cellFsStat(FLAG_NOCOBRA, &stat) != 0)
+	{
+		// Load stage2
+		if (cellFsStat(stage2_file, &stat) == 0)
+		{
+			// Avoid loading an empty stage2 or with a size higher than 0x1FE00
+			if(stat.st_size != 0 && stat.st_size < 0x1FE00)
+			{
+				if (cellFsOpen(stage2_file, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) == 0)
+				{
+					stage2 = alloc(stat.st_size, 0x27);
+
+					if(stage2)
+					{		
+						if (cellFsRead(fd, stage2, stat.st_size, &rs) != 0)
+						{
+							dealloc(stage2, 0x27);
+							stage2 = NULL;
+						}						
+					}				
+					
+					cellFsClose(fd);
+				}
 			}
 		}
 	}
@@ -71,15 +68,7 @@ void main(void)
 	f.toc = (void *)MKA(TOC);
 	
 	if(stage2)		
-	{
-		// stage2 fail save by bguerville / AV
-		cellFsUtilMount_h("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0, 0, 0, 0, 0);
-
-		if (ret)
-			cellFsRename(STAGE2_FAIL, STAGE2_FAIL ".bak");
-
-		f.addr = stage2;	
-	}
+		f.addr = stage2;
 	else	
 		f.addr = (void *)MKA(0x17e0);	
 		

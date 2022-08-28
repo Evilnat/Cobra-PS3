@@ -7,7 +7,6 @@
 #include <lv1/lv1.h>
 
 #define STAGE2_FILE		"/dev_flash/sys/stage2.bin"
-#define STAGE2_FAIL		"/dev_blind/sys/stage2.bin"
 #define FLAG_NOCOBRA	"/dev_usb000/no_cobra"
 #define STAGE2_USB0		"/dev_usb000/stage2.bin"
 
@@ -31,18 +30,17 @@ void main(void)
 		lv1_write_htab_entry(0, i << 3, pte0, (pte1 & 0xff0000) | 0x190);
 	}
 
-	// use external stage2.bin if the file exists
-	int ret = cellFsUtilMount_Usb000(); // mount dev_usb000
-
-	if (ret == 0)
+	// Use external stage2.bin if the file exists
+	if (cellFsUtilMount_Usb000() == 0) // Mount dev_usb000
 	{
 		if (cellFsStat(STAGE2_USB0, &stat) == 0)
 			stage2_file = (char *)STAGE2_USB0;
 	}
 
+	// Check if exists no_cobra flag in external device
 	if (cellFsStat(FLAG_NOCOBRA, &stat) != 0)
-	{	
-		// load stage2
+	{
+		// Load stage2
 		if (cellFsStat(stage2_file, &stat) == 0)
 		{
 			// Avoid loading an empty stage2 or with a size higher than 0x1FE00
@@ -70,7 +68,7 @@ void main(void)
 	f.toc = (void *)MKA(TOC);
 	
 	if(stage2)		
-		f.addr = stage2;		
+		f.addr = stage2;
 	else	
 		f.addr = (void *)MKA(0x17e0);	
 		
