@@ -262,7 +262,7 @@ LV2_HOOKED_FUNCTION_POSTCALL_2(void, open_path_hook, (char *path0, int mode))
 						int fd;
 						if (cellFsOpen("/dev_hdd0/tmp/wm_request", CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, 0666, NULL, 0) == 0)
 						{
-							cellFsWrite(fd, path, len, &size);
+							cellFsWrite(fd, path, size, &size);
 							cellFsClose(fd);
 						}
 					}
