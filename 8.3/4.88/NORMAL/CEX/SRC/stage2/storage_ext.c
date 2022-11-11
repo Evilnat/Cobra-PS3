@@ -128,7 +128,15 @@ static event_queue_t command_queue, result_queue;
 static event_port_t proxy_command_port;
 static event_queue_t proxy_result_queue;
 
-static int discfd = -1;
+#define LC_SECTORS	32
+#define UNDEFINED   -1
+
+static u8  lsd_header; // 0(lsd) / 4(sbi)
+static u8  lsd_struct; // 15(lsd)/14(sbi)
+static u16 lsd[LC_SECTORS];
+
+static int subqfd = UNDEFINED;
+static int discfd = UNDEFINED;
 static int disc_emulation;
 static int total_emulation;
 static int skip_emu_check = 0;
@@ -789,6 +797,38 @@ int process_fake_storage_event_cmd(FakeStorageEventCmd *cmd)
 	return ret;
 }
 
+////////////// READ LSD SECTORS ////////////////////
+static void read_libcrypt_sectors(const char *file)
+{
+	int ret = cellFsOpen(file, CELL_FS_O_RDONLY, &subqfd, 0, NULL, 0);
+	if(ret) return;
+
+	if(strstr(file, ".sbi"))
+		{lsd_struct = 14, lsd_header = 4;}
+	else
+		{lsd_struct = 15, lsd_header = 0;}
+
+	// Read list of LibCrypt sectors in MSF
+	size_t r; MSF msf;
+	for(u8 n = 0; n < LC_SECTORS; n++)
+	{
+		cellFsLseek(subqfd, lsd_header + (n * lsd_struct), SEEK_SET, &r);
+		ret = cellFsRead(subqfd, &msf, sizeof(MSF), &r);
+		if(ret) break;
+		lsd[n] = msf_bcd_to_lba(msf);
+	}
+	if(ret)
+	{
+		// Close LSD file
+		cellFsClose(subqfd);
+		subqfd = UNDEFINED;
+	}
+	if(lsd_header)
+		lsd_header = 8;
+	else
+		lsd_header = 3;
+}
+
 ////////////// PROCESS PSX VIDEO MODE //////////////
 static void get_cd_sector_size(unsigned int trackscount)
 {
@@ -879,7 +919,7 @@ uint32_t find_file_sector(uint8_t *buf, char *file)
 
 int process_get_psx_video_mode(void)
 {
-	int ret = -1;
+	int ret = UNDEFINED;
 
 	if (effective_disctype == DEVICE_TYPE_PSX_CD)
 	{
@@ -951,8 +991,19 @@ int process_get_psx_video_mode(void)
 							 exe_path[1] == 'I'))							// SIPS
 								ret = (exe_path[2] == 'E');					// SLES, SCES, SCED, SLED
 
+						if(subqfd == UNDEFINED)
+						{
+							sprintf(buf, "/dev_hdd0/tmp/lsd/%s.lsd", exe_path);
+							read_libcrypt_sectors(buf);
+						}
+						if(subqfd == UNDEFINED)
+						{
+							sprintf(buf, "/dev_hdd0/tmp/sbi/%s.sbi", exe_path);
+							read_libcrypt_sectors(buf);
+						}
+						
 						// detect PAL by PSX EXE
-						if(ret == -1)
+						if(ret == UNDEFINED)
 						{
 							strcat(exe_path, ";1");
 
@@ -1600,6 +1651,7 @@ static INLINE ScsiTrackDescriptor *find_track_by_lba(uint32_t lba)
 	return NULL;
 }
 
+/*
 static uint16_t q_crc_lut[256] =
 {
 	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5, 0x60C6, 0x70E7, 0x8108,
@@ -1643,6 +1695,7 @@ static INLINE uint16_t calculate_subq_crc(uint8_t *data)
 
 	return ~crc;
 }
+*/
 
 int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, uint64_t outlen, int is2048)
 {
@@ -1941,7 +1994,7 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 			}
 			else
 			{
-				uint8_t *p = buf;
+				uint8_t *p = buf; extend_kstack(0);
 
 				for (int i = 0; i < length; i++)
 				{
@@ -1966,16 +2019,42 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 					SubChannelQ *subq = (SubChannelQ *)p;
 					memset(subq, 0, sizeof(SubChannelQ));
 
-					ScsiTrackDescriptor *track = find_track_by_lba(lba);
-					subq->control_adr = ((track->adr_control << 4) & 0xF0) | (track->adr_control >> 4);
-					subq->track_number = track->track_number;
-					subq->index_number = 1;
+					// custom subchannel
+					ret = UNDEFINED;
+					u32 lba2 = lba + 150;
+					if(subqfd != UNDEFINED)
+					{
+						u8 n = LC_SECTORS, max = LC_SECTORS;
+						if(lba2 <= lsd[15] && lba2 >= lsd[00]) n = 0, max = 16; else // min 3
+						if(lba2 <= lsd[31] && lba2 >= lsd[16]) n = 16; // min 9
+						for(; n < max; n++)
+						{
+							if(lsd[n] >  lba2) break;
+							if(lsd[n] == lba2)
+							{
+								size_t r;
+								cellFsLseek(subqfd, lsd_header + (n * lsd_struct), SEEK_SET, &r);
+								ret = cellFsRead(subqfd, (void *)subq, 10, &r);
+								if((subq->control_adr <= 0) || (r != 10)) ret = UNDEFINED;
+								break;
+							}
+						}
+					}
 
-					if (user_data)
-						lba_to_msf_bcd(lba, &subq->min, &subq->sec, &subq->frame);
+					// use default subchannel data
+					if(ret)
+					{
+						ScsiTrackDescriptor *track = find_track_by_lba(lba);
+						subq->control_adr = ((track->adr_control << 4) & 0xF0) | (track->adr_control >> 4);
+						subq->track_number = track->track_number;
+						subq->index_number = 1;
 
-					lba_to_msf_bcd(lba + 150, &subq->amin, &subq->asec, &subq->aframe);
-					subq->crc = calculate_subq_crc((uint8_t *)subq);
+						if (user_data)
+							lba_to_msf_bcd(lba, &subq->min, &subq->sec, &subq->frame);
+
+						lba_to_msf_bcd(lba2, &subq->amin, &subq->asec, &subq->aframe);
+						//subq->crc = calculate_subq_crc((u8 *)subq); // this crc is ignored & recalculated by ps1 emulator
+					}
 
 					p += sizeof(SubChannelQ);
 					lba++;
@@ -2793,6 +2872,12 @@ static INLINE void do_umount_discfile(void)
 		discfd = -1;
 	}
 
+	if (subqfd != -1)
+	{
+		cellFsClose(subqfd);
+		subqfd = -1;
+	}
+
 	if (discfile)
 	{
 		if (discfile->cached_sector)
@@ -2993,6 +3078,24 @@ int mount_ps_cd(char *file, unsigned int trackscount, ScsiTrackDescriptor *track
 					forced_video_mode = 1;
 				if(strstr(file, "PAL"))
 					forced_video_mode = 2;
+
+				///////// Open LSD (LibCrypt Subchannel Data) for protected PAL games /////// AV:2022-06-02
+				char file_ext[5];
+				strcpy(file_ext, ext);
+
+				strcpy(ext, ".lsd");
+				ret = cellFsStat(file, &stat);
+				if(ret)
+				{
+					strcpy(ext, ".sbi");
+					ret = cellFsStat(file, &stat);
+				}
+				if(ret == CELL_FS_SUCCEEDED)
+				{
+					read_libcrypt_sectors(file);
+				}
+				strcpy(ext, file_ext);
+				////////////////////////////////////
 				
 				// detect sector size
 				ret = cellFsOpen(file, CELL_FS_O_RDONLY, &discfd, 0, NULL, 0);
