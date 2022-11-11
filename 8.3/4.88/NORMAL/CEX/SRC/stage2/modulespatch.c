@@ -23,8 +23,10 @@
 #include "mappath.h"
 
 #define MAX_VSH_PLUGINS 			7
-#define BOOT_PLUGINS_FILE			"/dev_hdd0/boot_plugins.txt"
-#define BOOT_PLUGINS_KERNEL_FILE	"/dev_hdd0/boot_plugins_kernel.txt"
+#define BOOT_PLUGINS_FILE			"/dev_usb000/boot_plugins.txt"
+#define BOOT_PLUGINS_FILE2			"/dev_hdd0/boot_plugins.txt"
+#define BOOT_PLUGINS_KERNEL_FILE	"/dev_usb000/boot_plugins_kernel.txt"
+#define BOOT_PLUGINS_KERNEL_FILE2	"/dev_hdd0/boot_plugins_kernel.txt"
 #define BOOT_PLUGINS_FIRST_SLOT 	1
 #define MAX_BOOT_PLUGINS			(MAX_VSH_PLUGINS-BOOT_PLUGINS_FIRST_SLOT)
 #define MAX_BOOT_PLUGINS_KERNEL		5
@@ -48,7 +50,7 @@ typedef struct
 
 #define N_SPRX_KEYS_1 (sizeof(sprx_keys_set1) / sizeof(KeySet))
 
-KeySet sprx_keys_set1[] =
+static KeySet sprx_keys_set1[] =
 {
 	{
 		{
@@ -64,7 +66,7 @@ KeySet sprx_keys_set1[] =
 
 #define N_SPRX_KEYS_2 (sizeof(sprx_keys_set2)/sizeof(KeySet))
 
-KeySet sprx_keys_set2[] =
+static KeySet sprx_keys_set2[] =
 {
 	{
 		{
@@ -114,7 +116,7 @@ int bc_to_net_status = 0;
 sys_prx_id_t vsh_plugins[MAX_VSH_PLUGINS];
 static int loading_vsh_plugin;
 
-SprxPatch main_vsh_patches[] =
+static SprxPatch main_vsh_patches[] =
 {
 	{ ps2tonet_patch, ORI(R3, R3, 0x8204), &condition_ps2softemu },
 	{ ps2tonet_size_patch, LI(R5, 0x40), &condition_ps2softemu },
@@ -125,7 +127,7 @@ SprxPatch main_vsh_patches[] =
 	{ 0 }
 };
 
-SprxPatch explore_plugin_patches[] =
+static SprxPatch explore_plugin_patches[] =
 {
 	{ app_home_offset, 0x2f646576, &condition_apphome   }, 
 	{ app_home_offset + 4, 0x5f626476, &condition_apphome }, 
@@ -134,32 +136,32 @@ SprxPatch explore_plugin_patches[] =
 	{ 0 }
 };
 
-SprxPatch explore_category_game_patches[] =
+static SprxPatch explore_category_game_patches[] =
 {
 	{ ps2_nonbw_offset2, LI(R0, 1), &condition_ps2softemu },
 	{ 0 }
 };
 
-SprxPatch bdp_disc_check_plugin_patches[] =
+static SprxPatch bdp_disc_check_plugin_patches[] =
 {
 	{ dvd_video_region_check_offset, LI(R3, 1), &condition_true }, /* Kills standard dvd-video region protection (not RCE one) */
 	{ 0 }
 };
 
-SprxPatch ps1_emu_patches[] =
+static SprxPatch ps1_emu_patches[] =
 {
 	{ ps1_emu_get_region_offset, LI(R29, 0x82), &condition_true }, /* regions 0x80-0x82 bypass region check. */
 	{ 0 }
 };
 
-SprxPatch ps1_netemu_patches[] =
+static SprxPatch ps1_netemu_patches[] =
 {
 	// Some rare titles such as Langrisser Final Edition are launched through ps1_netemu!
 	{ ps1_netemu_get_region_offset, LI(R3, 0x82), &condition_true },
 	{ 0 }
 };
 
-SprxPatch game_ext_plugin_patches[] =
+static SprxPatch game_ext_plugin_patches[] =
 {
 	{ sfo_check_offset, NOP, &condition_true },
 	{ ps2_nonbw_offset3, LI(R0, 1), &condition_ps2softemu },
@@ -169,14 +171,14 @@ SprxPatch game_ext_plugin_patches[] =
 	{ 0 }
 };
 
-SprxPatch psp_emulator_patches[] =
+static SprxPatch psp_emulator_patches[] =
 {
 	// Sets psp mode as opossed to minis mode. Increases compatibility, removes text protection and makes most savedata work
 	{ psp_set_psp_mode_offset, LI(R4, 0), &condition_psp_iso },
 	{ 0 }
 };
 
-SprxPatch emulator_api_patches[] =
+static SprxPatch emulator_api_patches[] =
 {
 	// Read umd patches
 	{ psp_read, STDU(SP, 0xFF90, SP), &condition_psp_iso },
@@ -228,7 +230,7 @@ SprxPatch emulator_api_patches[] =
 	{ 0 }
 };
 
-SprxPatch pemucorelib_patches[] =
+static SprxPatch pemucorelib_patches[] =
 {
 	{ psp_eboot_dec_patch, LI(R6, 0x110), &condition_psp_dec }, // -> makes unsigned psp eboot.bin run, 0x10 works too
 	{ psp_prx_patch, STDU(SP, 0xFF90, SP), &condition_psp_iso },
@@ -281,7 +283,7 @@ SprxPatch pemucorelib_patches[] =
 	{ 0 }
 };
 
-SprxPatch libsysutil_savedata_psp_patches[] =
+static SprxPatch libsysutil_savedata_psp_patches[] =
 {
 #if defined(FIRMWARE_CEX) 
 	{ psp_savedata_patch1, MAKE_JUMP_VALUE(psp_savedata_patch1, psp_savedata_patch2), &condition_psp_iso },
@@ -293,7 +295,7 @@ SprxPatch libsysutil_savedata_psp_patches[] =
 	{ 0 }
 };
 
-SprxPatch libfs_external_patches[] =
+static SprxPatch libfs_external_patches[] =
 {
 	// Redirect internal libfs function to kernel. If condition_apphome is 1, it means there is a JB game mounted
 	{ aio_copy_root_offset, STDU(SP, 0xFF90, SP), &condition_apphome },
@@ -311,7 +313,7 @@ SprxPatch libfs_external_patches[] =
 	{ 0 }
 };
 
-PatchTableEntry patch_table[] =
+static PatchTableEntry patch_table[] =
 {
 	{ VSH_HASH, main_vsh_patches },
 	{ EXPLORE_PLUGIN_HASH, explore_plugin_patches },
@@ -538,12 +540,12 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 		uint64_t hash = 0;
 
 		for(int i = 0; i < 0x8; i++)  //0x20 bytes only		
-			hash ^= buf[i + 0xb0];  //unique location in all files+static hashes between firmware		
+			hash ^= buf[i + 0xb0];  //unique location in all files+static hashes between firmware
 
-		if((total & 0xff0000)==0)		
-			total = (total & 0xfff000); //if size is less than 0x10000 then check for next 4 bits		
+		if((total & 0xff0000) == 0)
+			total = (total & 0xfff000); //if size is less than 0x10000 then check for next 4 bits
 		else		
-			total = (total & 0xff0000); //copy third byte		
+			total = (total & 0xff0000); //copy third byte
 		
 		hash = ((hash << 32) & 0xfffff00000000000) | (total);  //20 bits check, prevent diferent hash just because of minor changes
 
@@ -768,7 +770,7 @@ int prx_load_vsh_plugin(unsigned int slot, char *path, void *arg, uint32_t arg_s
 		return EKRESOURCE;	
 
 	CellFsStat stat;
-	if (cellFsStat(path, &stat) != 0 || stat.st_size < 0x230) 
+	if (cellFsStat(path, &stat) != SUCCEEDED || stat.st_size < 0x230) 
 		return EINVAL; // prevent a semi-brick (black screen on start up) if the sprx is 0 bytes (due a bad ftp transfer).
 
 	loading_vsh_plugin = 1;
@@ -928,12 +930,12 @@ uint64_t load_plugin_kernel(char *path)
 	{
 		if(stat.st_size > 4)
 		{
-			if(cellFsOpen(path, CELL_FS_O_RDONLY, &file, 0, NULL, 0) == 0)
+			if(cellFsOpen(path, CELL_FS_O_RDONLY, &file, 0, NULL, 0) == SUCCEEDED)
 			{
 				void *skprx = malloc(stat.st_size);
 				if(skprx)
 				{
-					if(cellFsRead(file, skprx, stat.st_size, &read)==0)
+					if(cellFsRead(file, skprx, stat.st_size, &read) == SUCCEEDED)
 					{	
 						f_desc_t f;
 						f.addr = skprx;
@@ -976,31 +978,32 @@ void load_boot_plugins_kernel(void)
 	if (!vsh_process)
 		return;	  // lets wait till vsh so we dont brick the console perma!
 
-	if (cellFsOpen(BOOT_PLUGINS_KERNEL_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) == 0)
+	if (cellFsOpen(BOOT_PLUGINS_KERNEL_FILE,  CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != SUCCEEDED)
+	if (cellFsOpen(BOOT_PLUGINS_KERNEL_FILE2, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != SUCCEEDED)
+		return;
+	
+	while (num_loaded_kernel < MAX_BOOT_PLUGINS_KERNEL)
 	{
-		while (num_loaded_kernel < MAX_BOOT_PLUGINS_KERNEL)
+		char path[128];
+		int eof;			
+			
+		if (read_text_line(fd, path, sizeof(path), &eof) > 0)
 		{
-			char path[128];
-			int eof;			
-			
-			if (read_text_line(fd, path, sizeof(path), &eof) > 0)
-			{
-				uint64_t ret = load_plugin_kernel(path);
+			uint64_t ret = load_plugin_kernel(path);
 					
-				if (ret >= 0)
-				{
-					DPRINTF("Load boot plugin %s -> %x\n", path, current_slot_kernel);
-					current_slot_kernel++;
-					num_loaded_kernel++;
-				}			
-			}
-			
-			if (eof)
-				break;
+			if (ret >= 0)
+			{
+				DPRINTF("Load boot plugin %s -> %x\n", path, current_slot_kernel);
+				current_slot_kernel++;
+				num_loaded_kernel++;
+			}			
 		}
-
-		cellFsClose(fd);
+			
+		if (eof)
+			break;
 	}
+
+	cellFsClose(fd);
 }
 
 // webMAN integration support
@@ -1027,11 +1030,12 @@ void load_boot_plugins(void)
 		DPRINTF("Loading integrated webMAN plugin into slot %x\n", current_slot);
         current_slot++;
 		num_loaded++;
-		webman_loaded=1;
+		webman_loaded = 1;
 	}
 	// KW END
 
-	if (cellFsOpen(BOOT_PLUGINS_FILE, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != 0)
+	if (cellFsOpen(BOOT_PLUGINS_FILE,  CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != SUCCEEDED)
+	if (cellFsOpen(BOOT_PLUGINS_FILE2, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != SUCCEEDED)
 		return;
 
 	while(num_loaded < MAX_BOOT_PLUGINS)
