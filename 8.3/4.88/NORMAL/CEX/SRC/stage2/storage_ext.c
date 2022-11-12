@@ -32,8 +32,11 @@
 //#define ps2emu_entry1_semibc 0x165b40
 //#define ps2emu_entry2_semibc 0x165CC0
 
-#define _4KB_	0x1000
-#define _64KB_	0x10000
+#define _4KB_						0x1000
+#define _64KB_						0x10000
+
+#define LC_SECTORS					32
+#define UNDEFINED   				-1
 
 #define READ_BUF_SIZE				(256 * 1024)
 #define READ_BUF_SIZE_SECTORS_PSX	(128)
@@ -128,7 +131,13 @@ static event_queue_t command_queue, result_queue;
 static event_port_t proxy_command_port;
 static event_queue_t proxy_result_queue;
 
-static int discfd = -1;
+static u8  lsd_header; // 0(lsd) / 4(sbi)
+static u8  lsd_struct; // 15(lsd) / 14(sbi)
+static u16 lsd[LC_SECTORS];
+
+static int subqfd = UNDEFINED;
+static int discfd = UNDEFINED;
+
 static int disc_emulation;
 static int total_emulation;
 static int skip_emu_check = 0;
@@ -146,6 +155,8 @@ int ps2emu_type;
 
 static int video_mode = -2;
 static uint32_t base_offset = 0;
+static uint32_t cd_sector_size = 2352; // -- AV: cd sector size
+uint8_t forced_video_mode = 0; // 0 = Detect, 1 = NTSC, 2 = PAL
 
 //static char *encrypted_image;
 //static int encrypted_image_fd = -1;
@@ -155,7 +166,8 @@ unsigned int real_disctype; 		/* Real disc in the drive */
 unsigned int effective_disctype; 	/* The type of disc we want it to be, and the one faked in storage event. */
 unsigned int fake_disctype; 		/* If no zero, get device type command will fake disc type to this. */
 
-static uint32_t cd_sector_size = 2352; // -- AV: cd sector size
+int emu_read_bdvd1(void *object, void *buf, uint64_t size, uint64_t offset);
+int emu_storage_read(device_handle_t device_handle, uint64_t unk, uint64_t start_sector, uint32_t sector_count, void *buf, uint32_t *nread, uint64_t unk2);
 
 LV2_EXPORT int storage_internal_get_device_object(void *object, device_handle_t handle, void **dev_object);
 
@@ -187,7 +199,7 @@ static INLINE void get_next_read(int64_t discoffset, uint64_t bufsize, uint64_t 
 		base += discfile->sizes[i];
 	}
 
-	DPRINTF("Offset or size out of range  %lx %lx!!!!!!!!\n", discoffset, bufsize);
+	//DPRINTF("Offset or size out of range  %lx %lx!!!!!!!!\n", discoffset, bufsize);
 }
 
 static INLINE int process_read_iso_cmd(ReadIsoCmd *cmd)
@@ -328,7 +340,7 @@ static INLINE int process_read_iso_cmd(ReadIsoCmd *cmd)
 		}
 	}
 
-	DPRINTF("WARNING: Error %x\n", ret);
+	//DPRINTF("WARNING: Error %x\n", ret);
 
 	discfile->activefile = activefile;
 
@@ -788,6 +800,45 @@ int process_fake_storage_event_cmd(FakeStorageEventCmd *cmd)
 	return ret;
 }
 
+////////////// READ LSD SECTORS ////////////////////
+static void read_libcrypt_sectors(const char *file)
+{
+	int ret = cellFsOpen(file, CELL_FS_O_RDONLY, &subqfd, 0, NULL, 0);
+	
+	if(ret) 
+		return;
+
+	if(strstr(file, ".sbi"))
+		lsd_struct = 14, lsd_header = 4;
+	else
+		lsd_struct = 15, lsd_header = 0;
+
+	// Read list of LibCrypt sectors in MSF
+	size_t r; MSF msf;
+	for(u8 n = 0; n < LC_SECTORS; n++)
+	{
+		cellFsLseek(subqfd, lsd_header + (n * lsd_struct), SEEK_SET, &r);
+		ret = cellFsRead(subqfd, &msf, sizeof(MSF), &r);
+		
+		if(ret) 
+			break;
+		
+		lsd[n] = msf_bcd_to_lba(msf);
+	}
+	
+	if(ret)
+	{
+		// Close LSD file
+		cellFsClose(subqfd);
+		subqfd = UNDEFINED;
+	}
+	
+	if(lsd_header)
+		lsd_header = 8;
+	else
+		lsd_header = 3;
+}
+
 ////////////// PROCESS PSX VIDEO MODE //////////////
 static void get_cd_sector_size(unsigned int trackscount)
 {
@@ -800,9 +851,6 @@ static void get_cd_sector_size(unsigned int trackscount)
 	if(cd_sector_size != 2352 && cd_sector_size != 2048 && cd_sector_size != 2328 && cd_sector_size != 2336 && cd_sector_size != 2340 && cd_sector_size != 2368 && cd_sector_size != 2448) 
 		cd_sector_size = 2352;
 }
-
-int emu_read_bdvd1(void *object, void *buf, uint64_t size, uint64_t offset);
-int emu_storage_read(device_handle_t device_handle, uint64_t unk, uint64_t start_sector, uint32_t sector_count, void *buf, uint32_t *nread, uint64_t unk2);
 
 int read_psx_sector(void *dma, void *buf, uint64_t sector)
 {
@@ -878,7 +926,7 @@ uint32_t find_file_sector(uint8_t *buf, char *file)
 
 int process_get_psx_video_mode(void)
 {
-	int ret = -1;
+	int ret = UNDEFINED;
 
 	if (effective_disctype == DEVICE_TYPE_PSX_CD)
 	{
@@ -903,26 +951,27 @@ int process_get_psx_video_mode(void)
 
 			char *buf = malloc(_4KB_);
 
-			if (!buf) ; else
-			if ((sector != 0) && (read_psx_sector(dma, buf, sector) == SUCCEEDED))
+			if (!buf) ; 
+			else if ((sector != 0) && (read_psx_sector(dma, buf, sector) == SUCCEEDED))
 			{
 				char *p = strstr(buf, "cdrom");
+				
 				if (!p)
-					 p = strstr(buf, "CDROM");
+					p = strstr(buf, "CDROM");
 
 				char *exe_path = malloc(140); 
 
 				if(!exe_path) 
 					p = 0;
 
-				if (p)
+				if(p)
 				{
 					p += 5;
 
 					while ((*p != 0) && !isalpha(*p)) 
 						p++;
 
-					if (*p)
+					if(*p)
 					{
 						memset(exe_path, 0, 140);
 
@@ -950,8 +999,20 @@ int process_get_psx_video_mode(void)
 							 exe_path[1] == 'I'))							// SIPS
 								ret = (exe_path[2] == 'E');					// SLES, SCES, SCED, SLED
 
+						if(subqfd == UNDEFINED)
+						{
+							sprintf(buf, "/dev_hdd0/tmp/lsd/%s.lsd", exe_path);
+							read_libcrypt_sectors(buf);
+						}
+						
+						if(subqfd == UNDEFINED)
+						{
+							sprintf(buf, "/dev_hdd0/tmp/sbi/%s.sbi", exe_path);
+							read_libcrypt_sectors(buf);
+						}
+
 						// detect PAL by PSX EXE
-						if(ret == -1)
+						if(ret == UNDEFINED)
 						{
 							strcat(exe_path, ";1");
 
@@ -964,6 +1025,7 @@ int process_get_psx_video_mode(void)
 									ret = 0;
 								}
 								else*/
+
 								if (strncmp(buf + 0x71, "Europe", 6) == SUCCEEDED)								
 									ret = 1; // PAL								
 								else
@@ -973,19 +1035,25 @@ int process_get_psx_video_mode(void)
 					}
 				}
 
-				if(exe_path) free(exe_path);
+				if(exe_path) 
+					free(exe_path);
 			}
-			if(buf) free(buf);
+			
+			if(buf) 
+				free(buf);
 		}
 
 		if(ret == 0) 
 			DPRINTF("NTSC\n");
+			
 		if(ret == 1) 
 			DPRINTF("PAL\n");
 
 		free(bbuf);
 		page_free(NULL, dma, 0x2F);
 	}
+
+	forced_video_mode = (ret + 1);
 
 	return ret;
 }
@@ -1598,7 +1666,7 @@ static INLINE ScsiTrackDescriptor *find_track_by_lba(uint32_t lba)
 	return NULL;
 }
 
-static uint16_t q_crc_lut[256] =
+/*static uint16_t q_crc_lut[256] =
 {
 	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5, 0x60C6, 0x70E7, 0x8108,
 	0x9129, 0xA14A, 0xB16B, 0xC18C, 0xD1AD, 0xE1CE, 0xF1EF, 0x1231, 0x0210,
@@ -1640,7 +1708,7 @@ static INLINE uint16_t calculate_subq_crc(uint8_t *data)
 		crc = q_crc_lut[(crc >> 8) ^ data[i]] ^ (crc << 8);
 
 	return ~crc;
-}
+}*/
 
 int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, uint64_t outlen, int is2048)
 {
@@ -1939,7 +2007,8 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 			}
 			else
 			{
-				uint8_t *p = buf;
+				uint8_t *p = buf; 
+				extend_kstack(0);
 
 				for (int i = 0; i < length; i++)
 				{
@@ -1952,6 +2021,7 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 
 						event_port_send(command_port, CMD_READ_CD_ISO_2352, (uint64_t)&read_cmd, 0);
 						ret = event_queue_receive(result_queue, &event, 0);
+
 						if (ret == 0)
 							ret = (int)(int64_t)event.data1;
 
@@ -1964,17 +2034,52 @@ int process_cd_iso_scsi_cmd(uint8_t *indata, uint64_t inlen, uint8_t *outdata, u
 					SubChannelQ *subq = (SubChannelQ *)p;
 					memset(subq, 0, sizeof(SubChannelQ));
 
-					ScsiTrackDescriptor *track = find_track_by_lba(lba);
-					subq->control_adr = ((track->adr_control << 4) & 0xF0) | (track->adr_control >> 4);
-					subq->track_number = track->track_number;
-					subq->index_number = 1;
+					// custom subchannel
+					ret = UNDEFINED;
+					u32 lba2 = lba + 150;
+					
+					if(subqfd != UNDEFINED)
+					{
+						u8 n = LC_SECTORS, max = LC_SECTORS;
+						if(lba2 <= lsd[15] && lba2 >= lsd[00]) // min 3
+							n = 0, max = 16; 
+						else if(lba2 <= lsd[31] && lba2 >= lsd[16]) // min 9
+							n = 16; 
+						
+						for(; n < max; n++)
+						{
+							if(lsd[n] >  lba2) 
+								break;
+							
+							if(lsd[n] == lba2)
+							{
+								size_t r;
+								cellFsLseek(subqfd, lsd_header + (n * lsd_struct), SEEK_SET, &r);
+								ret = cellFsRead(subqfd, (void *)subq, 10, &r);
+								
+								if((subq->control_adr <= 0) || (r != 10)) 
+									ret = UNDEFINED;
+									
+								break;
+							}
+						}
+					}
 
-					if (user_data)
-						lba_to_msf_bcd(lba, &subq->min, &subq->sec, &subq->frame);
+					// use default subchannel data
+					if(ret)
+					{
+						ScsiTrackDescriptor *track = find_track_by_lba(lba);
+						subq->control_adr = ((track->adr_control << 4) & 0xF0) | (track->adr_control >> 4);
+						subq->track_number = track->track_number;
+						subq->index_number = 1;
 
-					lba_to_msf_bcd(lba + 150, &subq->amin, &subq->asec, &subq->aframe);
-					subq->crc = calculate_subq_crc((uint8_t *)subq);
+						if (user_data)
+							lba_to_msf_bcd(lba, &subq->min, &subq->sec, &subq->frame);
 
+						lba_to_msf_bcd(lba2, &subq->amin, &subq->asec, &subq->aframe);
+						//subq->crc = calculate_subq_crc((u8 *)subq); // this crc is ignored & recalculated by ps1 emulator
+					}
+					
 					p += sizeof(SubChannelQ);
 					lba++;
 				}
@@ -2025,7 +2130,7 @@ static INLINE void do_video_mode_patch(void)
 		{
 			if (video_mode != 2)
 			{
-				int ret = get_psx_video_mode();
+				int ret = forced_video_mode ? (forced_video_mode - 1) : get_psx_video_mode();
 				if (ret >= 0) //{
 					video_mode = ret;/*condition_game_ext_psx=0;}
 				 if(ret == -1 || ps2emu_type!=PS2EMU_SW) {condition_game_ext_psx=1;}*/
@@ -2061,7 +2166,7 @@ static INLINE void do_video_mode_patch(void)
 					if(vmode_patch_offset)
 						copy_to_user(&patch, (void *)(vmode_patch_offset + _64KB_), 4);
 
-					DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)vmode_patch_offset, (uint32_t)patch);
+					//DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)vmode_patch_offset, (uint32_t)patch);
 				break;
 
 				default:
@@ -2372,7 +2477,7 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, post_cellFsUtilMount, (const char *bl
 		#endif*/
 	}
 
-	// CFW2OFW fix by Evilnat
+	// CFW2OFW Fix by Evilnat
 	// Fixes black screen while a CFW2OFW game is loaded with a mounted JB folder game
 	if(CFW2OFW_game && !strcmp(mount_point, "/dev_bdvd/PS3_GAME"))
 	{
@@ -2791,6 +2896,12 @@ static INLINE void do_umount_discfile(void)
 		discfd = -1;
 	}
 
+	if (subqfd != -1)
+	{
+		cellFsClose(subqfd);
+		subqfd = -1;
+	}
+
 	if (discfile)
 	{
 		if (discfile->cached_sector)
@@ -2826,6 +2937,7 @@ static INLINE void do_umount_discfile(void)
 		}
 	}
 
+	forced_video_mode = 0;
 	disc_emulation = EMU_OFF;
 	total_emulation = 0;
 	emu_ps3_rec = 0;
@@ -2985,23 +3097,52 @@ int mount_ps_cd(char *file, unsigned int trackscount, ScsiTrackDescriptor *track
 
 			if(cd_sector_size == 2352)
 			{
+				// force video by title id in file name
+				if(strstr(file, "NTSC"))
+					forced_video_mode = 1;
+				if(strstr(file, "PAL"))
+					forced_video_mode = 2;
+
+				///////// Open LSD (LibCrypt Subchannel Data) for protected PAL games /////// AV:2022-06-02
+				char file_ext[5], ext[5];
+
+				strcpy(file_ext, ext);
+
+				strcpy(ext, ".lsd");
+				ret = cellFsStat(file, &stat);
+				if(ret)
+				{
+					strcpy(ext, ".sbi");
+					ret = cellFsStat(file, &stat);
+				}
+				
+				if(ret == 0)
+					read_libcrypt_sectors(file);
+				
+				strcpy(ext, file_ext);
+				////////////////////////////////////
+
 				// detect sector size
 				ret = cellFsOpen(file, CELL_FS_O_RDONLY, &discfd, 0, NULL, 0);
+				
 				if(ret == SUCCEEDED)
 				{
 					char buffer[20]; uint64_t v;
-					u16 sec_size[7] = {2352, 2048, 2336, 2448, 2328, 2340, 2368};
+					u16 sec_size[7] = { 2352, 2048, 2336, 2448, 2328, 2340, 2368 };
+
 					for(u8 n = 0; n < 7; n++)
 					{
-						cellFsLseek(discfd, base_offset + (sec_size[n]<<4) + 0x18, SEEK_SET, &v);
+						cellFsLseek(discfd, base_offset + (sec_size[n] << 4) + 0x18, SEEK_SET, &v);
 						cellFsRead(discfd, buffer, 20, &v);
-						if(  (memcmp(buffer + 8, "PLAYSTATION ", 0xC) == 0) ||
-							((memcmp(buffer + 1, "CD001", 5) == 0) && buffer[0] == 0x01) ) 
-							{
-								cd_sector_size = sec_size[n]; 
-								break;
-							}
+						
+						if((memcmp(buffer + 8, "PLAYSTATION ", 0xC) == 0) ||
+						  ((memcmp(buffer + 1, "CD001", 5) == 0) && buffer[0] == 0x01)) 
+						{
+							cd_sector_size = sec_size[n]; 
+							break;
+						}
 					}
+					
 					cellFsClose(discfd);
 				}
 

@@ -177,12 +177,6 @@ int ps3mapi_disable_syscall(int num);
 
 #define PS3MAPI_OPCODE_RING_BUZZER 					0x2245
 
-#define PS3MAPI_OPCODE_CONVERT_SAVEDATA 			0x2246
-
-#define PS3MAPI_OPCODE_SET_FAKE_ACCOUNTID 			0x2247
-
-#define PS3MAPI_OPCODE_ACTIVATE_ACCOUNT 	 		0x2248
-
 #define PS3MAPI_OPCODE_CREATE_RIF 		 			0x2249
 
 //----------------------------------------------------------

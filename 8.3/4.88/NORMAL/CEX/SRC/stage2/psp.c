@@ -300,7 +300,7 @@ int sys_psp_set_umdfile(char *file, char *id, int prometheus)
 		switch(vsh_check)
 		{
 			case VSH_HASH:
-				DPRINTF("Now patching PSP DRM In Retail VSH..\n");
+				//DPRINTF("Now patching PSP DRM In Retail VSH..\n");
 
 				patches_backup = malloc(sizeof(psp_drm_patches));
 
@@ -308,7 +308,7 @@ int sys_psp_set_umdfile(char *file, char *id, int prometheus)
 
 				for (int i = 0; psp_drm_patches[i].offset != 0; i++)
 				{
-					DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)psp_drm_patches[i].offset, (uint32_t)psp_drm_patches[i].data);
+					//DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)psp_drm_patches[i].offset, (uint32_t)psp_drm_patches[i].data);
 
 					copy_from_process(vsh_process, (void *)(uint64_t)(0x10000 + patches_backup[i].offset), &patches_backup[i].data, 4);
 
@@ -318,7 +318,7 @@ int sys_psp_set_umdfile(char *file, char *id, int prometheus)
 			break;
 
 			default:
-				DPRINTF("Unknown VSH HASH, PSP DRM was not patched!\n");
+				//DPRINTF("Unknown VSH HASH, PSP DRM was not patched!\n");
 				break;
 		}
 	}

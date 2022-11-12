@@ -14,7 +14,7 @@ void main(void)
 {
 	char *stage2_file = (char *)STAGE2_FILE;
 	void *stage2 = NULL;
-	
+
 	f_desc_t f;
 	int (* func)(void);	
 
@@ -30,7 +30,7 @@ void main(void)
 		lv1_write_htab_entry(0, i << 3, pte0, (pte1 & 0xff0000) | 0x190);
 	}
 
-	// Use external stage2.bin if the file exists
+	// Use external stage2.bin if the file exists (by haxxxen)
 	if (cellFsUtilMount_Usb000() == 0) // Mount dev_usb000
 	{
 		if (cellFsStat(STAGE2_USB0, &stat) == 0)
@@ -67,7 +67,7 @@ void main(void)
 
 	f.toc = (void *)MKA(TOC);
 	
-	if(stage2)		
+	if(stage2)
 		f.addr = stage2;
 	else	
 		f.addr = (void *)MKA(0x17e0);	

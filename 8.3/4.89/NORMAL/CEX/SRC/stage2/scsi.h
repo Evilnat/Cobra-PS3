@@ -52,7 +52,7 @@
 #define SCSI_CMD_READ_2064						0xD1 /* Not reall name. Not standard cmd? */
 
 #define itob(i)               					((i) / 10 * 16 + (i) % 10)
-#define btoi(b) 								(10 * (b >> 4) + (b & 15))
+#define btoi(b)               					(10 * (b >> 4) + (b & 15))
 
 enum DvdBookType
 {

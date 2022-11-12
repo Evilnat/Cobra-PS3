@@ -30,10 +30,8 @@
 #include "config.h"
 #include "ps3mapi_core.h"
 #include "fan_control.h"
-#include "savegames.h"
 #include "make_rif.h"
 #include "homebrew_blocker.h"
-#include "qa.h"
 
 // Format of version:
 // byte 0, 7 MS bits -> reserved
@@ -128,7 +126,7 @@ static int disable_cobra_stage()
 
 static int inst_and_run_kernel(uint8_t *payload, int size)
 {
-	if((!size) || (size>0x10000))
+	if((!size) || (size > 0x10000))
 		return -1;
 	
 	if(!payload)
@@ -301,7 +299,7 @@ LV2_SYSCALL2(void, sys_cfw_poke, (uint64_t *ptr, uint64_t value))
 				f_desc_t f;
 
 				// Assume app is trying to write the so called "new poke"
-				DPRINTF("Making sys_cfw_new_poke\n");
+				//DPRINTF("Making sys_cfw_new_poke\n");
 
 				if (current_813)				
 					unhook_function(sc813, current_813);				
@@ -315,7 +313,7 @@ LV2_SYSCALL2(void, sys_cfw_poke, (uint64_t *ptr, uint64_t value))
 				f_desc_t f;
 
 				// Assume app is trying to write a memcpy
-				DPRINTF("Making sys_cfw_memcpy\n");
+				//DPRINTF("Making sys_cfw_memcpy\n");
 
 				if (current_813)				
 					unhook_function(sc813, current_813);				
@@ -338,7 +336,7 @@ LV2_SYSCALL2(void, sys_cfw_poke, (uint64_t *ptr, uint64_t value))
 			}
 			else
 			{
-				DPRINTF("Warning: syscall 813 being overwritten with unknown value (%016lx). *blocking it*\n", value);
+				//DPRINTF("Warning: syscall 813 being overwritten with unknown value (%016lx). *blocking it*\n", value);
 				return;
 			}
 		}
@@ -754,37 +752,11 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 					return skip_existing_rif;
 				break;
 
-				case PS3MAPI_OPCODE_CONVERT_SAVEDATA:
-					return patch_savedata((char *)param2);
-				break;
-
 				case PS3MAPI_OPCODE_CREATE_RIF:
 					make_rif((char *)param2);
 					return SUCCEEDED;
 				break;
 
-				case PS3MAPI_OPCODE_SET_FAKE_ACCOUNTID:
-					return set_fakeID(param2, param3);
-				break;
-
-				case PS3MAPI_OPCODE_ACTIVATE_ACCOUNT:
-					if(xreg_data((char *)param2, ACCOUNTID, READ, 0, 1))
-						return create_act_dat((char *)param3);
-					else
-						return 1;					
-				break;
-
-				//----------
-				//QA
-				//----------
-				case PS3MAPI_OPCODE_CHECK_QA:
-					return read_qa_flag();
-				break;
-
-				case PS3MAPI_OPCODE_SET_QA:
-					return set_qa_flag((uint8_t)param2);
-				break;
-				
 				//----------
 				//DEFAULT
 				//----------
@@ -802,7 +774,7 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 		case SYSCALL8_OPCODE_STEALTH_ACTIVATE: // KW PSNPatch stealth extension compatibility
 		{
 			uint64_t syscall_not_impl = *(uint64_t *)MKA(syscall_table_symbol);
-			//*(uint64_t *)MKA(syscall_table_symbol + 8* 8) = syscall_not_impl;
+			//*(uint64_t *)MKA(syscall_table_symbol + 8 * 8) = syscall_not_impl;
 			ps3mapi_partial_disable_syscall8 = 2; //NzV Edit: Keep PS3M_API Features only.
 			*(uint64_t *)MKA(syscall_table_symbol + 8 * 9) = syscall_not_impl;
 			*(uint64_t *)MKA(syscall_table_symbol + 8 * 10) = syscall_not_impl;
@@ -1120,11 +1092,6 @@ int main(void)
 	fan_patches();
 
 	//map_path("/app_home", "/dev_usb000", 0); //Not needed
-	
-	// Cobra loaded successfully
-	cellFsUtilMount_h("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0, 0, 0, 0, 0);
-	cellFsRename(CB_LOCATION ".bak", CB_LOCATION);
-	cellFsUtilUmount("/dev_blind", 0, 1);
 
 	return SUCCEEDED;
 }

@@ -26,7 +26,7 @@
 #define BOOT_PLUGINS_FILE			"/dev_usb000/boot_plugins.txt"
 #define BOOT_PLUGINS_FILE2			"/dev_hdd0/boot_plugins.txt"
 #define BOOT_PLUGINS_KERNEL_FILE	"/dev_usb000/boot_plugins_kernel.txt"
-#define BOOT_PLUGINS_KERNEL_FILE2	"/dev_usb000/boot_plugins_kernel.txt"
+#define BOOT_PLUGINS_KERNEL_FILE2	"/dev_hdd0/boot_plugins_kernel.txt"
 #define BOOT_PLUGINS_FIRST_SLOT 	1
 #define MAX_BOOT_PLUGINS			(MAX_VSH_PLUGINS-BOOT_PLUGINS_FIRST_SLOT)
 #define MAX_BOOT_PLUGINS_KERNEL		5
@@ -540,12 +540,12 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 		uint64_t hash = 0;
 
 		for(int i = 0; i < 0x8; i++)  //0x20 bytes only		
-			hash ^= buf[i + 0xb0];  //unique location in all files+static hashes between firmware		
+			hash ^= buf[i + 0xb0];  //unique location in all files+static hashes between firmware
 
-		if((total & 0xff0000)==0)		
-			total = (total & 0xfff000); //if size is less than 0x10000 then check for next 4 bits		
+		if((total & 0xff0000) == 0)
+			total = (total & 0xfff000); //if size is less than 0x10000 then check for next 4 bits
 		else		
-			total = (total & 0xff0000); //copy third byte		
+			total = (total & 0xff0000); //copy third byte
 		
 		hash = ((hash << 32) & 0xfffff00000000000) | (total);  //20 bits check, prevent diferent hash just because of minor changes
 
@@ -601,10 +601,10 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 							if(patch->offset == ps1_netemu_get_region_offset)
 								data = LI(R3, 0x85);
 						}
+						
+						buf[patch->offset / 4] = data;
 
-						buf[patch->offset/4] = data;
-
-						DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)patch->offset, (uint32_t)patch->data);
+						DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)patch->offset, (uint32_t)data);
 						//DPRINTF("Offset: %lx\n", &buf[patch->offset/4]);
 					}
 
@@ -844,7 +844,6 @@ int prx_unload_vsh_plugin(unsigned int slot)
 		//DPRINTF("Stop failed: %x!\n", ret);	
 	}
 
-
 	if (ret == 0)
 	{
 		vsh_plugins[slot] = 0;
@@ -937,7 +936,7 @@ uint64_t load_plugin_kernel(char *path)
 				void *skprx = malloc(stat.st_size);
 				if(skprx)
 				{
-					if(cellFsRead(file, skprx, stat.st_size, &read)==0)
+					if(cellFsRead(file, skprx, stat.st_size, &read) == 0)
 					{	
 						f_desc_t f;
 						f.addr = skprx;
@@ -988,11 +987,11 @@ void load_boot_plugins_kernel(void)
 	{
 		char path[128];
 		int eof;			
-		
+
 		if (read_text_line(fd, path, sizeof(path), &eof) > 0)
 		{
 			uint64_t ret = load_plugin_kernel(path);
-				
+
 			if (ret >= 0)
 			{
 				DPRINTF("Load boot plugin %s -> %x\n", path, current_slot_kernel);
@@ -1000,12 +999,12 @@ void load_boot_plugins_kernel(void)
 				num_loaded_kernel++;
 			}			
 		}
-		
+
 		if (eof)
 			break;
 	}
 
-	cellFsClose(fd);	
+	cellFsClose(fd);
 }
 
 // webMAN integration support
@@ -1074,8 +1073,8 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, create_process_common_hooked, (proces
 									 void **sp_88, uint64_t *sp_90, process_t *process, uint64_t *sp_A0,
 									  uint64_t *sp_A8))
 {
-	char *parent_name = get_process_name(parent);
-	DPRINTF("PROCESS %s (%s) (%08X) created from parent process: %s\n", path, get_process_name(*process), *pid, ((int64_t)parent_name < 0) ? parent_name : "KERNEL");
+	//char *parent_name = get_process_name(parent);
+	//DPRINTF("PROCESS %s (%s) (%08X) created from parent process: %s\n", path, get_process_name(*process), *pid, ((int64_t)parent_name < 0) ? parent_name : "KERNEL");
 
 	return SUCCEEDED;
 }

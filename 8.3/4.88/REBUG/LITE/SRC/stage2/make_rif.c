@@ -8,14 +8,89 @@
 #include "modulespatch.h"
 #include "ps3mapi_core.h"
 #include "make_rif.h"
-#include "savegames.h"
 
-uint8_t skip_existing_rif = 0;
+#define ACCOUNTID						1
+#define READ 							0
+
+#define XREGISTRY_FILE 					"/dev_flash2/etc/xRegistry.sys"
+
+static uint8_t empty[0x10] = 
+{
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
 
 unsigned char RAP_KEY[] =  { 0x86, 0x9F, 0x77, 0x45, 0xC1, 0x3F, 0xD8, 0x90, 0xCC, 0xF2, 0x91, 0x88, 0xE3, 0xCC, 0x3E, 0xDF };
 unsigned char RAP_PBOX[] = { 0x0C, 0x03, 0x06, 0x04, 0x01, 0x0B, 0x0F, 0x08, 0x02, 0x07, 0x00, 0x05, 0x0A, 0x0E, 0x0D, 0x09 };
 unsigned char RAP_E1[] =   { 0xA9, 0x3E, 0x1F, 0xD6, 0x7C, 0x55, 0xA3, 0x29, 0xB7, 0x5F, 0xDD, 0xA6, 0x2A, 0x95, 0xC7, 0xA5 };
 unsigned char RAP_E2[] =   { 0x67, 0xD4, 0x5D, 0xA3, 0x29, 0x6D, 0x00, 0x6A, 0x4E, 0x7C, 0x53, 0x7B, 0xF5, 0x53, 0x8C, 0x74 };
+
+uint32_t userID;
+uint8_t skip_existing_rif = 0;
+uint8_t account_id[0x10];
+
+static int xreg_data(char *value)
+{
+    int fd, result = -1; 
+    uint16_t offset = 0;
+    uint64_t read, seek;    
+
+    if(cellFsOpen(XREGISTRY_FILE, CELL_FS_O_RDWR, &fd, 0666, NULL, 0) != SUCCEEDED)
+		return result;
+
+	char *buffer = malloc(0x2A);    
+
+    if(!buffer)
+		return result;
+
+    // Get offset
+    for(int i = 0; i < 0x10000; i++)
+    {       
+        cellFsLseek(fd, i, SEEK_SET, &seek);
+        cellFsRead(fd, buffer, 0x31 + 1, &read);
+
+        // Found offset
+        if(strcmp(buffer, value) == 0) 
+        {
+            offset = i - 0x15;
+            uint8_t *data = NULL;
+
+            // Search value from value table
+            for(int i = 0x10000; i < 0x15000; i++)
+            {
+            	data = (uint8_t *) malloc(0x17);
+
+                cellFsLseek(fd, i, SEEK_SET, &seek);
+                cellFsRead(fd, data, 0x17, &read);
+                
+                // Found value
+                if (memcmp(data, &offset, 2) == 0 && data[4] == 0x00 && data[5] == 0x11 && data[6] == 0x02)
+                {       
+                    result = 0;   
+
+                    memcpy(&account_id, data + 7, 0x10);
+
+                    if(memcmp(data + 7, empty, 0x10) != SUCCEEDED)                        
+                        result = 1;                                                                    
+
+                    free(data);
+					free(buffer);
+					cellFsClose(fd);
+					
+					return result;
+                }
+
+                free(data);
+            }
+        }
+    }
+
+    free(buffer);
+    cellFsClose(fd);    
+
+    return result;
+}
 
 static void get_rif_key(unsigned char* rap, unsigned char* rif)
 {
@@ -239,7 +314,7 @@ void make_rif(const char *path)
 
 			sprintf(buffer, ACCOUNTID_VALUE, userid);
 			
-			if(!act_dat_found && xreg_data(buffer, ACCOUNTID, READ, 0, 1))
+			if(!act_dat_found && xreg_data(buffer))
 				create_act_dat(userid);	
 
 			act_dat_found = 0;

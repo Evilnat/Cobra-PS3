@@ -15,6 +15,7 @@ LV2_FUNCTION3(cellFsUtilMount_h, cellFsUtilMount_symbol) /* We need to call this
 LV2_FUNCTION(cellFsUtilUmount, cellFsUtilUmount_symbol)
 LV2_FUNCTION(cellFsUtilNewfs, cellFsUtilNewfs_symbol)
 LV2_FUNCTION(cellFsRename_internal, cellFsRename_internal_symbol)
+LV2_FUNCTION(cellFsUtilMount_Usb000, cellUsb000_mount_symbol)
 
 LV2_FUNCTION(pathdup_from_user, pathdup_from_user_symbol)
 LV2_FUNCTION(open_fs_object, open_fs_object_symbol)

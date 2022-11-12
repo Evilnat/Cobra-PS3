@@ -35,7 +35,7 @@ LDFLAGS= -T stage2.ld -nostartfiles -nostdlib -nodefaultlibs -Wl,-static -L. $(f
 	 -Wl,--gc-sections -Wl,-Map=stage2.map
 
 OBJS = start.o ps3mapi_core.o main.o crypto.o modulespatch.o config.o psp_s.o mappath.o storage_ext.o region.o psp.o  \
-	   fan_control.o savegames.o homebrew_blocker.o make_rif.o qa.o \
+	   fan_control.o homebrew_blocker.o make_rif.o \
 	../lv2/src/usb.o ../lv2/src/patch.o ../lv2/src/interrupt.o ../lv2/src/interrupt_c.o ../lv2/src/io.o ../lv2/src/libc.o \
 	../lv2/src/libc_c.o ../lv2/src/memory.o ../lv2/src/memory_c.o ../lv2/src/thread.o ../lv2/src/thread_c.o ../lv2/src/process.o \
 	../lv2/src/synchronization.o ../lv2/src/modules.o ../lv2/src/modules_c.o ../lv2/src/storage.o ../lv2/src/object.o \

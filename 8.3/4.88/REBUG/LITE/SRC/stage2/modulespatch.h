@@ -125,6 +125,7 @@ extern uint64_t vsh_check;
 
 extern process_t vsh_process;
 extern uint8_t safe_mode;
+extern uint8_t forced_video_mode;
 
 /* Functions for kernel */
 void modules_patch_init(void);
