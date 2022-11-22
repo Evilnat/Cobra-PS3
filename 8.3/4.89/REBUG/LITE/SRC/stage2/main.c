@@ -603,6 +603,10 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 					return ps3mapi_process_page_allocate((process_id_t)param2, param3, param4, param5, param6, (uint64_t *)param7);
 				break;
 
+				case PS3MAPI_OPCODE_PROC_PAGE_FREE:
+					return ps3mapi_process_page_free((process_id_t)param2, param3, (u64 *)param4);
+				break;
+					
 				//----------
 				//MODULE
 				//----------

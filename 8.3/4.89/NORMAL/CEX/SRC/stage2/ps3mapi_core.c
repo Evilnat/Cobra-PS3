@@ -190,16 +190,13 @@ int ps3mapi_process_page_allocate(process_id_t pid, uint64_t size, uint64_t page
 
 	int ret;
 	void *kbuf, *vbuf;
+
 	if (page_size > 0)
-	{
 		ret = page_allocate(process, size, flags, page_size, &kbuf);
-	}
 	else
-	{
-		ret = page_allocate_auto(process, size, &kbuf);
-	}	
+		ret = page_allocate_auto(process, size, flags, &kbuf);
 	
-	if (ret) // (ret != SUCCEEDED)
+	if (ret)
 		return ENOMEM;
 
 	if (is_executable == 0)
@@ -228,8 +225,6 @@ int ps3mapi_process_page_allocate(process_id_t pid, uint64_t size, uint64_t page
 		*(uint32_t *)(addr) = 0x3B804000; // li r28, 0x4000
 		clear_icache((void *)addr, 4);
 	}
-
-	uint64_t temp_address = (uint64_t)vbuf;
 
 	uint64_t temp_table[2];
 	temp_table[0] = (uint64_t)vbuf;

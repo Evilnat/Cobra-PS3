@@ -181,7 +181,7 @@ int ps3mapi_get_process_mem(process_id_t pid, uint64_t addr, char *buf, int size
 }
 
 // TheRouletteBoi
-int ps3mapi_process_page_allocate(process_id_t pid, uint64_t size, uint64_t page_size, uint64_t flags, uint64_t is_executable, uint64_t *page_address)
+int ps3mapi_process_page_allocate(process_id_t pid, uint64_t size, uint64_t page_size, uint64_t flags, uint64_t is_executable, uint64_t *page_table)
 {
 	process_t process = ps3mapi_internal_get_process_by_pid(pid);
 
@@ -190,8 +190,13 @@ int ps3mapi_process_page_allocate(process_id_t pid, uint64_t size, uint64_t page
 
 	int ret;
 	void *kbuf, *vbuf;
-	ret = page_allocate(process, size, flags, page_size, &kbuf);
-	if (ret != SUCCEEDED)
+
+	if (page_size > 0)
+		ret = page_allocate(process, size, flags, page_size, &kbuf);
+	else
+		ret = page_allocate_auto(process, size, flags, &kbuf);
+	
+	if (ret)
 		return ENOMEM;
 
 	if (is_executable == 0)
@@ -221,8 +226,10 @@ int ps3mapi_process_page_allocate(process_id_t pid, uint64_t size, uint64_t page
 		clear_icache((void *)addr, 4);
 	}
 
-	uint64_t temp_address = (uint64_t)vbuf;
-	ret = copy_to_user(&temp_address, get_secure_user_ptr(page_address), sizeof(uint64_t));
+	uint64_t temp_table[2];
+	temp_table[0] = (uint64_t)vbuf;
+	temp_table[1] = (uint64_t)kbuf;
+	ret = copy_to_user(temp_table, get_secure_user_ptr(page_table), sizeof(uint64_t)*2);
 
 	if (ret != SUCCEEDED)
 	{
@@ -230,6 +237,26 @@ int ps3mapi_process_page_allocate(process_id_t pid, uint64_t size, uint64_t page
 		page_free(process, kbuf, flags);
 		return ret;
 	}
+
+	return SUCCEEDED;
+}
+
+int ps3mapi_process_page_free(process_id_t pid, uint64_t flags, uint64_t *page_table)
+{
+	process_t process = ps3mapi_internal_get_process_by_pid(pid);
+
+	if (process <= 0)
+		return ESRCH;
+
+	uint64_t temp_table[2];
+	int ret = copy_from_user(get_secure_user_ptr(page_table), temp_table, sizeof(uint64_t)*2);
+	if (ret) // (ret != SUCCEEDED)
+		return EINVAL;
+
+	uint64_t *vbuf = (uint64_t *)temp_table[0];
+	uint64_t *kbuf = (uint64_t *)temp_table[1];
+	page_unexport_from_proc(process, vbuf);
+	page_free(process, kbuf, flags);
 
 	return SUCCEEDED;
 }
