@@ -24,12 +24,10 @@ LV2_EXPORT int sm_get_fan_policy_internal(uint64_t *sysm_obj, uint8_t id, uint8_
 LV2_EXPORT int sm_set_fan_policy_internal(uint64_t *sysm_obj, uint8_t unk, uint8_t mode, uint8_t speed);
 
 
-static INLINE int sm_ring_buzzer(uint16_t beep)
+static INLINE void sm_ring_buzzer(uint16_t beep)
 {
 	memcpy(&sysm_obj, (void *)SYSM_OBJ_OFFSET, 8); 
 	sm_ring_buzzer_internal(sysm_obj, 0x29, 0xA, beep);
-
-	return 0;
 }
 
 static INLINE void sm_get_temperature(int id, uint32_t *temp)
@@ -45,12 +43,10 @@ static INLINE void sm_get_fan_policy(uint8_t id, uint8_t *st, uint8_t *mode, uin
 	sm_get_fan_policy_internal(sysm_obj, id, st, mode, speed, unk, 1000000);
 }
 
-static INLINE int sm_set_fan_policy(uint8_t unk, uint8_t mode, uint8_t speed)
+static INLINE void sm_set_fan_policy(uint8_t unk, uint8_t mode, uint8_t speed)
 {
 	memcpy(&sysm_obj, (void *)SYSM_OBJ_OFFSET, 8); 
 	sm_set_fan_policy_internal(sysm_obj, unk, mode, speed);
-
-	return 0;
 }
 
 #endif /* __LV2_CTRL_H__ */

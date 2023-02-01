@@ -729,9 +729,9 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 						fan_control_running = 0;
 
 					if(param2 == 2 || param2 == 3 || param2 == 4 || param2 == 5)
-						return sm_set_fan_policy(0, 2, 0x68); // 40%, to avoid a lower initial speed
+						sm_set_fan_policy(0, 2, 0x68); // 40%, to avoid a lower initial speed
 					else
-						return sm_set_fan_policy(0, (uint8_t)(param2 >= 0x33 ? 2 : 1), (uint8_t)(param2 >= 0x33 ? param2 : 0));
+						sm_set_fan_policy(0, (uint8_t)(param2 >= 0x33 ? 2 : 1), (uint8_t)(param2 >= 0x33 ? param2 : 0));
 				break;
 
 				// Now the value is setted externally with xai_plugin
@@ -744,7 +744,7 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 				break;
 				
 				case PS3MAPI_OPCODE_RING_BUZZER:
-					return sm_ring_buzzer((uint16_t)param2);
+					sm_ring_buzzer((uint16_t)param2);
 				break;
 
 				case PS3MAPI_OPCODE_SKIP_EXISTING_RIF:
@@ -1076,6 +1076,14 @@ static INLINE void apply_kernel_patches(void)
 	create_syscalls();
 }
 
+static void loaded_cobra()
+{
+	// Cobra loaded successfully
+	cellFsUtilMount_h("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0, 0, 0, 0, 0);
+	cellFsRename(CB_LOCATION ".bak", CB_LOCATION);
+	cellFsUtilUmount("/dev_blind", 0, 1);
+}
+
 int main(void)
 {
 #ifdef DEBUG
@@ -1094,6 +1102,7 @@ int main(void)
 	storage_ext_patches();
 	region_patches();
 	fan_patches();
+	loaded_cobra();
 	
 	//map_path("/app_home", "/dev_usb000", 0); //Not needed
 
