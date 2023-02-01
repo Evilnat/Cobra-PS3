@@ -2823,11 +2823,16 @@ LV2_HOOKED_FUNCTION(int, shutdown_copy_params_patched, (uint8_t *argp_user, uint
 		else
 		{
 			cellFsUnlink(PS2EMU_CONFIG_FILE);
+
 			if (disc_emulation == EMU_PS2_CD || disc_emulation == EMU_PS2_DVD)
 				prepare_ps2emu = 1;
 			else
 			{
 				//DPRINTF("NPDRM game, skipping ps2emu preparation\n");
+
+				// Set constant FAN Speed while launching a PS2 Classic game
+				if(ps2_speed)
+					sm_set_fan_policy(0, (ps2_speed == 1) ? 1 : 2, (ps2_speed == 1) ? 0 : ps2_speed);
 			}
 		}
 	}
@@ -2885,6 +2890,7 @@ LV2_HOOKED_FUNCTION(int, shutdown_copy_params_patched, (uint8_t *argp_user, uint
 
 		copy_ps2emu_stage2(ps2emu_type);
 	}
+
 	return SUCCEEDED;
 }
 
