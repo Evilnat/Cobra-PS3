@@ -57,7 +57,7 @@
 #define CB_LOCATION 			"/dev_blind/sys/stage2.bin"
 
 #define COBRA_VERSION			0x0F
-#define COBRA_VERSION_BCD		0x0830
+#define COBRA_VERSION_BCD		0x0840
 
 #if defined(FIRMWARE_CEX)
 	#define FIRMWARE_VERSION	0x0489

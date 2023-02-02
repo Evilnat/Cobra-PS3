@@ -46,80 +46,97 @@ static int init_map_entry(uint8_t index)
 // TODO: map_path and open_path_hook should be mutexed...
 int map_path(char *oldpath, char *newpath, uint32_t flags)
 {
-	int i, firstfree = -1;
+    int i, firstfree = -1;
 
-	if (!oldpath || strlen(oldpath) == 0)
-		return -1;
+    if (!oldpath || strlen(oldpath) == 0)
+        return -1;
 
-	DPRINTF("Map path: %s -> %s\n", oldpath, newpath);
+    DPRINTF("Map path: %s -> %s\n", oldpath, newpath);
 
-	if (newpath && strcmp(oldpath, newpath) == 0)
-		newpath = NULL;
+    if (newpath && strcmp(oldpath, newpath) == 0)
+        newpath = NULL;
 
-	if (strcmp(oldpath, "/dev_bdvd") == 0)
-		condition_apphome = (newpath != NULL);
+    if (strcmp(oldpath, "/dev_bdvd") == 0)
+        condition_apphome = (newpath != NULL);
 
-	for (i = 0; i < MAX_TABLE_ENTRIES; i++)
-	{
-		if (map_table[i].oldpath)
-		{
-			if (strcmp(oldpath, map_table[i].oldpath) == 0)
-			{
-				if (newpath && strlen(newpath))
-				{
-					strncpy(map_table[i].newpath, newpath, MAX_PATH - 1);
-					map_table[i].newpath[MAX_PATH - 1] = 0;
-					map_table[i].newpath_len = strlen(newpath);
-					map_table[i].flags = (map_table[i].flags&FLAG_COPY) | (flags&(~FLAG_COPY));
-				}
-				else
-				{
-					if(init_map_entry(i))
-						continue;
+    for (i = 0; i < MAX_TABLE_ENTRIES; i++)
+    {
+        if (map_table[i].oldpath)
+        {
+            if (strcmp(oldpath, map_table[i].oldpath) == 0)
+            {
+                if (newpath && strlen(newpath))
+                {
+                    strncpy(map_table[i].newpath, newpath, MAX_PATH - 1);
+                    map_table[i].newpath[MAX_PATH - 1] = 0;
+                    map_table[i].newpath_len = strlen(newpath);
+                    map_table[i].flags = (map_table[i].flags&FLAG_COPY) | (flags&(~FLAG_COPY));
+                }
+                else
+                {
+                    if(init_map_entry(i))
+                        continue;
 
-					if (map_table[i].flags & FLAG_COPY)
-						free(map_table[i].oldpath);
+                    if (map_table[i].flags & FLAG_COPY)
+                        free(map_table[i].oldpath);
 
-					free(map_table[i].newpath);
-					map_table[i].oldpath = NULL;
-					map_table[i].newpath = NULL;
-					map_table[i].flags = 0;
-				}
+                    free(map_table[i].newpath);
+                    map_table[i].oldpath = NULL;
+                    map_table[i].newpath = NULL;
+                    map_table[i].flags = 0;
+                }
 
-				break;
-			}
-		}
-		else if (firstfree < 0)
-			firstfree = i;
-	}
+                break;
+            }
+        }
+        else if (firstfree < 0)
+            firstfree = i;
+    }
+    
+    if (i == MAX_TABLE_ENTRIES)
+    {
+        if (firstfree < 0)
+            return EKRESOURCE;
 
-	if (i == MAX_TABLE_ENTRIES)
-	{
-		if (firstfree < 0)
-			return EKRESOURCE;
+        if (!newpath || strlen(newpath) == 0)
+            return SUCCEEDED;
 
-		if (!newpath || strlen(newpath) == 0)
-			return SUCCEEDED;
+        map_table[firstfree].flags = flags;
 
-		map_table[firstfree].flags = flags;
+        int len = strlen(oldpath); 
 
-		if (flags & FLAG_COPY)
-		{
-			int len = strlen(oldpath);
-			map_table[firstfree].oldpath = malloc(len + 1);
-			strncpy(map_table[firstfree].oldpath, oldpath, len);
-			map_table[firstfree].oldpath[len] = 0;
-		}
-		else
-			map_table[firstfree].oldpath = oldpath;
+        if(len >= MAX_PATH)
+        	return -1;
+        
+        char *oldpath_buf = malloc(len + 1);
 
-		map_table[firstfree].newpath = malloc(MAX_PATH);
-		strncpy(map_table[firstfree].newpath, newpath, MAX_PATH - 1);
-		map_table[firstfree].newpath[MAX_PATH - 1] = 0;
-		map_table[firstfree].newpath_len = strlen(newpath);
-	}
+        if(!oldpath_buf)
+            return -1;
 
-	return SUCCEEDED;
+        if (flags & FLAG_COPY)
+        {                       
+            map_table[firstfree].oldpath = (char *)oldpath_buf;
+            strncpy(map_table[firstfree].oldpath, oldpath, len);
+            map_table[firstfree].oldpath[len] = 0;
+        }
+        else
+            map_table[firstfree].oldpath = oldpath;
+
+        char *newpath_buf = malloc(MAX_PATH);
+
+        if(!newpath_buf)
+        {
+            free(oldpath_buf);
+            return -1;
+        }
+
+        map_table[firstfree].newpath = (char *)newpath_buf;
+        strncpy(map_table[firstfree].newpath, newpath, MAX_PATH - 1);
+        map_table[firstfree].newpath[MAX_PATH - 1] = 0;
+        map_table[firstfree].newpath_len = strlen(newpath);
+    }
+
+    return SUCCEEDED;
 }
 
 int map_path_user(char *oldpath, char *newpath, uint32_t flags)

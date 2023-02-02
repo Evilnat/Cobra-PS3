@@ -60,7 +60,7 @@ void main(void)
 		// Disabling stage2 to avoid issues, will be enabled in stage2
 		cellFsUtilMount_h("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0, 0, 0, 0, 0);
 		cellFsRename(STAGE2_DEVBLIND, STAGE2_DEVBLIND ".bak");
-
+		
 		f.addr = stage2;
 	}
 	else	

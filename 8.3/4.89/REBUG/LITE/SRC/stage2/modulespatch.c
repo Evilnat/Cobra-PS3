@@ -23,10 +23,8 @@
 #include "mappath.h"
 
 #define MAX_VSH_PLUGINS 			7
-#define BOOT_PLUGINS_FILE			"/dev_usb000/boot_plugins.txt"
-#define BOOT_PLUGINS_FILE2			"/dev_hdd0/boot_plugins.txt"
-#define BOOT_PLUGINS_KERNEL_FILE	"/dev_usb000/boot_plugins_kernel.txt"
-#define BOOT_PLUGINS_KERNEL_FILE2	"/dev_hdd0/boot_plugins_kernel.txt"
+#define BOOT_PLUGINS_FILE			"/dev_hdd0/boot_plugins.txt"
+#define BOOT_PLUGINS_KERNEL_FILE	"/dev_hdd0/boot_plugins_kernel.txt"
 #define BOOT_PLUGINS_FIRST_SLOT 	1
 #define MAX_BOOT_PLUGINS			(MAX_VSH_PLUGINS-BOOT_PLUGINS_FIRST_SLOT)
 #define MAX_BOOT_PLUGINS_KERNEL		5
@@ -647,7 +645,7 @@ LV2_HOOKED_FUNCTION_POSTCALL_7(void, pre_map_process_memory, (void *object, uint
 			// Change flags, RX -> RWX, make vsh text writable
 			set_patched_func_param(4, 0x2004004);
 
-			// We can clear stage0.  			
+			// We can clear stage0.
 			cleared_stage0 = 1; 
 		}
 		else if (flags == 0x2008004) 
@@ -667,10 +665,16 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, load_process_hooked, (process_t proce
 		{
 			//DPRINTF("COBRA: Safe mode detected\n");
 
-			// Disable stage2.cex by haxxxen
-			// Disabling it prevents issues while we are in Recovery Menu
+			// Preventing issues and soft/perma bricks with stage2 and plugins
 			cellFsUtilMount_h("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0, 0, 0, 0, 0);
+
+			// Disabling boot_plugins.txt by Evilnat
+			cellFsRename(BOOT_PLUGINS_FILE, BOOT_PLUGINS_FILE ".bak");
+			cellFsRename(BOOT_PLUGINS_KERNEL_FILE, BOOT_PLUGINS_KERNEL_FILE ".bak");
+
+			// Disable stage2.bin by haxxxen
 			cellFsRename("/dev_blind/rebug/cobra/stage2.cex", "/dev_blind/rebug/cobra/stage2.cex.bak");
+
 			cellFsUtilUmount("/dev_blind", 0, 1);
 			
 			safe_mode = 1;
@@ -934,6 +938,7 @@ uint64_t load_plugin_kernel(char *path)
 			if(cellFsOpen(path, CELL_FS_O_RDONLY, &file, 0, NULL, 0) == 0)
 			{
 				void *skprx = malloc(stat.st_size);
+				
 				if(skprx)
 				{
 					if(cellFsRead(file, skprx, stat.st_size, &read) == 0)
@@ -980,7 +985,6 @@ void load_boot_plugins_kernel(void)
 		return;	  // lets wait till vsh so we dont brick the console perma!
 
 	if (cellFsOpen(BOOT_PLUGINS_KERNEL_FILE,  CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != SUCCEEDED)
-	if (cellFsOpen(BOOT_PLUGINS_KERNEL_FILE2, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != SUCCEEDED)
 		return;
 
 	while (num_loaded_kernel < MAX_BOOT_PLUGINS_KERNEL)
@@ -994,7 +998,7 @@ void load_boot_plugins_kernel(void)
 
 			if (ret >= 0)
 			{
-				DPRINTF("Load boot plugin %s -> %x\n", path, current_slot_kernel);
+				//DPRINTF("Load boot plugin %s -> %x\n", path, current_slot_kernel);
 				current_slot_kernel++;
 				num_loaded_kernel++;
 			}			
@@ -1028,7 +1032,7 @@ void load_boot_plugins(void)
 	// Loading webman from flash - must first detect if the toogle is activated
 	if(prx_load_vsh_plugin(current_slot, PRX_PATH, NULL, 0) >= 0)
 	{
-		DPRINTF("Loading integrated webMAN plugin into slot %x\n", current_slot);
+		//DPRINTF("Loading integrated webMAN plugin into slot %x\n", current_slot);
         current_slot++;
 		num_loaded++;
 		webman_loaded = 1;
@@ -1036,7 +1040,6 @@ void load_boot_plugins(void)
 	// KW END
 
 	if (cellFsOpen(BOOT_PLUGINS_FILE,  CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != SUCCEEDED)
-	if (cellFsOpen(BOOT_PLUGINS_FILE2, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != SUCCEEDED)
 		return;
 
 	while(num_loaded < MAX_BOOT_PLUGINS)

@@ -645,7 +645,7 @@ LV2_HOOKED_FUNCTION_POSTCALL_7(void, pre_map_process_memory, (void *object, uint
 			// Change flags, RX -> RWX, make vsh text writable
 			set_patched_func_param(4, 0x2004004);
 
-			// We can clear stage0. 
+			// We can clear stage0.
 			cleared_stage0 = 1; 
 		}
 		else if (flags == 0x2008004) 

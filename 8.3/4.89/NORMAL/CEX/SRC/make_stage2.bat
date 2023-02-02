@@ -12,7 +12,7 @@ if not exist ..\BIN mkdir ..\BIN
 cd stage2
 
 rm -f *.o *.elf *.bin *.release *.debug *.map *.lzma ../lv2/src/*.o ../lv1/src/*.o ../debug/src/*.o
-make --silent all
+make all
 rm -f *.o *.elf *.map *.lzma ../lv2/src/*.o ../lv1/src/*.o ../debug/src/*.o
 
 pause

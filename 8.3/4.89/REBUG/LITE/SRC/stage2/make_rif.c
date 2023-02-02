@@ -61,6 +61,12 @@ static int xreg_data(char *value)
             {
             	data = (uint8_t *) malloc(0x17);
 
+            	if(!data)
+            	{
+            		free(buffer);
+            		return result;
+            	}
+
                 cellFsLseek(fd, i, SEEK_SET, &seek);
                 cellFsRead(fd, data, 0x17, &read);
                 
@@ -217,6 +223,10 @@ int create_act_dat(const char *userid)
 	accountID = SWAP64(accountID);
 	
 	uint8_t *actdat = malloc(0x1038);	
+
+	if(!actdat)	
+		return 1;
+	
 	memset(actdat, 0x11, 0x1038);
 	memcpy(actdat, &header, 8);
 	memcpy(actdat + 8, &accountID, 8);
