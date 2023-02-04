@@ -2,11 +2,11 @@ Feel free to download / modify.
 
 Thanks to Cobra team, Joonie, Habib, Haxxxen, Alexander, Dean, KW, Nzv, Bguerville, Aldo, LightningMods and all who helped updating Cobra source.
 
-# COBRA 8.3 Source
+# COBRA 8.4 Source
 
-Ported from Cobra 8.3 from @aldostools.
+Ported from Cobra 8.4 from @aldostools.
 
-###### New features in 8.3:
+###### New features in 8.4:
     • Failsafe Cobra stage2 (by bguerville/aldo)
     • Restore CFW Syscalls without reboot just entering to 'Settings > System Update' on XMB (by aldo)
     • Force video mode in PS1 games adding "NTSC" or "PAL" in the file name of the BIN/CUE
