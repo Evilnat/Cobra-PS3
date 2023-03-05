@@ -7,11 +7,12 @@ Thanks to Cobra team, Joonie, Habib, Haxxxen, Alexander, Dean, KW, Nzv, Bguervil
 Ported from Cobra 8.4 from @aldostools.
 
 ###### New features in 8.4:
+    • Opcode to toggle PS2 icon (ISOs/BIN.ENC) in XMB (by Evilnat)
     • Failsafe Cobra stage2 (by bguerville/aldo)
     • Restore CFW Syscalls without reboot just entering to 'Settings > System Update' on XMB (by aldo)
     • Force video mode in PS1 games adding "NTSC" or "PAL" in the file name of the BIN/CUE
     • PS2 FAN Speed now works with PS2 Classic games
-    • Updated PS3MAPI_CORE_VERSION   to 0x0124 (OsirizX additions for Dynarec)
+    • Updated PS3MAPI_CORE_VERSION  to 0x0124 (OsirizX additions for Dynarec)
     • Disabling boot_plugins.txt (by Evilnat)
     • Check for NULL memory allocation in make_rif.c
     • Map path like Mamba 8.4

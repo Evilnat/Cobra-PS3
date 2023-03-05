@@ -148,7 +148,7 @@ int read_cobra_config(void)
 	// Removed. Now condition_ps2softemu has another meaning and it is set automatically in storage_ext if no BC console
 	//condition_ps2softemu = config.ps2softemu;
 
-	DPRINTF("Configuration read.\n+ bd_video_region = %d, + dvd_video_region = %d\n+ spoof_version = %04X, + spoof_revision = %d\n+ fan_speed = %02X, + ps2_speed = %02X\n+ allow_restore_sc = %X, + skip_existing_rif = %02X\n",
+	DPRINTF("Configuration read.\n+ bd_video_region = %d\n+ dvd_video_region = %d\n+ spoof_version = %04X\n+ spoof_revision = %d\n+ fan_speed = %02X\n+ ps2_speed = %02X\n+ allow_restore_sc = %X\n+ skip_existing_rif = %02X\n",
 		bd_video_region, dvd_video_region, config.spoof_version, config.spoof_revision, fan_speed, ps2_speed, allow_restore_sc, skip_existing_rif);
 	
 	return SUCCEEDED;
