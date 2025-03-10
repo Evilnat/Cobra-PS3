@@ -9,7 +9,6 @@ Thanks to Cobra team, Joonie, Habib, Haxxxen, Alexander, Dean, KW, Nzv, Bguervil
     • Fixed controller infinite loop (Thanks to aldostools)
     • Added asm code embedding to display temperature when compiling ps2_netemu.self (Thanks to @3141card for his research)
     • Support for 3k3y/Redump ISOs on-the-fly  
-    • Changed base load to 0x8000000000001000 in stage0
     • Opcode to set SYSCALLS mode at boot
     • Opcode to set GAMEBOOT mode
     • Opcode to set EPILEPSY WARNING mode
@@ -18,9 +17,7 @@ Thanks to Cobra team, Joonie, Habib, Haxxxen, Alexander, Dean, KW, Nzv, Bguervil
     • Sorry if I forgot something else...
     
 ###### To do:
-    • rap2bin - bin2rap support by @esc0rtd3w
     • Patch to allow universal DVD region
-    • Patch PS2CLASSICS to be able to play it on DEX
 
 ### Data that need to be ported to every CFW version
 
