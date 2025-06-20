@@ -31,8 +31,8 @@ Once you have completed the previous step, you just need to copy the "overclock.
 
 This is what the routes would be like:
 
-- **PC USB:**  X:\overclock.txt\
-- **PS3 USB:** /dev_usbXXX/overclock.txt\
+- **PC USB:**  X:\overclock.txt
+- **PS3 USB:** /dev_usbXXX/overclock.txt
 - **PS3 HDD:** /dev_hdd0/overclock.txt
 
 > [!CAUTION]
