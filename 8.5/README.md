@@ -27,6 +27,9 @@ For example, I want to overclock RSX's core to 600MHz and memory to 750MHz, this
 
 This will overclock RSX's **Core** to **600MHz** and **Memory** to **750MHz**
 
+> [!CAUTION]
+> **Values must be multiple of 50 for Core and multiple of 25 for Memory**
+
 Once you have completed the previous step, you just need to copy the "overclock.txt" file to the root of a USB device in **FAT32** format or to the internal hard drive of the PS3
 
 This is what the routes would be like:
