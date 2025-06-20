@@ -312,47 +312,33 @@ int sys_psp_set_umdfile(char *file, char *id, int prometheus)
 
 	if (!patches_backup)
 	{
-		switch(vsh_check)
+		//DPRINTF("Now patching PSP DRM In VSH..\n");
+
+		if(vsh_check == VSH_CEX_HASH)
 		{
-			case VSH_CEX_HASH:
-				//DPRINTF("Now patching PSP DRM In Retail VSH..\n");
+			patches_backup = malloc(sizeof(psp_drm_patches));
+			memcpy(patches_backup, &psp_drm_patches, sizeof(psp_drm_patches));
+		}
+		else if(vsh_check == VSH_DEX_HASH)
+		{
+			patches_backup = malloc(sizeof(psp_drm_dex_patches));
+			memcpy(patches_backup, &psp_drm_dex_patches, sizeof(psp_drm_dex_patches));
+		}
+		else
+		{
+			//DPRINTF("Unknown VSH HASH, PSP DRM was not patched!\n");
+			return SUCCEEDED;
+		}
 
-				patches_backup = malloc(sizeof(psp_drm_patches));
+		for (int i = 0; (vsh_check == VSH_CEX_HASH ? psp_drm_patches[i].offset : psp_drm_dex_patches[i].offset) != 0; i++)
+		{
+			//DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)psp_drm_patches[i].offset, (uint32_t)psp_drm_patches[i].data);
 
-				memcpy(patches_backup, &psp_drm_patches, sizeof(psp_drm_patches));
+			copy_from_process(vsh_process, (void *)(uint64_t)(0x10000 + patches_backup[i].offset), &patches_backup[i].data, 4);
 
-				for (int i = 0; psp_drm_patches[i].offset != 0; i++)
-				{
-					//DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)psp_drm_patches[i].offset, (uint32_t)psp_drm_patches[i].data);
-
-					copy_from_process(vsh_process, (void *)(uint64_t)(0x10000 + patches_backup[i].offset), &patches_backup[i].data, 4);
-
-					if (copy_to_process(vsh_process, &psp_drm_patches[i].data, (void *)(uint64_t)(0x10000 + psp_drm_patches[i].offset), 4) != 0)
-						fatal("copy_to_process failed, you forgot to make vsh text writable, retard!\n");
-				}
-			break;
-
-			case VSH_DEX_HASH:
-				//DPRINTF("Now patching PSP DRM In DEBUG VSH..\n");
-
-				patches_backup = alloc(sizeof(psp_drm_dex_patches), 0x27);
-			
-				memcpy(patches_backup, &psp_drm_dex_patches, sizeof(psp_drm_dex_patches));
-					
-				for (int i = 0; psp_drm_dex_patches[i].offset != 0; i++)
-				{
-					//DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)psp_drm_dex_patches[i].offset, (uint32_t)psp_drm_dex_patches[i].data);
-			
-					copy_from_process(vsh_process, (void *)(uint64_t)(0x10000+patches_backup[i].offset), &patches_backup[i].data, 4);
-				
-					if (copy_to_process(vsh_process, &psp_drm_dex_patches[i].data, (void *)(uint64_t)(0x10000+psp_drm_dex_patches[i].offset), 4) != 0)					
-						fatal("copy_to_process failed, you forgot to make vsh text writable, retard!\n");					
-				}
-			break;
-
-			default:
-				//DPRINTF("Unknown VSH HASH, PSP DRM was not patched!\n");
-				break;
+			if(copy_to_process(vsh_process, (vsh_check == VSH_CEX_HASH ? &psp_drm_patches[i].data : &psp_drm_dex_patches[i].data), 
+				(void *)(uint64_t)(0x10000 + (vsh_check == VSH_CEX_HASH ? psp_drm_patches[i].offset : psp_drm_dex_patches[i].offset)), 4) != 0)
+				fatal("copy_to_process failed, you forgot to make vsh text writable, retard!\n");
 		}
 	}
 

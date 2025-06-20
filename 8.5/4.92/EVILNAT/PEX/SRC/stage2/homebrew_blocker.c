@@ -20,7 +20,7 @@
 #define MAX_LIST_ENTRIES	32 // Maximum elements for noth the custom blacklist and whitelist.
 
 int CFW2OFW_game = 0;
-uint8_t allow_restore_sc = 1;
+//uint8_t allow_restore_sc = 1;
 uint8_t syscalls_mode = 0; 
 
 static int __initialized_lists = 0; // Are the lists initialized ?
@@ -66,9 +66,6 @@ static int init_list(char *list, char *path, int maxentries)
 // to initialize the lists, tries to read them from file BLACKLIST_FILENAME and WHITELIST_FILENAME
 static int listed(int blacklist, char *gameid)
 {
-	char *list;
-	int i, elements;
-
 	if (!__initialized_lists)
 	{
 		// initialize the lists if not yet done
@@ -77,18 +74,10 @@ static int listed(int blacklist, char *gameid)
 		__initialized_lists = 1;
 	}
 
-	if (blacklist)
-	{
-		list = __blacklist;
-		elements = __blacklist_entries;
-	}
-	else
-	{
-		list = __whitelist;
-		elements = __whitelist_entries;
-	}
+	char *list = blacklist ? __blacklist : __whitelist;
+    int elements = blacklist ? __blacklist_entries : __whitelist_entries;
 
-	for (i = 0; i < elements; i++)
+	for (int i = 0; i < elements; i++)
 	{
 		if (!strncmp(list + (9 * i), gameid, 9))
 			return 1; // gameid is in the lists
@@ -124,7 +113,9 @@ int block_homebrew(const char *path)
 		char *gameid = (char *)path + 15;
 
 		// Block PSP Launchers if PSP UMD was not set (By @aldostools)
-		if (!umd_file && (!strncmp(gameid, "PSPC66820/USRDIR", 16) || !strncmp(gameid, "PSPM66820/USRDIR", 16)))
+		if (!umd_file && 
+			(!strncmp(gameid, "PSPC66820/USRDIR", 16) || 
+			 !strncmp(gameid, "PSPM66820/USRDIR", 16)))
 		{
 			block_psp_launcher = 1;
 			return allow;
@@ -178,11 +169,11 @@ int block_homebrew(const char *path)
 void restore_syscalls(const char *path)
 {
 	// Restore disabled CFW Syscalls without reboot just entering to Settings > System Update on XMB - aldostools
-	if(allow_restore_sc)
-	{
+	/*if(allow_restore_sc)
+	{*/
 		if(!strcmp(path, "/dev_flash/vsh/module/software_update_plugin.sprx"))
 			create_syscalls();
-	}
+	//}
 }
 
 void check_signin(const char *path)

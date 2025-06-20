@@ -16,11 +16,11 @@
 
 CobraConfig config;
 
-static uint8_t cfg_template[0x19] = 
+static uint8_t cfg_template[0x15] = 
 { 
-	0x00, 0x19, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 
-	0x00, 0x00, 0x00, 0x00, 0x00
+	0x00, 0x15, 0x00, 0x01, 0x00, 0x00, 0x00, 
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
 static void check_and_correct(CobraConfig *cfg)
@@ -79,14 +79,14 @@ static void check_and_correct(CobraConfig *cfg)
 
 	cfg->spoof_revision = 0;	
 
-	if(cfg->allow_restore_sc > 1)
-		cfg->allow_restore_sc = 0;
+	/*if(cfg->allow_restore_sc > 1)
+		cfg->allow_restore_sc = 0;*/
 
-	if(cfg->skip_existing_rif > 1)
-		cfg->skip_existing_rif = 0;
+	/*if(cfg->skip_existing_rif > 1)
+		cfg->skip_existing_rif = 0;*/
 
-	if(cfg->color_disc > 1)
-		cfg->color_disc = 0;
+	/*if(cfg->color_disc > 1)
+		cfg->color_disc = 0;*/
 
 	if(cfg->syscalls_mode > 2)
 		cfg->syscalls_mode = 0;	
@@ -94,8 +94,8 @@ static void check_and_correct(CobraConfig *cfg)
 	if(cfg->gameboot_mode > 1)
 		cfg->gameboot_mode = 0;	
 
-	if(cfg->epilepsy_warning > 1)
-		cfg->epilepsy_warning = 0;	
+	/*if(cfg->epilepsy_warning > 1)
+		cfg->epilepsy_warning = 0;*/
 
 	if(cfg->coldboot_mode > 1)
 		cfg->coldboot_mode = 0;		
@@ -108,6 +108,20 @@ static void check_and_correct(CobraConfig *cfg)
 		
 	if (cfg->size > sizeof(CobraConfig))
 		cfg->size = sizeof(CobraConfig);
+
+	// Optimized by aldostools
+	bd_video_region = config.bd_video_region;
+	dvd_video_region = config.dvd_video_region;
+	fan_speed = config.fan_speed;
+	ps2_speed = config.ps2_speed;
+	//allow_restore_sc = config.allow_restore_sc;
+	//skip_existing_rif = config.skip_existing_rif;
+	//color_disc = config.color_disc;
+	syscalls_mode = config.syscalls_mode;
+	gameboot_mode = config.gameboot_mode;
+	//epilepsy_warning = config.epilepsy_warning;
+	coldboot_mode = config.coldboot_mode;
+	hidden_trophy_mode = config.hidden_trophy_mode;
 }
 
 static uint16_t checksum(CobraConfig *cfg)
@@ -131,11 +145,11 @@ int read_cobra_config(void)
 	// Create "/dev_hdd0/vm/cobra_cfg.bin" file if it does not exist
 	// This fixes issues in some PS3 that can't create/save Cobra config
 	ret = cellFsStat(COBRA_CONFIG_FILE, &stat);
-	if(ret != CELL_FS_SUCCEEDED || stat.st_size != 0x19)
+	if(ret != CELL_FS_SUCCEEDED || stat.st_size != 0x15)
 	{
 		if(cellFsOpen(COBRA_CONFIG_FILE, CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, 0666, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
-			cellFsWrite(fd, cfg_template, 0x19, &write);
+			cellFsWrite(fd, cfg_template, 0x15, &write);
 			cellFsClose(fd);
 		}		
 	}
@@ -157,26 +171,13 @@ int read_cobra_config(void)
 	check_and_correct(&config);	
 	
 	config.size = sizeof(config);
-	
-	bd_video_region = config.bd_video_region;
-	dvd_video_region = config.dvd_video_region;
-	fan_speed = config.fan_speed;
-	ps2_speed = config.ps2_speed;
-	allow_restore_sc = config.allow_restore_sc;
-	skip_existing_rif = config.skip_existing_rif;
-	color_disc = config.color_disc;
-	syscalls_mode = config.syscalls_mode;
-	gameboot_mode = config.gameboot_mode;
-	epilepsy_warning = config.epilepsy_warning;
-	coldboot_mode = config.coldboot_mode;
-	hidden_trophy_mode = config.hidden_trophy_mode;
 
 	// Removed. Now condition_ps2softemu has another meaning and it is set automatically in storage_ext if no BC console
 	//condition_ps2softemu = config.ps2softemu;
 
 	// Disabled to reduce stage2 size
-	/*DPRINTF("Configuration read.\n+ bd_video_region = %d\n+ dvd_video_region = %d\n+ spoof_version = %04X\n+ spoof_revision = %d\n+ fan_speed = %02X\n+ ps2_speed = %02X\n+ allow_restore_sc = %X\n+ skip_existing_rif = %02X\n+ color_disc = %02X\n+ syscalls_mode = %02X\n+ gameboot_mode = %02X\n+ epilepsy_warning = %02X\n+ coldboot_mode = %02X\n+ hidden_trophy_mode = %02X\n\n",
-		bd_video_region, dvd_video_region, config.spoof_version, config.spoof_revision, fan_speed, ps2_speed, allow_restore_sc, skip_existing_rif, color_disc, syscalls_mode, gameboot_mode, epilepsy_warning, coldboot_mode, hidden_trophy_mode);*/
+	/*DPRINTF("Configuration read.\n+ bd_video_region = %d\n+ dvd_video_region = %d\n+ fan_speed = %02X\n+ ps2_speed = %02X\n+ syscalls_mode = %02X\n+ gameboot_mode = %02X\n+ coldboot_mode = %02X\n+ hidden_trophy_mode = %02X\n\n",
+		bd_video_region, dvd_video_region, fan_speed, ps2_speed, syscalls_mode, gameboot_mode, coldboot_mode, hidden_trophy_mode);*/
 	
 	return SUCCEEDED;
 }
@@ -238,18 +239,6 @@ int sys_write_cobra_config(CobraConfig *cfg)
 		copy_size = 0;
 	
 	memcpy(&config.checksum, &cfg->checksum, copy_size);
-	bd_video_region = config.bd_video_region;
-	dvd_video_region = config.dvd_video_region;
-	fan_speed = config.fan_speed;
-	ps2_speed = config.ps2_speed;
-	allow_restore_sc = config.allow_restore_sc;
-	skip_existing_rif = config.skip_existing_rif;
-	color_disc = config.color_disc;
-	syscalls_mode = config.syscalls_mode;
-	gameboot_mode = config.gameboot_mode;
-	epilepsy_warning = config.epilepsy_warning;
-	coldboot_mode = config.coldboot_mode;
-	hidden_trophy_mode = config.hidden_trophy_mode;
 	
 	return write_cobra_config();
 }

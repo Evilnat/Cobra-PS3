@@ -34,7 +34,7 @@ static unsigned char RAP_E2[] =   { 0x67, 0xD4, 0x5D, 0xA3, 0x29, 0x6D, 0x00, 0x
 
 char userid[9];
 char rap_bin_file[120];
-uint8_t skip_existing_rif = 0;
+//uint8_t skip_existing_rif = 0;
 uint8_t account_id[ACC_SIZE];
 
 static int xreg_data(const char *value)
@@ -55,7 +55,7 @@ static int xreg_data(const char *value)
 	for(int i = 0; i < 0x10000; i++)
 	{
 		cellFsLseek(fd, i, SEEK_SET, &seek);
-		cellFsRead(fd, buffer, 0x31 + 1, &read);
+		cellFsRead(fd, buffer, 0x32, &read);
 
 		// Found offset
 		if(strcmp(buffer, value) == SUCCEEDED)
@@ -67,7 +67,7 @@ static int xreg_data(const char *value)
 			for(int i = 0x10000; i < 0x15000; i++)
 			{
 				cellFsLseek(fd, i, SEEK_SET, &seek);
-				cellFsRead(fd, data, 0x17, &read);
+				cellFsRead(fd, data, sizeof(data), &read);
 
 				// Found value
 				if(memcmp(data, &offset, 2) == SUCCEEDED && data[4] == 0x00 && data[5] == 0x11 && data[6] == 0x02)
@@ -315,7 +315,7 @@ void make_rif(const char *path)
 			if(strncmp(cached_content_id, content_id, CONTENTID_SIZE) == SUCCEEDED)
 			{
 				found_rap_in_bin = 0;
-				DPRINTF("Using cached RAP value for content_id: %s\n", content_id);
+				//DPRINTF("Using cached RAP value for content_id: %s\n", content_id);
 			}
 			else
 			{
@@ -359,7 +359,7 @@ void make_rif(const char *path)
 			else if(is_pslauncher)
 			{
 				// Use the hardcoded values for PS2 and PSP launchers
-				DPRINTF("license for ps2_psp, loaded static value\n");
+				//DPRINTF("license for ps2_psp, loaded static value\n");
 				memcpy(rap, (uint8_t[]){ 0xF5, 0xDE, 0xCA, 0xBB, 0x09, 0x88, 0x4F, 0xF4, 0x02, 0xD4, 0x12, 0x3C, 0x25, 0x01, 0x71, 0xD9 }, KEY_SIZE);
 			}
 			else
@@ -411,11 +411,11 @@ void make_rif(const char *path)
 					sprintf(rif_path, "/%s", path);
 
 					// Skip the creation of rif license if it already exists - By aldostools
-					if(skip_existing_rif && cellFsStat(rif_path, &stat) == SUCCEEDED)
+					/*if(skip_existing_rif && cellFsStat(rif_path, &stat) == SUCCEEDED)
 					{
 						//DPRINTF("license already exists, omitting...);
 						return;
-					}
+					}*/
 
 					uint8_t rap_key[KEY_SIZE];
 					memcpy(rap_key, rap, KEY_SIZE);

@@ -146,7 +146,7 @@ extern uint64_t vsh_check;
 extern process_t vsh_process;
 extern uint8_t safe_mode;
 extern uint8_t forced_video_mode;
-extern uint8_t epilepsy_warning;
+//extern uint8_t epilepsy_warning;
 extern uint8_t gameboot_mode;
 extern uint8_t coldboot_mode;
 extern uint8_t hidden_trophy_mode;
@@ -171,7 +171,8 @@ int ps3mapi_unload_vsh_plugin(char* name);
 void unhook_all_modules(void);
 int ps3mapi_get_vsh_plugin_info(unsigned int slot, char *name, char *filename);
 
-void patch_epilepsy_warning();
+//void patch_epilepsy_warning();
 void patch_coldboot();
+void patch_overclock();
 
 #endif /* __MODULESPATCH_H__ */

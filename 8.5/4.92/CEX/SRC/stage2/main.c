@@ -677,14 +677,14 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 					return SUCCEEDED;
 				break;
 
-				case PS3MAPI_OPCODE_ALLOW_RESTORE_SYSCALLS:
+				/*case PS3MAPI_OPCODE_ALLOW_RESTORE_SYSCALLS:
 					allow_restore_sc = (uint8_t)param2; // 1 = allow, 0 = do not allow
 					return SUCCEEDED;
-				break;
+				break;*/
 
-				case PS3MAPI_OPCODE_GET_RESTORE_SYSCALLS:
+				/*case PS3MAPI_OPCODE_GET_RESTORE_SYSCALLS:
 					return allow_restore_sc;
-				break;
+				break;*/
 
 				//----------
 				//REMOVE HOOK
@@ -746,34 +746,34 @@ LV2_SYSCALL2(int64_t, syscall8, (uint64_t function, uint64_t param1, uint64_t pa
 					sm_ring_buzzer((uint16_t)param2);
 				break;
 
-				case PS3MAPI_OPCODE_SKIP_EXISTING_RIF:
+				/*case PS3MAPI_OPCODE_SKIP_EXISTING_RIF:
 					skip_existing_rif = (uint8_t)param2;
 					return SUCCEEDED;
-				break;
+				break;*/
 
-				case PS3MAPI_OPCODE_GET_SKIP_EXISTING_RIF:
+				/*case PS3MAPI_OPCODE_GET_SKIP_EXISTING_RIF:
 					return skip_existing_rif;
-				break;
+				break;*/
 
 				case PS3MAPI_OPCODE_CREATE_RIF:
 					make_rif((char *)param2);
 					return SUCCEEDED;
 				break;
 
-				case PS3MAPI_OPCODE_SWAP_PS2_ICON_COLOR:
+				/*case PS3MAPI_OPCODE_SWAP_PS2_ICON_COLOR:
 					color_disc = (uint8_t)param2; // 1 = PS2 CD: blue icon - PS2 DVD: yellow icon | 0 = PS2 CD/DVD blue icon
 					return SUCCEEDED;
-				break;
+				break;*/
 
 				case PS3MAPI_OPCODE_GAMEBOOT:
 					gameboot_mode = (uint8_t)param2;
 					return SUCCEEDED;
 				break;
 
-				case PS3MAPI_OPCODE_EPILEPSY_WARNING:
+				/*case PS3MAPI_OPCODE_EPILEPSY_WARNING:
 					epilepsy_warning = (uint8_t)param2;
 					return SUCCEEDED;
-				break;
+				break;*/
 
 				case PS3MAPI_OPCODE_COLDBOOT:
 					coldboot_mode = (uint8_t)param2;
@@ -1129,7 +1129,7 @@ int main(void)
 	fan_patches();
 	cobra_loaded();
 	
-	//map_path("/app_home", "/dev_usb000", 0); //Not needed
+	//map_path("/app_home", "/dev_usb000", 0); // Not needed
 
 	return SUCCEEDED;
 }

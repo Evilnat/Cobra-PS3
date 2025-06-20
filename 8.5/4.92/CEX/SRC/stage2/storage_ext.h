@@ -34,7 +34,7 @@ enum STORAGE_COMMAND
 };
 
 extern int ps2emu_type;
-extern uint8_t color_disc; // Change the color of PS2 CD/DVD icon in XMB
+//extern uint8_t color_disc; // Change the color of PS2 CD/DVD icon in XMB
 
 void restore_BD(void);
 

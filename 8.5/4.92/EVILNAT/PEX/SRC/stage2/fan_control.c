@@ -16,13 +16,8 @@ uint8_t ps2_speed;
 
 int sm_get_fan_speed(void)
 {
-	uint8_t st;
-	uint8_t mode;
-	uint8_t _fan_speed;
-	uint8_t unk;
-
+	uint8_t st, mode, _fan_speed, unk;
 	sm_get_fan_policy(0, &st, &mode, &_fan_speed, &unk);
-
 	return _fan_speed;
 }
 
@@ -51,50 +46,51 @@ static void fan_control(uint64_t arg0)
 	{
 		timer_usleep(SECONDS(3));
 
-		if(fan_control_running) // Avoids loading previous mode (By Evilnat)
+		// Avoids loading previous mode (By Evilnat)
+		if (!fan_control_running) 
+			break;
+
+		t_cpu = t_rsx = 0;
+		
+		sm_get_temperature(0, &t_cpu);
+		sm_get_temperature(1, &t_rsx);
+
+		if(t_rsx > t_cpu) 
+			t_cpu = t_rsx;
+
+		if(t_cpu > max_temp && t_cpu < 80) // Temp under max_temp (60°C/65°C/70°C/75°C) and 80°C
+		{		
+			warning = 0;
+			speed = speed + 5; // +2%
+
+			// Maximum fan speed
+			if(speed > 0xFF)
+				speed = 0xFF;
+		}
+		else if(t_cpu <= max_temp) // Temp lower or equal to max_temp (60°C/65°C/70°C/75°C)
 		{
-			t_cpu = t_rsx = 0;
-			
-			sm_get_temperature(0, &t_cpu);
-			sm_get_temperature(1, &t_rsx);
+			if(t_cpu >= (max_temp - 2)) 
+				continue;
 
-			if(t_rsx > t_cpu) 
-				t_cpu = t_rsx;
+			warning = 0;
+			speed = speed - 4; // -1.5%
 
-			if(t_cpu > max_temp && t_cpu < 80) // Temp under max_temp (60°C/65°C/70°C/75°C) and 80°C
-			{		
-				warning = 0;
-				speed = speed + 5; // +2%
+			// Minimium fan speed, probably a lower speed can create problems
+			if(speed < 0x55)
+                speed = 0x55; // 33%
+		}
+		else if(t_cpu >= 80) // Temp higher or equal to 80°C (Overheating!!)
+		{
+			// Overheating
+			// Let's warn the user with triple beep and we set fan speed to 0xF8	
+			if(!warning)
+				sm_ring_buzzer(TRIPLE_BEEP);
 
-				// Maximum fan speed
-				if(speed > 0xFF)
-					speed = 0xFF;
-			}
-			else if(t_cpu <= max_temp) // Temp lower or equal to max_temp (60°C/65°C/70°C/75°C)
-			{
-				if(t_cpu >= (max_temp - 2)) 
-					continue;
+			warning = 1;
+			speed = 0xF8; // 97%
+		}
 
-				warning = 0;
-				speed = speed - 4; // -1.5%
-
-				// Minimium fan speed, probably a lower speed can create problems
-				if(speed < 0x55)
-                    speed = 0x55; // 33%
-			}
-			else if(t_cpu >= 80) // Temp higher or equal to 80°C (Overheating!!)
-			{
-				// Overheating
-				// Let's warn the user with triple beep and we set fan speed to 0xF8	
-				if(!warning)
-					sm_ring_buzzer(TRIPLE_BEEP);
-
-				warning = 1;
-				speed = 0xF8; // 97%
-			}
-
-			sm_set_fan_policy(0, 2, speed);
-		}		
+		sm_set_fan_policy(0, 2, speed);	
 	}
 
 	//DPRINTF("Cobra's Dynamic Control FAN: Finished.\n");
@@ -127,7 +123,7 @@ void load_fan_control(int mode)
 		return;
 	else if(fan_speed >= 0x33 && fan_speed <= 0xFE) // Manual mode
 		sm_set_fan_policy(0, 2, fan_speed); 
-	else if(fan_speed == 1)  // SYSCON mode
+	else if(fan_speed == 1) // SYSCON mode
 		sm_set_fan_policy(0, 1, 0);
 	else
 		do_fan_control(mode); // Dynamic fan control

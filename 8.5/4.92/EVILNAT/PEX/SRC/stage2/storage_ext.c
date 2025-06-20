@@ -151,6 +151,7 @@ static int emu_ps3_rec = 0; // Support for burned PS3 DVD/BD Discs by deank
 static int disc_being_mounted = 0;
 static int could_not_read_disc;
 static int hdd0_mounted = 0;
+static int usb000_mounted = 0;
 
 // 3k3y/Redump ISOs decryption on-the-fly (By Evilnat)
 uint8_t key_d1[0x10] = { 0x38, 0x0B, 0xCF, 0x0B, 0x53, 0x45, 0x5B, 0x3C, 0x78, 0x17, 0xAB, 0x4F, 0xA3, 0xBA, 0x90, 0xED };
@@ -165,7 +166,7 @@ static unsigned char iv_[0x10];
 DiscRegionInfo discRegionInfo[200];
 
 int ps2emu_type;
-uint8_t color_disc = 0;
+//uint8_t color_disc = 0;
 
 static int video_mode = -2;
 static uint32_t base_offset = 0;
@@ -1230,11 +1231,7 @@ int process_get_psx_video_mode(void)
 				free(buf);
 		}
 
-		if(ret == 0)
-			DPRINTF("NTSC\n");
-
-		if(ret == 1)
-			DPRINTF("PAL\n");
+		DPRINTF((!ret ? "NTSC\n" : "PAL\n"));
 
 		free(bbuf);
 		page_free(NULL, dma, 0x2F);
@@ -1448,9 +1445,9 @@ void process_disc_insert(uint32_t disctype)
 		break;
 
 		case EMU_PS2_DVD:
-			if(color_disc)
+			/*if(color_disc)
 				fake_disctype = effective_disctype = DEVICE_TYPE_PS2_CD;
-			else
+			else*/
 				if (real_disctype != DEVICE_TYPE_PS2_DVD)
 					fake_disctype = effective_disctype = DEVICE_TYPE_PS2_DVD;	
 		break;
@@ -1475,15 +1472,15 @@ void process_disc_insert(uint32_t disctype)
 			{
 				if (is_psx(0))
 				{
-					if(color_disc)
+					/*if(color_disc)
 						fake_disctype = effective_disctype = DEVICE_TYPE_PS2_CD;						
-					else
+					else*/
 						fake_disctype = effective_disctype = DEVICE_TYPE_PS2_DVD;
 				}
 			}
-			else if (real_disctype == DEVICE_TYPE_PS2_DVD)			
+			/*else if (real_disctype == DEVICE_TYPE_PS2_DVD)			
 				if(color_disc)
-					fake_disctype = effective_disctype = DEVICE_TYPE_PS2_CD;
+					fake_disctype = effective_disctype = DEVICE_TYPE_PS2_CD;*/
 
 			// PS3 DVD-R/BD-R support
 			if(real_disctype && real_disctype != DEVICE_TYPE_PS3_BD && fake_disctype == 0 && is_psx(3))
@@ -2352,30 +2349,25 @@ static INLINE void do_video_mode_patch(void)
 
 		if (patch) //&& !condition_game_ext_psx)
 		{
-			switch(vsh_check)
+			DPRINTF("Patching Video mode in VSH...\n");
+			
+			if(vsh_check == VSH_CEX_HASH)
 			{
-				case VSH_CEX_HASH:
-					DPRINTF("Patching Video mode in Retail VSH..\n");
-
-					if(cex_vmode_patch_offset)
-						copy_to_user(&patch, (void *)(cex_vmode_patch_offset + _64KB_), 4);
-
-					//DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)cex_vmode_patch_offset, (uint32_t)patch);
-				break;
-
-				case VSH_DEX_HASH:
-						DPRINTF("Patching Video mode in Debug VSH..\n");
-
-					if(dex_vmode_patch_offset)
-						copy_to_user(&patch, (void *)(dex_vmode_patch_offset + _64KB_), 4);
-
-					//DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (uint32_t)dex_vmode_patch_offset, (uint32_t)patch);
-				break;
-
-				default:
-					DPRINTF("Unknown VSH HASH, Video mode was not patched!\n");
-				break;
+				if(cex_vmode_patch_offset)
+					copy_to_user(&patch, (void *)(cex_vmode_patch_offset + _64KB_), 4);
 			}
+			else if(vsh_check == VSH_DEX_HASH)
+			{
+				if(dex_vmode_patch_offset)
+					copy_to_user(&patch, (void *)(dex_vmode_patch_offset + _64KB_), 4);
+			}
+			else
+			{
+				DPRINTF("Unknown VSH HASH, Video mode was not patched!\n");
+				return;
+			}
+
+			//DPRINTF("Offset: 0x%08X | Data: 0x%08X\n", (vsh_check == VSH_CEX_HASH ? (uint32_t)cex_vmode_patch_offset : (uint32_t)dex_vmode_patch_offset), (uint32_t)patch);
 		}
 	}
 }
@@ -2658,10 +2650,11 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, post_cellFsUtilMount, (const char *bl
 		load_fan_control(fan_speed);
 		disable_cfw_syscalls(syscalls_mode);
 		patch_coldboot();
-		patch_epilepsy_warning();
+		//patch_epilepsy_warning();
 		// do_spoof_patches();
 		load_boot_plugins();
 		load_boot_plugins_kernel();
+		patch_overclock();	
 		// update_hashes();
 
 		mutex_lock(mutex, 0);
@@ -2681,6 +2674,13 @@ LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, post_cellFsUtilMount, (const char *bl
 		/*#ifndef DEBUG
 			unhook_function_on_precall_success(cellFsUtilMount_symbol, post_cellFsUtilMount, 8); // Hook no more needed
 		#endif*/
+	}
+
+	// Do overclock on boot (By Evilnat)
+	if (!usb000_mounted && strcmp(mount_point, "/dev_usb000") == 0 && strcmp(filesystem, "CELL_FS_FAT") == 0)
+	{
+		usb000_mounted = 1;
+		patch_overclock();
 	}
 
 	// CFW2OFW Fix by Evilnat
@@ -2873,7 +2873,7 @@ LV2_HOOKED_FUNCTION(int, shutdown_copy_params_patched, (uint8_t *argp_user, uint
 			{
 				//DPRINTF("NPDRM game, skipping ps2emu preparation\n");
 
-				// Set constant FAN Speed while launching a PS2 Classic game
+				// Set FAN Speed while launching a PS2 Classic game
 				if(ps2_speed)
 					sm_set_fan_policy(0, ((ps2_speed == 1) ? 1 : 2), ((ps2_speed == 1) ? 0 : ps2_speed));
 			}
@@ -2884,7 +2884,7 @@ LV2_HOOKED_FUNCTION(int, shutdown_copy_params_patched, (uint8_t *argp_user, uint
 	{
 		int fd;
 
-		// Set constant FAN Speed while you are in a PS2 game
+		// Set FAN Speed while you are in a PS2 game
 		if(ps2_speed)
 			sm_set_fan_policy(0, (ps2_speed == 1) ? 1 : 2, (ps2_speed == 1) ? 0 : ps2_speed);
 

@@ -13,6 +13,7 @@
 #include <lv2/thread.h>
 #include <lv2/syscall.h>
 #include <lv2/time.h>
+#include <lv1/patch.h>
 #include "common.h"
 #include "modulespatch.h"
 #include "crypto.h"
@@ -24,6 +25,12 @@
 #include "mappath.h"
 #include "ps3mapi_core.h"
 
+#define eieio()                \
+	{                          \
+		asm volatile("eieio"); \
+		asm volatile("sync");  \
+	}
+
 #define MAX_VSH_PLUGINS 			7
 #define BOOT_PLUGINS_FILE			"/dev_usb000/boot_plugins.txt"
 #define BOOT_PLUGINS_FILE2			"/dev_hdd0/boot_plugins.txt"
@@ -33,6 +40,11 @@
 #define MAX_BOOT_PLUGINS			(MAX_VSH_PLUGINS-BOOT_PLUGINS_FIRST_SLOT)
 #define MAX_BOOT_PLUGINS_KERNEL		5
 #define PRX_PATH					"/dev_flash/vsh/module/webftp_server.sprx"
+
+#define RSX_MEMORY_FREQ_OFFSET		0x28000004010ULL
+#define RSX_CORE_FREQ_OFFSET		0x28000004028ULL
+#define OVERCLOCK_FILE_USB			"/dev_usb000/overclock.txt"
+#define OVERCLOCK_FILE_HDD			"/dev_hdd0/overclock.txt"
 
 LV2_EXPORT int decrypt_func(uint64_t *, uint32_t *);
 
@@ -52,7 +64,7 @@ typedef struct
 
 #define N_SPRX_KEYS_1 (sizeof(sprx_keys_set1) / sizeof(KeySet))
 
-KeySet sprx_keys_set1[] =
+static KeySet sprx_keys_set1[] =
 {
 	{
 		{
@@ -68,7 +80,7 @@ KeySet sprx_keys_set1[] =
 
 #define N_SPRX_KEYS_2 (sizeof(sprx_keys_set2)/sizeof(KeySet))
 
-KeySet sprx_keys_set2[] =
+static KeySet sprx_keys_set2[] =
 {
 	{
 		{
@@ -96,6 +108,8 @@ static void *saved_sce_hdr;
 process_t vsh_process;
 uint8_t safe_mode;
 
+static int overclocked = 0;
+
 static uint32_t caller_process = 0;
 
 static uint8_t condition_true = 1;
@@ -105,10 +119,10 @@ uint8_t condition_apphome = 0;
 uint8_t condition_psp_iso = 0;
 uint8_t condition_psp_dec = 0;
 uint8_t condition_psp_keys = 0;
-uint8_t condition_psp_change_emu = 0;
+//uint8_t condition_psp_change_emu = 0;
 uint8_t condition_psp_prometheus = 0;
 uint8_t condition_pemucorelib = 1;
-uint8_t epilepsy_warning = 0; 
+//uint8_t epilepsy_warning = 0;
 uint8_t gameboot_mode = 0;
 uint8_t coldboot_mode = 0;
 uint8_t hidden_trophy_mode = 1;
@@ -122,7 +136,7 @@ int bc_to_net_status = 0;
 sys_prx_id_t vsh_plugins[MAX_VSH_PLUGINS];
 static int loading_vsh_plugin;
 
-SprxPatch cex_vsh_patches[] =
+static SprxPatch cex_vsh_patches[] =
 {
 	{ cex_ps2tonet_patch, ORI(R3, R3, 0x8204), &condition_ps2softemu },
 	{ cex_ps2tonet_size_patch, LI(R5, 0x40), &condition_ps2softemu },
@@ -133,7 +147,7 @@ SprxPatch cex_vsh_patches[] =
 	{ 0 }
 };
 
-SprxPatch dex_vsh_patches[] =
+static SprxPatch dex_vsh_patches[] =
 {
 	{ dex_ps2tonet_patch, ORI(R3, R3, 0x8204), &condition_ps2softemu },
 	{ dex_ps2tonet_size_patch, LI(R5, 0x40), &condition_ps2softemu },
@@ -144,7 +158,7 @@ SprxPatch dex_vsh_patches[] =
 	{ 0 }
 };
 
-SprxPatch explore_plugin_patches[] =
+static SprxPatch explore_plugin_patches[] =
 {
 	{ app_home_offset, 0x2f646576, &condition_apphome   }, 
 	{ app_home_offset + 4, 0x5f626476, &condition_apphome }, 
@@ -156,13 +170,13 @@ SprxPatch explore_plugin_patches[] =
 	{ 0 }
 };
 
-SprxPatch explore_category_game_patches[] =
+static SprxPatch explore_category_game_patches[] =
 {
 	{ ps2_nonbw_offset2, LI(R0, 1), &condition_ps2softemu },
 	{ 0 }
 };
 
-SprxPatch explore_category_psn_patches[] =
+static SprxPatch explore_category_psn_patches[] =
 {
 	{ trophy_title_xmb_patch2, 0x4800005c, &hidden_trophy_mode },
 	{ trophy_details_xmb_patch2, LI(9, 1), &hidden_trophy_mode },
@@ -170,7 +184,7 @@ SprxPatch explore_category_psn_patches[] =
 	{ 0 }
 };
 
-SprxPatch np_trophy_plugin_patches[] =
+static SprxPatch np_trophy_plugin_patches[] =
 {
 	{ trophy_title_ingame_patch, 0x4800000c, &hidden_trophy_mode },
 	{ trophy_details_ingame_patch, LI(3, 1), &hidden_trophy_mode },
@@ -178,7 +192,7 @@ SprxPatch np_trophy_plugin_patches[] =
 	{ 0 }
 };
 
-SprxPatch np_trophy_ingame_patches[] =
+static SprxPatch np_trophy_ingame_patches[] =
 {
 	{ trophy_title_ingame_patch2, 0x4800000c, &hidden_trophy_mode },
 	{ trophy_details_ingame_patch2, LI(3, 1), &hidden_trophy_mode },
@@ -186,26 +200,26 @@ SprxPatch np_trophy_ingame_patches[] =
 	{ 0 }
 };
 
-SprxPatch bdp_disc_check_plugin_patches[] =
+static SprxPatch bdp_disc_check_plugin_patches[] =
 {
 	{ dvd_video_region_check_offset, LI(R3, 1), &condition_true }, /* Kills standard dvd-video region protection (not RCE one) */
 	{ 0 }
 };
 
-SprxPatch ps1_emu_patches[] =
+static SprxPatch ps1_emu_patches[] =
 {
 	{ ps1_emu_get_region_offset, LI(R29, 0x82), &condition_true }, /* regions 0x80-0x82 bypass region check. */
 	{ 0 }
 };
 
-SprxPatch ps1_netemu_patches[] =
+static SprxPatch ps1_netemu_patches[] =
 {
 	// Some rare titles such as Langrisser Final Edition are launched through ps1_netemu!
 	{ ps1_netemu_get_region_offset, LI(R3, 0x82), &condition_true },
 	{ 0 }
 };
 
-SprxPatch game_ext_plugin_patches[] =
+static SprxPatch game_ext_plugin_patches[] =
 {
 	{ sfo_check_offset, NOP, &condition_true },
 	{ ps2_nonbw_offset3, LI(R0, 1), &condition_ps2softemu },
@@ -217,14 +231,14 @@ SprxPatch game_ext_plugin_patches[] =
 	{ 0 }
 };
 
-SprxPatch psp_emulator_patches[] =
+static SprxPatch psp_emulator_patches[] =
 {
 	// Sets psp mode as opossed to minis mode. Increases compatibility, removes text protection and makes most savedata work
 	{ psp_set_psp_mode_offset, LI(R4, 0), &condition_psp_iso },
 	{ 0 }
 };
 
-SprxPatch emulator_api_patches[] =
+static SprxPatch emulator_api_patches[] =
 {
 	// Read umd patches
 	{ psp_read, STDU(SP, 0xFF90, SP), &condition_psp_iso },
@@ -260,7 +274,6 @@ SprxPatch emulator_api_patches[] =
 	{ psp_read + 0x70, BLR, &condition_psp_iso },
 	{ psp_read_header, MAKE_CALL_VALUE(psp_read_header, psp_read + 0x3C), &condition_psp_iso },
 
-#if defined (FIRMWARE_CEX) || defined (FIRMWARE_DEX)
 	// Drm patches
 	{ psp_drm_patch5, MAKE_JUMP_VALUE(psp_drm_patch5, psp_drm_patch6), &condition_psp_iso },
 	{ psp_drm_patch7, LI(R6, 0), &condition_psp_iso },
@@ -272,11 +285,10 @@ SprxPatch emulator_api_patches[] =
 	// Product ID
 	{ psp_product_id_patch1, NOP, &condition_psp_iso },
 	{ psp_product_id_patch3, NOP, &condition_psp_iso },
-#endif
 	{ 0 }
 };
 
-SprxPatch pemucorelib_patches[] =
+static SprxPatch pemucorelib_patches[] =
 {
 	{ psp_eboot_dec_patch, LI(R6, 0x110), &condition_psp_dec }, // -> makes unsigned psp eboot.bin run, 0x10 works too
 	{ psp_prx_patch, STDU(SP, 0xFF90, SP), &condition_psp_iso },
@@ -329,19 +341,17 @@ SprxPatch pemucorelib_patches[] =
 	{ 0 }
 };
 
-SprxPatch libsysutil_savedata_psp_patches[] =
+static SprxPatch libsysutil_savedata_psp_patches[] =
 {
-#if defined(FIRMWARE_CEX) || defined(FIRMWARE_DEX)
 	{ psp_savedata_patch1, MAKE_JUMP_VALUE(psp_savedata_patch1, psp_savedata_patch2), &condition_psp_iso },
 	{ psp_savedata_patch3, NOP, &condition_psp_iso },
 	{ psp_savedata_patch4, NOP, &condition_psp_iso },
 	{ psp_savedata_patch5, NOP, &condition_psp_iso },
 	{ psp_savedata_patch6, NOP, &condition_psp_iso },
-#endif
 	{ 0 }
 };
 
-SprxPatch libfs_external_patches[] =
+static SprxPatch libfs_external_patches[] =
 {
 	// Redirect internal libfs function to kernel. If condition_apphome is 1, it means there is a JB game mounted
 	{ aio_copy_root_offset, STDU(SP, 0xFF90, SP), &condition_apphome },
@@ -489,9 +499,7 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 
 	// +4.30 -> 0x13 (exact firmware since it happens is unknown)
 	// 3.55 -> 0x29
-#if defined(FIRMWARE_CEX) || defined(FIRMWARE_DEX)
 	if ((p[0x30 / 4] >> 16) == 0x13)
-#endif
 	{	
 		//DPRINTF("We are in decrypted module or in cobra encrypted\n");	
 
@@ -666,18 +674,15 @@ LV2_PATCHED_FUNCTION(int, modules_patching, (uint64_t *arg1, uint32_t *arg2))
 	return SUCCEEDED;
 }
 
-#if defined (FIRMWARE_CEX)
-	LV2_HOOKED_FUNCTION_COND_POSTCALL_2(int, pre_modules_verification, (uint32_t *ret, uint32_t error))
-	{
+LV2_HOOKED_FUNCTION_COND_POSTCALL_2(int, pre_modules_verification, (uint32_t *ret, uint32_t error))
+{
+	#if defined (FIRMWARE_CEX)
 		*ret = 0;
 		return SUCCEEDED;
-	}
-#elif defined (FIRMWARE_DEX)
-	LV2_HOOKED_FUNCTION_COND_POSTCALL_2(int, pre_modules_verification, (uint32_t *ret, uint32_t error))
-	{
+	#elif defined (FIRMWARE_DEX)
 		return DO_POSTCALL;  // Fixes fucking DEX issue, no more crying bitches //
-	}
-#endif
+	#endif
+}
 
 void pre_map_process_memory(void *object, uint64_t process_addr, uint64_t size, uint64_t flags, void *unk, void *elf, uint64_t *out);
 
@@ -690,9 +695,9 @@ LV2_HOOKED_FUNCTION_POSTCALL_7(void, pre_map_process_memory, (void *object, uint
 	// Not the call address, but the call to the caller (process load code for .self)
 	if (get_call_address(1) == (void *)MKA(process_map_caller_call))
 	{	
-		if ((process_addr == 0x10000) && (size == dex_vsh_text_size) && (flags == 0x2008004) && (cleared_stage0 == 0))
+		if ((process_addr == 0x10000) && (size == cex_vsh_text_size || size == dex_vsh_text_size) && (flags == 0x2008004) && (cleared_stage0 == 0))
 		{
-			//DPRINTF("Making Debug VSH text writable, Size: 0x%lx\n", size);   
+			//DPRINTF("Making VSH text writable, Size: 0x%lx\n", size);   
 
 			// Change flags, RX -> RWX, make vsh text writable
 			set_patched_func_param(4, 0x2004004);
@@ -700,33 +705,9 @@ LV2_HOOKED_FUNCTION_POSTCALL_7(void, pre_map_process_memory, (void *object, uint
 			// We can clear stage0. 
 			cleared_stage0 = 1; 
 		}
-		else if ((process_addr == 0x10000) && (size == cex_vsh_text_size) && (flags == 0x2008004) && (cleared_stage0 == 0))
-		{
-			//DPRINTF("Making Retail VSH text writable, Size: 0x%lx\n", size);   
-
-			// Change flags, RX -> RWX, make vsh text writable
-			set_patched_func_param(4, 0x2004004);
-
-			// We can clear stage0.
-			cleared_stage0 = 1; 
-		}
 		else if (flags == 0x2008004) 
 			set_patched_func_param(4, 0x2004004); // Change flags, RX -> RWX
 	}	
-}
-
-int savefile(const char *path, void *data, size_t size)
-{
-	int file;
-	uint64_t write;	
-
-	if(cellFsOpen(path, CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &file, 0666, 0, 0) != CELL_FS_SUCCEEDED)
-		return -1;
-
-	cellFsWrite(file, data, size, &write);
-	cellFsClose(file);
-
-	return SUCCEEDED;	
 }
 
 LV2_HOOKED_FUNCTION_PRECALL_SUCCESS_8(int, load_process_hooked, (process_t process, int fd, char *path, int r6, uint64_t r7, uint64_t r8, uint64_t r9, uint64_t r10, uint64_t sp_70))
@@ -782,38 +763,16 @@ int bc_to_net(int param)
 	
 	if(param == 1) // enable netemu
 	{
-		switch(vsh_check) 
-		{
-			case VSH_CEX_HASH:
-				copy_to_process(vsh_process, &cex_vsh_patches[0].data, (void *)(uint64_t)(0x10000 + cex_vsh_patches[0].offset), 4);
-				copy_to_process(vsh_process, &cex_vsh_patches[1].data, (void *)(uint64_t)(0x10000 + cex_vsh_patches[1].offset), 4);
-				break;
-			
-			case VSH_DEX_HASH:
-				copy_to_process(vsh_process, &dex_vsh_patches[0].data, (void *)(uint64_t)(0x10000 + dex_vsh_patches[0].offset), 4);
-				copy_to_process(vsh_process, &dex_vsh_patches[1].data, (void *)(uint64_t)(0x10000 + dex_vsh_patches[1].offset), 4);
-				break;
-		}
-
+		copy_to_process(vsh_process, (vsh_check == VSH_CEX_HASH ? &cex_vsh_patches[0].data : &dex_vsh_patches[0].data), (void *)(uint64_t)(0x10000 + (vsh_check == VSH_CEX_HASH ? cex_vsh_patches[0].offset : dex_vsh_patches[0].offset)), 4);
+		copy_to_process(vsh_process, (vsh_check == VSH_CEX_HASH ? &cex_vsh_patches[1].data : &dex_vsh_patches[1].data), (void *)(uint64_t)(0x10000 + (vsh_check == VSH_CEX_HASH ? cex_vsh_patches[1].offset : dex_vsh_patches[1].offset)), 4);
 		bc_to_net_status = 1;
 		return 1;
 	}
 
 	if(param == 0) //restore
 	{
-		switch(vsh_check) 
-		{
-			case VSH_CEX_HASH:		
-				copy_to_process(vsh_process, &cex_vsh_patches[2].data, (void *)(uint64_t)(0x10000 + cex_vsh_patches[2].offset), 4);
-				copy_to_process(vsh_process, &cex_vsh_patches[3].data, (void *)(uint64_t)(0x10000 + cex_vsh_patches[3].offset), 4);
-				break;
-		
-			case VSH_DEX_HASH:		
-				copy_to_process(vsh_process, &dex_vsh_patches[2].data, (void *)(uint64_t)(0x10000 + dex_vsh_patches[2].offset), 4);
-				copy_to_process(vsh_process, &dex_vsh_patches[3].data, (void *)(uint64_t)(0x10000 + dex_vsh_patches[3].offset), 4);
-				break;
-		}	
-		
+		copy_to_process(vsh_process, (vsh_check == VSH_CEX_HASH ? &cex_vsh_patches[2].data : &dex_vsh_patches[2].data), (void *)(uint64_t)(0x10000 + (vsh_check == VSH_CEX_HASH ? cex_vsh_patches[2].offset : dex_vsh_patches[2].offset)), 4);
+		copy_to_process(vsh_process, (vsh_check == VSH_CEX_HASH ? &cex_vsh_patches[3].data : &dex_vsh_patches[3].data), (void *)(uint64_t)(0x10000 + (vsh_check == VSH_CEX_HASH ? cex_vsh_patches[3].offset : dex_vsh_patches[3].offset)), 4);		
 		bc_to_net_status = 0;
 		return SUCCEEDED;
 	}
@@ -902,7 +861,7 @@ int prx_load_vsh_plugin(unsigned int slot, char *path, void *arg, uint32_t arg_s
 	}
 
 	if (ret == 0)	
-		vsh_plugins[slot] = prx;	
+		vsh_plugins[slot] = prx;
 	else
 	{
 		prx_stop_module_with_thread(prx, vsh_process, 0, 0);
@@ -1262,6 +1221,7 @@ int ps3mapi_unload_vsh_plugin(char *name)
 		kfree(filename);
 		kfree(segments);
 	}
+	
 	return ESRCH;
 }
 
@@ -1308,7 +1268,7 @@ int ps3mapi_get_vsh_plugin_info(unsigned int slot, char *name, char *filename)
 // Enable epilepsy warning on boot (By Evilnat)
 // Patching it in cex_vsh_patches/dex_vsh_patches will return "invalid memory access by KERNEL"
 // This patch also enables the warning after exiting a PS2 game (needs a check about that...)
-void patch_epilepsy_warning()
+/*void patch_epilepsy_warning()
 {
 	if(vsh_process && epilepsy_warning && !safe_mode)
 	{
@@ -1317,7 +1277,7 @@ void patch_epilepsy_warning()
 		//DPRINTF("Patching to enable epilepsy warning\n");
 		process_write_memory(vsh_process, (vsh_check == VSH_CEX_HASH ? (void *)cex_epilepsy_warning_offset : (void *)dex_epilepsy_warning_offset), &patch, 1, 1);
 	}	
-}
+}*/
 
 // Disable coldboot animation and sound on boot (By Evilnat)
 void patch_coldboot()
@@ -1331,4 +1291,72 @@ void patch_coldboot()
 		process_write_memory(vsh_process, (vsh_check == VSH_CEX_HASH ? (void *)cex_coldboot_offset1 : (void *)dex_coldboot_offset1), &patch1, 4, 1);
 		process_write_memory(vsh_process, (vsh_check == VSH_CEX_HASH ? (void *)cex_coldboot_offset2 : (void *)dex_coldboot_offset2), &patch2, 4, 1);
 	}	
+}
+
+// Thanks to Chattrapat Sangmanee (@chattrapat_s) for his research on overclocking
+void patch_overclock()
+{
+	int lines = 0;
+	int fd, eof;
+	char value_char[2][5];
+	uint8_t original_value[2][8], new_value[2];
+	uint64_t value[2];
+
+	if (!vsh_process || overclocked)
+		return;	
+
+	// We search first on USB and if it is not available will search on HDD
+	if(cellFsOpen(OVERCLOCK_FILE_USB, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != CELL_FS_SUCCEEDED)
+	if(cellFsOpen(OVERCLOCK_FILE_HDD, CELL_FS_O_RDONLY, &fd, 0, NULL, 0) != CELL_FS_SUCCEEDED)
+		return;	
+	
+	for(int i = 0; i < 2; i++)
+	{
+		// Getting values in overclock.txt file
+		if(read_text_line(fd, value_char[i], sizeof(value_char), &eof) > 0)
+		{
+			if (eof)
+				break;
+
+			new_value[i] = strtoull(value_char[i], NULL, 10) / (!i ? 50 : 25);
+			value[i] = lv1_peekd((!i ? RSX_CORE_FREQ_OFFSET : RSX_MEMORY_FREQ_OFFSET));
+			memcpy(original_value[i], &value[i], 8);
+
+			if(!i)
+			{
+				original_value[i][6] = new_value[i];
+				value[i] = *(uint64_t *)original_value[i];
+			}
+
+			lines++;
+		}
+	}
+
+	cellFsClose(fd);
+
+	// Check if frequencies values are out of range
+	if(new_value[0] < 0x06 || new_value[0] > 0x15 ||
+		new_value[1] < 0x0C || new_value[1] > 0x2A)		
+	{
+		//DPRINTF("[OVERCLOCK] Frequency out of range, aborting...\n");
+		return;
+	}
+
+	// Patching with new values in RSX register
+	if(lines == 2)
+	{
+		lv1_poked(RSX_CORE_FREQ_OFFSET, value[0]);
+
+		while(original_value[1][6] != new_value[1])
+		{
+			timer_usleep(MILISECONDS(20));
+			original_value[1][6] += (new_value[1] > original_value[1][6] ? 1 : -1);
+			value[1] = *(uint64_t *)original_value[1];
+			lv1_poked(RSX_MEMORY_FREQ_OFFSET, value[1]);
+			eieio();
+		}
+
+		//DPRINTF("[OVERCLOCK] RSX Overclocked: Core %sMhz - Memory %sMhz\n", value_char[0], value_char[1]);
+		overclocked = 1;
+	}
 }

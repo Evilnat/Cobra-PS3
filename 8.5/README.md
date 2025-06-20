@@ -1,20 +1,19 @@
 Feel free to download / modify.
 
-Thanks to Cobra team, Joonie, Habib, Haxxxen, Alexander, Dean, KW, Nzv, Bguerville, Aldo, LightningMods and all who helped updating Cobra source.
+Thanks to Cobra team, Joonie, Habib, Haxxxen, Alexander, Dean, KW, Nzv, Bguerville, Aldo, LightningMods, Chattrapat Sangmanee and all who helped updating Cobra source.
 
 # COBRA 8.5 Source
 
 ###### New features in 8.5:
+    • Overclock RSX's core and memory frequencies at boot from USB/HDD
     • TTYWRITE support in socat (Thanks to haxxxen and PS3HEN team)
     • Fixed controller infinite loop (Thanks to aldostools)
     • Added asm code embedding to display temperature when compiling ps2_netemu.self (Thanks to @3141card for his research)
     • Support for 3k3y/Redump ISOs on-the-fly  
     • Opcode to set SYSCALLS mode at boot
     • Opcode to set GAMEBOOT mode
-    • Opcode to set EPILEPSY WARNING mode
     • Opcode to set COLDBOOT mode at boot
-    • Opcode to set HIDDEN TROPHIES mode    
-    • Sorry if I forgot something else...
+    • Opcode to set HIDDEN TROPHIES mode
     
 ###### To do:
     • Patch to allow universal DVD region
