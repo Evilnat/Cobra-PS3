@@ -18,7 +18,37 @@ Thanks to Cobra team, Joonie, Habib, Haxxxen, Alexander, Dean, KW, Nzv, Bguervil
 ###### To do:
     • Patch to allow universal DVD region
 
-### Data that need to be ported to every CFW version
+## RSX Overclock
+Create a file called **overclock.txt**, and put the frequencies you want to use
+
+For example, I want to overclock RSX's core to 600MHz and memory to 750MHz, this is how it would be in the file, first line is for **Core** and the second one for **Memory**:
+
+<img src="https://raw.githubusercontent.com/Evilnat/Cobra-PS3/master/overclock.png" width="500">
+
+This will overclock RSX's **Core** to **600MHz** and **Memory** to **750MHz**
+
+Once you have completed the previous step, you just need to copy the "overclock.txt" file to the root of a USB device in **FAT32** format or to the internal hard drive of the PS3
+
+This is what the routes would be like:
+
+- **PC USB:**  X:\overclock.txt\
+- **PS3 USB:** /dev_usbXXX/overclock.txt\
+- **PS3 HDD:** /dev_hdd0/overclock.txt
+
+> [!CAUTION]
+> **Just remember to only use numbers, do not use letters or other characters**
+
+Start or restart the PS3 so that Cobra loads the file, once the XMB has finished loading, go to the Network column and choose the option [Custom Firmware Tools > Overclock Tools > Check GPU/VRAM clock speed]
+
+> [!NOTE]
+> **Cobra will check if /dev_usb000 is mounted and it will overclock the PS3. If you turn on the PS3 without a USB device and  you connect one after a while, Cobra will overclock**
+
+>[!NOTE]
+> **Overclocking from USB has priority over HDD, if the PS3 crashes with the file on the internal HDD, you can use the USB with smaller values ​​to boot the PS3 and delete the file**
+
+Default values are 500MHz for Core and 650MHz for Memory
+
+## Data that need to be ported to every CFW version
 
 The following files have data that must be ported to each firmware version:
 
