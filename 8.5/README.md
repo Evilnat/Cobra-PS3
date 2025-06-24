@@ -39,8 +39,11 @@ Once you have completed the previous step, you just need to copy the "overclock.
 This is what the routes would be like:
 
 - **PC USB:**  X:\overclock.txt
-- **PS3 USB:** /dev_usbXXX/overclock.txt
+- **PS3 USB:** /dev_usb000/overclock.txt
 - **PS3 HDD:** /dev_hdd0/overclock.txt
+
+> [!CAUTION]
+> **For USB, the port closest to the BD reader should be used (/dev_usb000)**
 
 > [!CAUTION]
 > **Just remember to only use numbers, do not use letters or other characters**
